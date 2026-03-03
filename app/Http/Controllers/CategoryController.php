@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use App\Models\ItemReport;
 use Illuminate\Http\Request;
@@ -29,13 +30,11 @@ class CategoryController extends WebBaseController
         return view('categories.create');
     }
 
-    public function store(Request $request)
+    public function store(CategoryRequest $request)
     {
         $this->requireAnyRole(['admin','osa']);
 
-        $data = $request->validate([
-            'name' => ['required','string','max:120', Rule::unique('categories','name')],
-        ]);
+        $data = $request->validated();
 
         $row = Category::create($data);
         $this->audit($request, 'categories.create', 'categories', $row->id, $data);
@@ -50,15 +49,13 @@ class CategoryController extends WebBaseController
         return view('categories.edit', compact('category'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(CategoryRequest $request, int $id)
     {
         $this->requireAnyRole(['admin','osa']);
 
         $category = Category::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => ['required','string','max:120', Rule::unique('categories','name')->ignore($category->id)],
-        ]);
+        $data = $request->validated();
 
         $category->update($data);
         $this->audit($request, 'categories.update', 'categories', $category->id, $data);

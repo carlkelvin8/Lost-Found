@@ -21,14 +21,46 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('login'));
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthWebController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthWebController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('login.post');
 
 Route::get('/register', [AuthWebController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthWebController::class, 'register'])->name('register.post');
+Route::post('/register', [AuthWebController::class, 'register'])
+    ->middleware('throttle:3,1')
+    ->name('register.post');
+
+// Email Verification Routes
+Route::get('/email/verify', [AuthWebController::class, 'showVerifyEmail'])
+    ->middleware('auth')
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', [AuthWebController::class, 'verifyEmail'])
+    ->middleware(['auth', 'signed'])
+    ->name('verification.verify');
+
+Route::post('/email/verification-notification', [AuthWebController::class, 'resendVerificationEmail'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');
+
+// Password Reset Routes
+Route::get('/forgot-password', [AuthWebController::class, 'showForgotPassword'])
+    ->name('password.request');
+
+Route::post('/forgot-password', [AuthWebController::class, 'sendResetLink'])
+    ->middleware('throttle:3,1')
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [AuthWebController::class, 'showResetPassword'])
+    ->name('password.reset');
+
+Route::post('/reset-password', [AuthWebController::class, 'resetPassword'])
+    ->middleware('throttle:5,1')
+    ->name('password.update');
 
 Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // My profile

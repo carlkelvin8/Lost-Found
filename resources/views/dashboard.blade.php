@@ -9,173 +9,153 @@
   $initial = strtoupper(substr($user->email,0,1));
 @endphp
 
-<div class="glass-card hero p-3 p-md-4 mb-3">
-  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-    <div class="d-flex align-items-center gap-3">
-      <div class="avatar">{{ $initial }}</div>
-      <div>
-        <div class="h4 fw-bold mb-0">Dashboard</div>
-        <div class="mini">
-          Logged in as <span class="fw-semibold">{{ $user->email }}</span>
-          @if($user->profile) · {{ $user->profile->full_name }} @endif
-        </div>
-      </div>
-    </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a class="btn btn-sm btn-primary" href="{{ route('reports.create') }}"><i class="bi bi-plus-circle"></i> New Report</a>
-      <a class="btn btn-sm btn-ghost" href="{{ route('reports.index') }}"><i class="bi bi-inbox"></i> View Reports</a>
-      @if($isStaff)
-        <a class="btn btn-sm btn-ghost" href="{{ route('matches.index') }}"><i class="bi bi-diagram-2"></i> Matches</a>
-        <a class="btn btn-sm btn-ghost" href="{{ route('users.index') }}"><i class="bi bi-people"></i> Users</a>
+<!-- Welcome Header -->
+<div class="dashboard-header">
+  <div class="dashboard-welcome">
+    <div class="dashboard-avatar">
+      @if($user->profile && $user->profile->avatar_url)
+        <img src="{{ asset($user->profile->avatar_url) }}" alt="{{ $user->profile->full_name ?? 'User' }}">
+      @else
+        <span class="dashboard-avatar-initial">{{ $initial }}</span>
       @endif
     </div>
+    <div class="dashboard-welcome-text">
+      <h1 class="dashboard-title">Welcome back, {{ $user->profile->full_name ?? 'User' }}</h1>
+      <p class="dashboard-subtitle">Here's what's happening with your lost and found items</p>
+    </div>
+  </div>
+  <div class="dashboard-actions">
+    <a class="btn btn-primary" href="{{ route('reports.create') }}">
+      <i class="bi bi-plus-lg"></i> New Report
+    </a>
   </div>
 </div>
 
-<div class="row g-3">
-  <div class="col-12 col-md-6 col-lg-3">
-    <div class="metric-card">
-      <div class="metric-top d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-          <div class="icon"><i class="bi bi-file-earmark-text"></i></div>
-          <div class="fw-semibold">My Reports</div>
-        </div>
-        <div class="mini">You</div>
-      </div>
-      <div class="metric-body">
-        <div class="display-6 fw-bold">{{ $stats['my_reports'] }}</div>
-      </div>
+<!-- Stats Cards -->
+<div class="dashboard-stats">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-primary">
+      <i class="bi bi-file-earmark-text-fill"></i>
+    </div>
+    <div class="stat-content">
+      <div class="stat-label">My Reports</div>
+      <div class="stat-value">{{ $stats['my_reports'] }}</div>
     </div>
   </div>
 
-  <div class="col-12 col-md-6 col-lg-3">
-    <div class="metric-card">
-      <div class="metric-top d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-          <div class="icon"><i class="bi bi-person-check"></i></div>
-          <div class="fw-semibold">My Claims</div>
-        </div>
-        <div class="mini">You</div>
-      </div>
-      <div class="metric-body">
-        <div class="display-6 fw-bold">{{ $stats['my_claims'] }}</div>
-      </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-success">
+      <i class="bi bi-person-check-fill"></i>
+    </div>
+    <div class="stat-content">
+      <div class="stat-label">My Claims</div>
+      <div class="stat-value">{{ $stats['my_claims'] }}</div>
     </div>
   </div>
 
   @if($isStaff)
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="metric-card">
-        <div class="metric-top d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <div class="icon"><i class="bi bi-hourglass-split"></i></div>
-            <div class="fw-semibold">Pending Reports</div>
-          </div>
-          <div class="mini">Staff</div>
-        </div>
-        <div class="metric-body">
-          <div class="display-6 fw-bold">{{ $stats['pending_reports'] }}</div>
-        </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-warning">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Pending Reports</div>
+        <div class="stat-value">{{ $stats['pending_reports'] }}</div>
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="metric-card">
-        <div class="metric-top d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <div class="icon"><i class="bi bi-diagram-2"></i></div>
-            <div class="fw-semibold">Suggested Matches</div>
-          </div>
-          <div class="mini">Staff</div>
-        </div>
-        <div class="metric-body">
-          <div class="display-6 fw-bold">{{ $stats['suggested_matches'] }}</div>
-        </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-info">
+        <i class="bi bi-diagram-2-fill"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Suggested Matches</div>
+        <div class="stat-value">{{ $stats['suggested_matches'] }}</div>
       </div>
     </div>
   @endif
 </div>
 
-{{-- Quick Actions --}}
-<div class="row g-3 mt-2">
-  <div class="col-12">
-    <div class="section-title">
-      <i class="bi bi-lightning-charge"></i> Quick Actions
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <a href="{{ route('reports.create') }}" class="quick-action text-decoration-none">
-      <i class="bi bi-plus-circle-fill"></i>
-      <div class="fw-bold text-dark">New Report</div>
-      <div class="mini">Submit lost/found item</div>
+<!-- Quick Actions -->
+<div class="dashboard-section">
+  <h2 class="section-heading">Quick Actions</h2>
+  <div class="quick-actions-grid">
+    <a href="{{ route('reports.create') }}" class="quick-action-card">
+      <div class="quick-action-icon">
+        <i class="bi bi-plus-circle-fill"></i>
+      </div>
+      <div class="quick-action-title">New Report</div>
+      <div class="quick-action-desc">Submit lost/found item</div>
     </a>
-  </div>
-  <div class="col-6 col-md-3">
-    <a href="{{ route('reports.index') }}" class="quick-action text-decoration-none">
-      <i class="bi bi-inbox-fill"></i>
-      <div class="fw-bold text-dark">View Reports</div>
-      <div class="mini">Browse all reports</div>
+
+    <a href="{{ route('reports.index') }}" class="quick-action-card">
+      <div class="quick-action-icon">
+        <i class="bi bi-inbox-fill"></i>
+      </div>
+      <div class="quick-action-title">View Reports</div>
+      <div class="quick-action-desc">Browse all reports</div>
     </a>
-  </div>
-  <div class="col-6 col-md-3">
-    <a href="{{ route('claims.index') }}" class="quick-action text-decoration-none">
-      <i class="bi bi-person-check-fill"></i>
-      <div class="fw-bold text-dark">My Claims</div>
-      <div class="mini">Track your claims</div>
+
+    <a href="{{ route('claims.index') }}" class="quick-action-card">
+      <div class="quick-action-icon">
+        <i class="bi bi-person-check-fill"></i>
+      </div>
+      <div class="quick-action-title">My Claims</div>
+      <div class="quick-action-desc">Track your claims</div>
     </a>
-  </div>
-  <div class="col-6 col-md-3">
-    <a href="{{ route('notifications.index') }}" class="quick-action text-decoration-none">
-      <i class="bi bi-bell-fill"></i>
-      <div class="fw-bold text-dark">Notifications</div>
-      <div class="mini">View updates</div>
+
+    <a href="{{ route('notifications.index') }}" class="quick-action-card">
+      <div class="quick-action-icon">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      <div class="quick-action-title">Notifications</div>
+      <div class="quick-action-desc">View updates</div>
     </a>
   </div>
 </div>
 
-{{-- Recent Activity Section --}}
-<div class="row g-3 mt-3">
-  <div class="col-12 col-lg-6">
-    <div class="glass-card p-3">
-      <div class="section-title">
+<!-- Recent Activity Section -->
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3 class="dashboard-card-title">
         <i class="bi bi-clock-history"></i> My Recent Reports
-      </div>
+      </h3>
+    </div>
+    <div class="dashboard-card-body">
       @if($recentReports->isEmpty())
-        <div class="text-center py-4">
-          <i class="bi bi-inbox" style="font-size:3rem;color:var(--muted);opacity:.3"></i>
-          <div class="mini mt-2">No reports yet</div>
-          <a href="{{ route('reports.create') }}" class="btn btn-sm btn-primary mt-2">
+        <div class="empty-state-simple">
+          <i class="bi bi-inbox"></i>
+          <p>No reports yet</p>
+          <a href="{{ route('reports.create') }}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus-circle"></i> Create First Report
           </a>
         </div>
       @else
-        <div class="d-flex flex-column gap-2">
+        <div class="activity-list">
           @foreach($recentReports as $report)
-            <a href="{{ route('reports.show', $report->id) }}" class="activity-item text-decoration-none">
-              <div class="d-flex align-items-start justify-content-between gap-2">
-                <div class="flex-grow-1">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="chip chip-{{ $report->report_type === 'lost' ? 'warning' : 'success' }}">
-                      <i class="bi bi-{{ $report->report_type === 'lost' ? 'exclamation-circle' : 'check-circle' }}"></i>
-                      {{ ucfirst($report->report_type) }}
-                    </span>
-                    <span class="status-badge status-{{ $report->status }}">{{ $report->status }}</span>
-                  </div>
-                  <div class="fw-semibold text-dark">{{ Str::limit($report->item_name, 40) }}</div>
-                  <div class="mini">
-                    <i class="bi bi-tag"></i> {{ $report->category->name ?? 'N/A' }}
-                    · <i class="bi bi-geo-alt"></i> {{ $report->location->name ?? 'N/A' }}
-                  </div>
+            <a href="{{ route('reports.show', $report->id) }}" class="activity-list-item">
+              <div class="activity-list-content">
+                <div class="activity-list-badges">
+                  <span class="badge badge-{{ $report->report_type === 'lost' ? 'warning' : 'success' }}">
+                    {{ ucfirst($report->report_type) }}
+                  </span>
+                  <span class="badge badge-outline">{{ $report->status }}</span>
                 </div>
-                <div class="text-end">
-                  <div class="mini">{{ $report->created_at->diffForHumans() }}</div>
+                <div class="activity-list-title">{{ Str::limit($report->item_name, 40) }}</div>
+                <div class="activity-list-meta">
+                  <span><i class="bi bi-tag"></i> {{ $report->category->name ?? 'N/A' }}</span>
+                  <span><i class="bi bi-geo-alt"></i> {{ $report->location->name ?? 'N/A' }}</span>
                 </div>
+              </div>
+              <div class="activity-list-time">
+                {{ $report->created_at->diffForHumans() }}
               </div>
             </a>
           @endforeach
         </div>
-        <div class="text-center mt-3">
-          <a href="{{ route('reports.index') }}" class="btn btn-sm btn-ghost">
+        <div class="dashboard-card-footer">
+          <a href="{{ route('reports.index') }}" class="btn-link">
             View All Reports <i class="bi bi-arrow-right"></i>
           </a>
         </div>
@@ -184,41 +164,42 @@
   </div>
 
   @if($isStaff)
-    <div class="col-12 col-lg-6">
-      <div class="glass-card p-3">
-        <div class="section-title">
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
           <i class="bi bi-activity"></i> Recent Activity
-        </div>
+        </h3>
+      </div>
+      <div class="dashboard-card-body">
         @if($recentActivity->isEmpty())
-          <div class="text-center py-4">
-            <i class="bi bi-activity" style="font-size:3rem;color:var(--muted);opacity:.3"></i>
-            <div class="mini mt-2">No recent activity</div>
+          <div class="empty-state-simple">
+            <i class="bi bi-activity"></i>
+            <p>No recent activity</p>
           </div>
         @else
-          <div class="d-flex flex-column gap-2">
+          <div class="activity-list">
             @foreach($recentActivity as $activity)
-              <a href="{{ route('reports.show', $activity->id) }}" class="activity-item text-decoration-none">
-                <div class="d-flex align-items-start justify-content-between gap-2">
-                  <div class="flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                      <span class="chip chip-{{ $activity->report_type === 'lost' ? 'warning' : 'success' }}">
-                        <i class="bi bi-{{ $activity->report_type === 'lost' ? 'exclamation-circle' : 'check-circle' }}"></i>
-                        {{ ucfirst($activity->report_type) }}
-                      </span>
-                      <span class="status-badge status-{{ $activity->status }}">{{ $activity->status }}</span>
-                    </div>
-                    <div class="fw-semibold text-dark">{{ Str::limit($activity->item_name, 35) }}</div>
-                    <div class="mini">
-                      <i class="bi bi-person"></i> {{ $activity->reporter->email ?? 'Unknown' }}
-                      · {{ $activity->created_at->diffForHumans() }}
-                    </div>
+              <a href="{{ route('reports.show', $activity->id) }}" class="activity-list-item">
+                <div class="activity-list-content">
+                  <div class="activity-list-badges">
+                    <span class="badge badge-{{ $activity->report_type === 'lost' ? 'warning' : 'success' }}">
+                      {{ ucfirst($activity->report_type) }}
+                    </span>
+                    <span class="badge badge-outline">{{ $activity->status }}</span>
                   </div>
+                  <div class="activity-list-title">{{ Str::limit($activity->item_name, 35) }}</div>
+                  <div class="activity-list-meta">
+                    <span><i class="bi bi-person"></i> {{ $activity->reporter->email ?? 'Unknown' }}</span>
+                  </div>
+                </div>
+                <div class="activity-list-time">
+                  {{ $activity->created_at->diffForHumans() }}
                 </div>
               </a>
             @endforeach
           </div>
-          <div class="text-center mt-3">
-            <a href="{{ route('reports.index') }}" class="btn btn-sm btn-ghost">
+          <div class="dashboard-card-footer">
+            <a href="{{ route('reports.index') }}" class="btn-link">
               View All Activity <i class="bi bi-arrow-right"></i>
             </a>
           </div>
@@ -226,46 +207,40 @@
       </div>
     </div>
   @else
-    <div class="col-12 col-lg-6">
-      <div class="glass-card p-3">
-        <div class="section-title">
-          <i class="bi bi-info-circle"></i> Getting Started
-        </div>
-        <div class="d-flex flex-column gap-3">
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width:40px;height:40px;border-radius:8px;border:2px solid var(--text-primary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:700;background:transparent">1</div>
-            </div>
-            <div>
-              <div class="fw-semibold">Report Lost or Found Items</div>
-              <div class="mini">Submit a report when you lose or find an item on campus</div>
-            </div>
-          </div>
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width:40px;height:40px;border-radius:8px;border:2px solid var(--text-primary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:700;background:transparent">2</div>
-            </div>
-            <div>
-              <div class="fw-semibold">AI-Powered Matching</div>
-              <div class="mini">Our system automatically matches lost and found items using AI</div>
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
+          <i class="bi bi-lightbulb"></i> Getting Started
+        </h3>
+      </div>
+      <div class="dashboard-card-body">
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-number">1</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Report Lost or Found Items</div>
+              <div class="guide-step-desc">Submit a report when you lose or find an item on campus</div>
             </div>
           </div>
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width:40px;height:40px;border-radius:8px;border:2px solid var(--text-primary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:700;background:transparent">3</div>
-            </div>
-            <div>
-              <div class="fw-semibold">Claim Your Items</div>
-              <div class="mini">Get notified when matches are found and claim your items</div>
+          <div class="guide-step">
+            <div class="guide-step-number">2</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">AI-Powered Matching</div>
+              <div class="guide-step-desc">Our system automatically matches lost and found items using AI</div>
             </div>
           </div>
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width:40px;height:40px;border-radius:8px;border:2px solid var(--text-primary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:700;background:transparent">4</div>
+          <div class="guide-step">
+            <div class="guide-step-number">3</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Claim Your Items</div>
+              <div class="guide-step-desc">Get notified when matches are found and claim your items</div>
             </div>
-            <div>
-              <div class="fw-semibold">Track Progress</div>
-              <div class="mini">Monitor the status of your reports and claims in real-time</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-number">4</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Track Progress</div>
+              <div class="guide-step-desc">Monitor the status of your reports and claims in real-time</div>
             </div>
           </div>
         </div>
@@ -407,3 +382,548 @@
 </div>
 @endif
 @endsection
+
+
+@push('styles')
+<style>
+/* ============================================
+   MODERN DASHBOARD STYLES
+   ============================================ */
+
+/* Dashboard Header */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.dashboard-welcome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.dashboard-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: #0041C7;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 65, 199, 0.2);
+  overflow: hidden;
+}
+
+.dashboard-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.dashboard-welcome-text {
+  flex: 1;
+}
+
+.dashboard-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs) 0;
+  line-height: 1.2;
+}
+
+.dashboard-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Stats Cards */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-icon-primary {
+  background: linear-gradient(135deg, rgba(58, 203, 235, 0.1) 0%, rgba(0, 65, 199, 0.1) 100%);
+  color: #0041C7;
+}
+
+.stat-icon-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.stat-icon-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.stat-icon-info {
+  background: rgba(13, 133, 216, 0.1);
+  color: var(--info);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.stat-value {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+  margin-bottom: var(--space-3xl);
+}
+
+.section-heading {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-lg);
+}
+
+.quick-action-card {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.quick-action-card:hover {
+  border-color: #0041C7;
+  box-shadow: 0 8px 24px rgba(0, 65, 199, 0.15);
+  transform: translateY(-4px);
+}
+
+.quick-action-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(58, 203, 235, 0.1) 0%, rgba(0, 65, 199, 0.1) 100%);
+  color: #0041C7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  transition: all var(--transition-fast);
+}
+
+.quick-action-card:hover .quick-action-icon {
+  background: #0041C7;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 65, 199, 0.3);
+}
+
+.quick-action-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quick-action-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.dashboard-card-header {
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-secondary);
+}
+
+.dashboard-card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.dashboard-card-title i {
+  color: var(--text-secondary);
+}
+
+.dashboard-card-body {
+  padding: var(--space-xl);
+}
+
+.dashboard-card-footer {
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--border-default);
+  text-align: center;
+}
+
+/* Activity List */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.activity-list-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.activity-list-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-default);
+}
+
+.activity-list-content {
+  flex: 1;
+}
+
+.activity-list-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.activity-list-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.activity-list-meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.activity-list-meta i {
+  margin-right: 0.25rem;
+}
+
+.activity-list-time {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Empty State */
+.empty-state-simple {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+}
+
+.empty-state-simple i {
+  font-size: 3rem;
+  color: var(--text-muted);
+  opacity: 0.3;
+  margin-bottom: var(--space-lg);
+  display: block;
+}
+
+.empty-state-simple p {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+}
+
+/* Guide Steps */
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+.guide-step-number {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 2px solid #0041C7;
+  background: transparent;
+  color: #0041C7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.guide-step-content {
+  flex: 1;
+}
+
+.guide-step-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.guide-step-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Analytics Grid */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.analytics-card {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.analytics-card-wide {
+  grid-column: span 2;
+}
+
+.analytics-card-body {
+  padding: var(--space-xl);
+}
+
+.analytics-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+  font-weight: 600;
+}
+
+.analytics-value {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+  line-height: 1;
+}
+
+.chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, rgba(58, 203, 235, 0.15) 0%, rgba(0, 65, 199, 0.15) 100%);
+  color: #0041C7;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.badge-outline {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* Link Button */
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: #0041C7;
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-link:hover {
+  color: #0160C9;
+  gap: var(--space-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-welcome {
+    width: 100%;
+  }
+
+  .dashboard-actions {
+    width: 100%;
+  }
+
+  .dashboard-actions .btn {
+    flex: 1;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-card-wide {
+    grid-column: span 1;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+@endpush

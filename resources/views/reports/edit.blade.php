@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Report · Lost & Found')
+@section('title', 'Edit Report · NAAP Lost & Found')
 
 @section('content')
 {{-- FLASH --}}
@@ -161,15 +161,88 @@
   <form method="POST" action="{{ route('reports.photos.store',$report->id) }}"
         enctype="multipart/form-data" class="row g-2 align-items-end">
     @csrf
-    <div class="col-md-8">
+    <div class="col-12">
       <label class="form-label">Upload New Photo</label>
-      <input class="form-control" type="file" name="photo" required>
+      <div class="photo-upload-section">
+        <div class="upload-options">
+          <button type="button" class="btn btn-primary btn-camera" onclick="initCameraForEdit()">
+            <i class="bi bi-camera-fill"></i> Take Photo
+          </button>
+          <span class="upload-divider">or</span>
+          <label for="photoInputEdit" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> Choose File
+          </label>
+          <input id="photoInputEdit" class="form-control d-none" type="file" name="photo" accept="image/*" required onchange="previewSinglePhoto(this)" />
+        </div>
+        <div id="singlePhotoPreview" class="mt-3"></div>
+      </div>
     </div>
-    <div class="col-md-4">
-      <button class="btn btn-outline-primary w-100">
-        <i class="bi bi-upload"></i> Upload
+    <div class="col-12">
+      <button class="btn btn-primary w-100">
+        <i class="bi bi-upload"></i> Upload Photo
       </button>
     </div>
   </form>
 </div>
+
+@push('styles')
+<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet">
+<style>
+  .photo-upload-section {
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-align: center;
+  }
+
+  .upload-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .btn-camera {
+    min-width: 140px;
+  }
+
+  .upload-divider {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  #singlePhotoPreview img {
+    max-width: 200px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-default);
+  }
+</style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/camera-capture.js') }}"></script>
+<script>
+  function initCameraForEdit() {
+    initCamera({
+      maxPhotos: 1,
+      targetInput: 'input[name="photo"]'
+    });
+  }
+
+  function previewSinglePhoto(input) {
+    const container = document.getElementById('singlePhotoPreview');
+    container.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        container.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>
+@endpush
 @endsection

@@ -12,8 +12,8 @@
         <i class="bi bi-list"></i>
       </button>
       <a class="navbar-brand" href="{{ route('dashboard') }}">
-        <i class="bi bi-box-seam"></i>
-        <span>Lost & Found</span>
+        <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo" style="height: 40px; width: auto; object-fit: contain;">
+        <span>NAAP Lost & Found</span>
       </a>
     </div>
 
@@ -31,14 +31,17 @@
       <!-- Notifications -->
       <a href="{{ route('notifications.index') }}" class="navbar-icon-btn" title="Notifications">
         <i class="bi bi-bell"></i>
-        <span class="notification-badge">3</span>
       </a>
 
       <!-- User Menu -->
       <div class="navbar-user-menu">
         <button class="user-menu-trigger" type="button" id="userMenuTrigger">
           <div class="user-avatar">
-            {{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}
+            @if($user->profile && $user->profile->avatar_url)
+              <img src="{{ asset($user->profile->avatar_url) }}" alt="{{ $user->profile->full_name ?? 'User' }}">
+            @else
+              {{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}
+            @endif
           </div>
           <div class="user-info">
             <div class="user-name">{{ $user->profile->full_name ?? 'User' }}</div>
@@ -278,6 +281,13 @@
   justify-content: center;
   font-weight: 700;
   font-size: var(--text-sm);
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-info {

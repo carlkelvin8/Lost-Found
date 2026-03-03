@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RegisterRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 
 class AuthWebController extends WebBaseController
@@ -29,18 +31,11 @@ class AuthWebController extends WebBaseController
     /* =========================
      * REGISTER (STUDENT DEFAULT)
      * ========================= */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $data = $request->validate([
-            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')],
-            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
-            'full_name' => ['required', 'string', 'max:190'],
-            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
-            'school_id_number' => ['nullable', 'string', 'max:60'],
-            'contact_no' => ['nullable', 'string', 'max:40'],
-        ]);
+        $data = $request->validated();
 
-        DB::transaction(function () use ($request, $data) {
+        $user = DB::transaction(function () use ($request, $data) {
 
             // ✅ CORRECT: save to `password`
             $user = User::create([
@@ -68,11 +63,16 @@ class AuthWebController extends WebBaseController
             $this->audit($request, 'auth.register', 'users', $user->id, [
                 'role' => 'student'
             ]);
+
+            return $user;
         });
+
+        // Send email verification notification
+        $user->sendEmailVerificationNotification();
 
         return redirect()
             ->route('login')
-            ->with('success', 'Account created successfully. You may now log in.');
+            ->with('success', 'Account created successfully. Please check your email to verify your account.');
     }
 
     /* =========================
@@ -81,8 +81,18 @@ class AuthWebController extends WebBaseController
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email', 'max:190'],
-            'password' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'max:190',
+                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:255',
+            ],
         ]);
 
         $user = User::where('email', $data['email'])->first();
@@ -134,5 +144,112 @@ class AuthWebController extends WebBaseController
         }
 
         return redirect()->route('login')->with('success', 'Logged out');
+    }
+
+    /* =========================
+     * EMAIL VERIFICATION
+     * ========================= */
+    public function showVerifyEmail()
+    {
+        return view('auth.verify-email');
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+
+        $user->markEmailAsVerified();
+
+        return redirect()->route('dashboard')->with('success', 'Email verified successfully!');
+    }
+
+    public function resendVerificationEmail(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Verification link sent!');
+    }
+
+    /* =========================
+     * PASSWORD RESET
+     * ========================= */
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'max:190',
+                'exists:users,email',
+            ],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            $user->sendPasswordResetNotification(
+                app('auth.password.broker')->createToken($user)
+            );
+        }
+
+        return back()->with('success', 'If that email exists, we sent a password reset link.');
+    }
+
+    public function showResetPassword(Request $request, $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->email
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => [
+                'required',
+                'string',
+            ],
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'exists:users,email',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/',
+            ],
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->save();
+            }
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', 'Password reset successfully!')
+            : back()->withErrors(['email' => [__($status)]]);
     }
 }

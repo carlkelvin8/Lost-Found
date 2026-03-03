@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Report History · Lost & Found')
+@section('title', 'Report History · NAAP Lost & Found')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">

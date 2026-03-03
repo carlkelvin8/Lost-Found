@@ -1,8 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Create Report · Lost & Found')
+@section('title', 'Create Report · NAAP Lost & Found')
 
 @push('styles')
+<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet">
 <style>
   .page-header-section {
     margin-bottom: var(--space-xl);
@@ -193,8 +194,22 @@
 
       <div class="col-12">
         <label class="form-label">Photos (optional, multiple)</label>
-        <input class="form-control" type="file" name="photos[]" multiple accept="image/*" />
-        <div class="form-text">Upload clear photos for better matching (front/back/details).</div>
+        <div class="photo-upload-section">
+          <div class="upload-options">
+            <button type="button" class="btn btn-primary btn-camera" onclick="initCamera()">
+              <i class="bi bi-camera-fill"></i> Take Photo
+            </button>
+            <span class="upload-divider">or</span>
+            <label for="photoInput" class="btn btn-outline-primary">
+              <i class="bi bi-upload"></i> Choose Files
+            </label>
+            <input id="photoInput" class="form-control d-none" type="file" name="photos[]" multiple accept="image/*" onchange="previewPhotos(this)" />
+          </div>
+          <div class="form-text mt-2">
+            <i class="bi bi-info-circle"></i> Upload clear photos for better matching (front/back/details). Max 5 photos.
+          </div>
+          <div id="photoPreviewContainer" class="mt-3"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -208,4 +223,117 @@
     </button>
   </div>
 </form>
+
+@push('styles')
+<style>
+  .photo-upload-section {
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    text-align: center;
+    transition: all var(--transition-base);
+  }
+
+  .photo-upload-section:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-hover);
+  }
+
+  .upload-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .btn-camera {
+    min-width: 160px;
+    height: 56px;
+    font-size: var(--text-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+  }
+
+  .upload-divider {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 0 var(--space-sm);
+  }
+
+  #photoPreviewContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-md);
+  }
+
+  .photo-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 2px solid var(--border-default);
+    background: var(--bg-tertiary);
+    transition: all var(--transition-base);
+  }
+
+  .photo-preview-item:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .photo-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-number {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--accent-primary);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+  }
+</style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/camera-capture.js') }}"></script>
+<script>
+  function previewPhotos(input) {
+    const container = document.getElementById('photoPreviewContainer');
+    container.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement('div');
+          div.className = 'photo-preview-item fade-in';
+          div.innerHTML = `
+            <img src="${e.target.result}" alt="Photo ${index + 1}">
+            <span class="photo-number">${index + 1}</span>
+          `;
+          container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+</script>
+@endpush
 @endsection

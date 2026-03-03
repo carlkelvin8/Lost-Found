@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Report #{{ $report->id }} · Lost & Found')
+@section('title', 'Report #{{ $report->id }} · NAAP Lost & Found')
 
 @section('content')
 {{-- HEADER --}}
@@ -8,7 +8,7 @@
   <div>
     <h1 class="h4 fw-bold mb-1">Report #{{ $report->id }}</h1>
     <div class="d-flex gap-2 align-items-center flex-wrap">
-      <span class="badge badge-status text-bg-{{ $statusColor }}">{{ strtoupper($report->status) }}</span>
+      <span class="badge badge-status text-bg-{{ $statusColor ?? 'secondary' }}">{{ strtoupper($report->status) }}</span>
       <span class="badge text-bg-{{ $report->report_type==='lost'?'warning':'info' }}">{{ strtoupper($report->report_type) }}</span>
       <span class="text-muted small">System-managed status</span>
     </div>

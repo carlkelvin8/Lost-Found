@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ItemReportRequest;
 use App\Jobs\ProcessImageAnalysis;
 use App\Models\Category;
 use App\Models\ItemReport;
@@ -184,8 +185,16 @@ class ItemReportController extends WebBaseController
         // convenience for blade (so you don’t compute again)
         $canEdit = !$this->isLocked($report->status) && ($isStaff || $isOwner);
         $report->can_edit = $canEdit; // dynamic property for views
+        $statusColor = match ((string) $report->status) {
+            'pending'  => 'secondary',
+            'matched'  => 'primary',
+            'claimed'  => 'warning',
+            'returned' => 'success',
+            'archived' => 'dark',
+            default    => 'secondary',
+        };
 
-        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner'));
+        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner', 'statusColor'));
     }
 
     /* =========================

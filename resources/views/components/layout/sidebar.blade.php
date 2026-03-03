@@ -9,49 +9,58 @@
   <div class="sidebar-content">
     <!-- Main Navigation -->
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Main</div>
+      <div class="sidebar-section-title">Main Menu</div>
       
       <a href="{{ route('dashboard') }}" class="sidebar-item {{ $currentRoute === 'dashboard' ? 'active' : '' }}">
-        <i class="bi bi-speedometer2"></i>
-        <span>Dashboard</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-grid-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Dashboard</span>
       </a>
 
       <a href="{{ route('reports.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'reports.') ? 'active' : '' }}">
-        <i class="bi bi-inbox"></i>
-        <span>Reports</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-inbox-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Reports</span>
         @if(isset($pendingReportsCount) && $pendingReportsCount > 0)
           <span class="sidebar-badge">{{ $pendingReportsCount }}</span>
         @endif
       </a>
 
       <a href="{{ route('claims.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'claims.') ? 'active' : '' }}">
-        <i class="bi bi-person-check"></i>
-        <span>Claims</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Claims</span>
       </a>
 
-      <a href="{{ route('notifications.index') }}" class="sidebar-item sidebar-item-notification {{ str_starts_with($currentRoute, 'notifications.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon-wrapper">
-          <i class="bi bi-bell"></i>
+      <a href="{{ route('notifications.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'notifications.') ? 'active' : '' }}">
+        <div class="sidebar-item-icon sidebar-item-icon-notification">
+          <i class="bi bi-bell-fill"></i>
           <span class="notification-dot"></span>
         </div>
-        <span>Notifications</span>
-        <span class="sidebar-badge sidebar-badge-notification">3</span>
+        <span class="sidebar-item-text">Notifications</span>
       </a>
     </div>
 
     @if($isStaff)
     <!-- Staff Section -->
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Staff</div>
+      <div class="sidebar-section-title">Staff Tools</div>
       
       <a href="{{ route('matches.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'matches.') ? 'active' : '' }}">
-        <i class="bi bi-diagram-2"></i>
-        <span>Matches</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-diagram-2-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Matches</span>
       </a>
 
       <a href="{{ route('users.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'users.') ? 'active' : '' }}">
-        <i class="bi bi-people"></i>
-        <span>Users</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Users</span>
       </a>
     </div>
 
@@ -60,29 +69,39 @@
       <div class="sidebar-section-title">Management</div>
       
       <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}">
-        <i class="bi bi-diagram-3"></i>
-        <span>Departments</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Departments</span>
       </a>
 
       <a href="{{ route('categories.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'categories.') ? 'active' : '' }}">
-        <i class="bi bi-tags"></i>
-        <span>Categories</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-tags-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Categories</span>
       </a>
 
       <a href="{{ route('locations.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'locations.') ? 'active' : '' }}">
-        <i class="bi bi-geo-alt"></i>
-        <span>Locations</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-geo-alt-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Locations</span>
       </a>
 
       @if(in_array('admin', $roleNames, true))
       <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}">
-        <i class="bi bi-shield"></i>
-        <span>Roles</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-shield-fill"></i>
+        </div>
+        <span class="sidebar-item-text">Roles</span>
       </a>
 
       <a href="{{ route('activity_logs.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'activity_logs.') ? 'active' : '' }}">
-        <i class="bi bi-clock-history"></i>
-        <span>Activity Logs</span>
+        <div class="sidebar-item-icon">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <span class="sidebar-item-text">Activity Logs</span>
       </a>
       @endif
     </div>
@@ -90,20 +109,24 @@
 
     <!-- Quick Actions -->
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Quick Actions</div>
-      
-      <a href="{{ route('reports.create') }}" class="sidebar-item sidebar-item-primary">
-        <i class="bi bi-plus-circle"></i>
-        <span>New Report</span>
+      <a href="{{ route('reports.create') }}" class="sidebar-item-cta">
+        <i class="bi bi-plus-lg"></i>
+        <span>Create New Report</span>
       </a>
     </div>
   </div>
 
   <!-- Sidebar Footer -->
   <div class="sidebar-footer">
-    <a href="{{ route('profile.edit') }}" class="sidebar-footer-item">
-      <i class="bi bi-gear"></i>
-      <span>Settings</span>
+    <a href="{{ route('profile.edit') }}" class="sidebar-footer-link">
+      <div class="sidebar-footer-icon">
+        <i class="bi bi-gear-fill"></i>
+      </div>
+      <div class="sidebar-footer-text">
+        <div class="sidebar-footer-label">Settings</div>
+        <div class="sidebar-footer-sublabel">Manage your account</div>
+      </div>
+      <i class="bi bi-chevron-right sidebar-footer-arrow"></i>
     </a>
   </div>
 </aside>
@@ -112,13 +135,17 @@
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <style>
+/* ============================================
+   MODERN SIDEBAR DESIGN - BLUE GRADIENT THEME
+   ============================================ */
+
 .main-sidebar {
   position: fixed;
   top: 70px;
   left: 0;
-  width: 260px;
+  width: 280px;
   height: calc(100vh - 70px);
-  background: var(--bg-primary);
+  background: white;
   border-right: 1px solid var(--border-default);
   display: flex;
   flex-direction: column;
@@ -130,44 +157,49 @@
 
 .sidebar-content {
   flex: 1;
-  padding: var(--space-lg) 0;
+  padding: var(--space-xl) var(--space-md);
 }
 
+/* Section Styling */
 .sidebar-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-2xl);
 }
 
 .sidebar-section-title {
-  padding: 0 var(--space-lg);
-  margin-bottom: var(--space-sm);
-  font-size: 0.7rem;
+  padding: 0 var(--space-md);
+  margin-bottom: var(--space-md);
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
+/* Sidebar Items */
 .sidebar-item {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-md) var(--space-md);
+  margin-bottom: var(--space-xs);
   color: var(--text-secondary);
   text-decoration: none;
   font-size: var(--text-sm);
   font-weight: 500;
-  transition: var(--transition-fast);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
   position: relative;
 }
 
 .sidebar-item:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 .sidebar-item.active {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(58, 203, 235, 0.1) 0%, rgba(0, 65, 199, 0.1) 100%);
+  color: #0041C7;
   font-weight: 600;
 }
 
@@ -175,72 +207,77 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 3px;
-  background: var(--text-primary);
-}
-
-.sidebar-item i {
-  font-size: 1.1rem;
-  width: 20px;
-  text-align: center;
-}
-
-.sidebar-item span {
-  flex: 1;
-}
-
-.sidebar-badge {
-  padding: 0.125rem 0.5rem;
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  line-height: 1;
-  min-width: 20px;
-  text-align: center;
-}
-
-.sidebar-badge-notification {
-  background: #ef4444;
-  color: #ffffff;
-  animation: pulse-badge 2s ease-in-out infinite;
-}
-
-@keyframes pulse-badge {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-}
-
-.sidebar-item-notification {
-  position: relative;
-}
-
-.sidebar-item-icon-wrapper {
-  position: relative;
-  width: 20px;
   height: 20px;
+  background: linear-gradient(180deg, #3ACBEB 0%, #0041C7 100%);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Icon Styling */
+.sidebar-item-icon {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.sidebar-item.active .sidebar-item-icon {
+  background: #0041C7;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 65, 199, 0.25);
+}
+
+.sidebar-item-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* Badge Styling */
+.sidebar-badge {
+  padding: 0.25rem 0.5rem;
+  background: #0041C7;
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  line-height: 1;
+  min-width: 22px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 65, 199, 0.3);
+}
+
+.sidebar-item.active .sidebar-badge {
+  background: linear-gradient(135deg, #1CA3DE 0%, #0160C9 100%);
+  color: white;
+}
+
+/* Notification Dot */
+.sidebar-item-icon-notification {
+  position: relative;
 }
 
 .notification-dot {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 6px;
+  right: 6px;
   width: 8px;
   height: 8px;
   background: #ef4444;
-  border: 2px solid var(--bg-primary);
+  border: 2px solid white;
   border-radius: 50%;
   animation: pulse-dot 2s ease-in-out infinite;
 }
@@ -254,71 +291,132 @@
   }
 }
 
-.sidebar-item-notification:hover .notification-dot {
+.sidebar-item:hover .notification-dot {
   animation: none;
 }
 
-.sidebar-item-notification.active .notification-dot {
-  border-color: var(--bg-tertiary);
+.sidebar-item.active .notification-dot {
+  border-color: rgba(58, 203, 235, 0.3);
 }
 
-.sidebar-item-primary {
-  margin: 0 var(--space-md);
-  border-radius: var(--radius-md);
-  background: var(--text-primary);
-  color: var(--bg-primary);
+/* Call-to-Action Button */
+.sidebar-item-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: #0041C7;
+  color: white;
+  text-decoration: none;
+  font-size: var(--text-sm);
   font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 65, 199, 0.25);
 }
 
-.sidebar-item-primary:hover {
-  background: var(--text-secondary);
-  color: var(--bg-primary);
+.sidebar-item-cta:hover {
+  background: #0160C9;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 65, 199, 0.35);
 }
 
+.sidebar-item-cta i {
+  font-size: 1.125rem;
+}
+
+/* Sidebar Footer */
 .sidebar-footer {
   padding: var(--space-lg);
   border-top: 1px solid var(--border-default);
+  background: var(--bg-secondary);
 }
 
-.sidebar-footer-item {
+.sidebar-footer-link {
   display: flex;
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: var(--text-sm);
-  font-weight: 500;
   border-radius: var(--radius-md);
-  transition: var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
-.sidebar-footer-item:hover {
-  background: var(--bg-hover);
+.sidebar-footer-link:hover {
+  background: white;
   color: var(--text-primary);
 }
 
-.sidebar-footer-item i {
-  font-size: 1.1rem;
+.sidebar-footer-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
 }
 
+.sidebar-footer-link:hover .sidebar-footer-icon {
+  background: rgba(0, 65, 199, 0.1);
+  color: #0041C7;
+}
+
+.sidebar-footer-text {
+  flex: 1;
+}
+
+.sidebar-footer-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.sidebar-footer-sublabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.sidebar-footer-arrow {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-footer-link:hover .sidebar-footer-arrow {
+  transform: translateX(2px);
+  color: #0041C7;
+}
+
+/* Sidebar Overlay */
 .sidebar-overlay {
   position: fixed;
   top: 70px;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
   z-index: 998;
   opacity: 0;
   visibility: hidden;
-  transition: var(--transition-base);
+  transition: all var(--transition-base);
 }
 
 /* Mobile Styles */
 @media (max-width: 991px) {
   .main-sidebar {
     transform: translateX(-100%);
+    box-shadow: var(--shadow-xl);
   }
 
   .main-sidebar.show {
@@ -331,7 +429,7 @@
   }
 }
 
-/* Scrollbar for sidebar */
+/* Scrollbar Styling */
 .main-sidebar::-webkit-scrollbar {
   width: 6px;
 }
@@ -347,6 +445,13 @@
 
 .main-sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
+}
+
+/* Update content-wrap margin for new sidebar width */
+@media (min-width: 992px) {
+  .content-wrap {
+    margin-left: 280px;
+  }
 }
 </style>
 
