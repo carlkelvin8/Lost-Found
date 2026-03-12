@@ -50,29 +50,38 @@ class AuthWebController extends WebBaseController
                 'user_id' => $user->id,
                 'full_name' => $data['full_name'],
                 'school_id_number' => $data['school_id_number'] ?? null,
-                'department_id' => $data['department_id'] ?? null,
+                'department_id' => $data['department_name'] ?? null,
                 'contact_no' => $data['contact_no'] ?? null,
+                'user_type' => $data['user_type'], // Save the selected user type
+                'address' => $data['address'] ?? null,
             ]);
 
-            // DEFAULT ROLE = STUDENT
-            $studentRole = Role::where('name', 'student')->first();
-            if ($studentRole) {
-                $user->roles()->syncWithoutDetaching([$studentRole->id]);
-            }
+            // ASSIGN ROLE BASED ON SELECTION
+            $roleMap = [
+                'admin' => 'admin',
+                'faculty' => 'osa', // Treat faculty as staff (osa)
+                'student' => 'student',
+            ];
+            
+            $roleName = $roleMap[$data['user_type']] ?? 'student';
+            $role = Role::firstOrCreate(['name' => $roleName]);
+            
+            $user->roles()->syncWithoutDetaching([$role->id]);
 
             $this->audit($request, 'auth.register', 'users', $user->id, [
-                'role' => 'student'
+                'role' => $roleName,
+                'user_type' => $data['user_type']
             ]);
 
             return $user;
         });
 
-        // Send email verification notification
-        $user->sendEmailVerificationNotification();
+        // Send email verification notification (commented out for testing)
+        // $user->sendEmailVerificationNotification();
 
         return redirect()
             ->route('login')
-            ->with('success', 'Account created successfully. Please check your email to verify your account.');
+            ->with('success', 'Account created successfully. You can now log in.');
     }
 
     /* =========================

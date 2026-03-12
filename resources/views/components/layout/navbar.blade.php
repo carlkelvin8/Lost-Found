@@ -19,18 +19,24 @@
 
     <!-- Search Bar (Desktop) -->
     <div class="navbar-search">
-      <div class="search-wrapper">
+      <form class="search-wrapper" id="navbarSearchForm" method="GET" action="{{ route('reports.index') }}">
         <i class="bi bi-search"></i>
-        <input type="text" class="search-input" placeholder="Search reports, claims...">
+        <input type="text" class="search-input" name="q" placeholder="Search reports, claims..." autocomplete="off">
         <kbd class="search-kbd">Ctrl K</kbd>
-      </div>
+      </form>
     </div>
 
     <!-- Right Section -->
     <div class="navbar-actions">
       <!-- Notifications -->
+      @php
+        $unreadCount = $user ? \App\Models\Notification::where('user_id', $user->id)->whereNull('read_at')->count() : 0;
+      @endphp
       <a href="{{ route('notifications.index') }}" class="navbar-icon-btn" title="Notifications">
         <i class="bi bi-bell"></i>
+        @if($unreadCount > 0)
+          <span class="notification-badge">{{ $unreadCount }}</span>
+        @endif
       </a>
 
       <!-- User Menu -->
@@ -102,6 +108,8 @@
   border-bottom: 1px solid var(--border-default);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   z-index: 1000;
+  width: 100%;
+  overflow: visible;
 }
 
 .navbar-container {
@@ -111,12 +119,16 @@
   gap: var(--space-lg);
   padding: 0 var(--space-xl);
   max-width: 100%;
+  width: 100%;
+  overflow: visible;
 }
 
 .navbar-brand-section {
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  width: 280px;
+  flex-shrink: 0;
 }
 
 .sidebar-toggle {
@@ -161,6 +173,7 @@
 .navbar-search {
   flex: 1;
   max-width: 500px;
+  min-width: 200px;
 }
 
 .search-wrapper {
@@ -211,6 +224,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  overflow: visible;
 }
 
 .navbar-icon-btn {
@@ -251,6 +265,7 @@
 
 .navbar-user-menu {
   position: relative;
+  z-index: 1001;
 }
 
 .user-menu-trigger {
@@ -291,7 +306,7 @@
 }
 
 .user-info {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
@@ -321,14 +336,19 @@
   box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
+  transform: translateY(-10px) translateX(0);
+  transform-origin: top right;
   transition: var(--transition-fast);
+  z-index: 1002;
+  pointer-events: none;
+  display: block;
 }
 
 .user-dropdown.show {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .dropdown-header {
@@ -406,6 +426,12 @@
     padding: 0.375rem;
   }
 }
+
+@media (max-width: 991px) {
+  .navbar-brand-section {
+    width: auto;
+  }
+}
 </style>
 
 <script>
@@ -413,18 +439,28 @@ document.addEventListener('DOMContentLoaded', function() {
   const userMenuTrigger = document.getElementById('userMenuTrigger');
   const userDropdown = document.getElementById('userDropdown');
   const sidebarToggle = document.getElementById('sidebarToggle');
+  const navbarSearchForm = document.getElementById('navbarSearchForm');
+  const searchInput = document.querySelector('.search-input');
 
   // User menu toggle
   if (userMenuTrigger && userDropdown) {
     userMenuTrigger.addEventListener('click', function(e) {
       e.stopPropagation();
       userDropdown.classList.toggle('show');
+      const userRole = userMenuTrigger.querySelector('.user-role');
+      if (userRole) {
+        userRole.style.display = userDropdown.classList.contains('show') ? 'none' : 'block';
+      }
     });
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
       if (!userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
         userDropdown.classList.remove('show');
+        const userRole = userMenuTrigger.querySelector('.user-role');
+        if (userRole) {
+          userRole.style.display = 'block';
+        }
       }
     });
   }
@@ -433,8 +469,32 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sidebarToggle) {
     sidebarToggle.addEventListener('click', function() {
       const sidebar = document.getElementById('mainSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
       if (sidebar) {
         sidebar.classList.toggle('show');
+        if (overlay) {
+          overlay.classList.toggle('show');
+        }
+      }
+    });
+  }
+
+  // Ctrl+K Search Shortcut
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      if (searchInput) {
+        searchInput.focus();
+      }
+    }
+  });
+
+  // Search form submission
+  if (navbarSearchForm && searchInput) {
+    navbarSearchForm.addEventListener('submit', function(e) {
+      const query = searchInput.value.trim();
+      if (!query) {
+        e.preventDefault();
       }
     });
   }

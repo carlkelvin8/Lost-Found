@@ -29,8 +29,8 @@ class ReportPhotoController extends WebBaseController
         ]);
 
         $path = $data['photo']->store('report_photos', 'public');
-        // Store relative path so asset() helper works with any domain/port
-        $url = 'storage/' . $path;
+        // Store full URL path for the new public/storage setup
+        $url = '/public/storage/' . $path;
 
         ReportPhoto::create([
             'report_id' => $report->id,
@@ -61,7 +61,8 @@ class ReportPhotoController extends WebBaseController
 
         // Delete file from storage if it exists
         if ($photo->photo_url) {
-            $path = str_replace('storage/', '', $photo->photo_url);
+            // Handle both old format (storage/...) and new format (/public/storage/...)
+            $path = str_replace(['/public/storage/', 'storage/'], '', $photo->photo_url);
             Storage::disk('public')->delete($path);
         }
 

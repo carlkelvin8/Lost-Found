@@ -178,7 +178,7 @@
 
         .stats-grid {
             margin-top: 3rem;
-            display: grid;
+            display: none;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
         }
@@ -191,6 +191,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
+            display: none;
         }
 
         .stat-item:hover {
@@ -219,9 +220,10 @@
         .auth-form-side {
             background: #ffffff;
             display: flex;
-            align-items: center;
+            align-items: flex-start; /* changed from center */
             justify-content: center;
-            padding: 3rem;
+            padding: 2rem;
+            padding-top: 4rem;
             overflow-y: auto;
             position: relative;
         }
@@ -324,17 +326,6 @@
             font-weight: 600;
             color: #000000;
             margin-bottom: 0.625rem;
-        }
-
-        .label-badge {
-            display: inline-block;
-            background: #e5e7eb;
-            color: #6c757d;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.125rem 0.5rem;
-            border-radius: 4px;
-            margin-left: 0.5rem;
         }
 
         .form-control {
@@ -548,21 +539,6 @@
             <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Lost and Found Management System</p>
             <p style="font-size: 0.9375rem; opacity: 0.9; margin-bottom: 1.5rem;">Piccio Garden, Villamor, Pasay City, Philippines</p>
             <p style="font-size: 1rem;">Create your account to report and track lost items on campus.</p>
-            
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">1K+</div>
-                    <div class="stat-label">Items Found</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Active Users</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">95%</div>
-                    <div class="stat-label">Success Rate</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -661,8 +637,18 @@
                         <i class="bi bi-info-circle"></i>
                     </div>
                     <div class="section-title">
-                        Additional Details <span class="label-badge">Optional</span>
+                        Additional Details
                     </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">I am a</label>
+                    <select class="form-control" name="user_type" required>
+                        <option value="" selected disabled>Select user type</option>
+                        <option value="student" {{ old('user_type') == 'student' ? 'selected' : '' }}>Student</option>
+                        <option value="faculty" {{ old('user_type') == 'faculty' ? 'selected' : '' }}>Faculty/Staff</option>
+                        <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>Administrator</option>
+                    </select>
                 </div>
 
                 <div class="form-row">
@@ -680,15 +666,17 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Department ID</label>
-                        <input 
-                            class="form-control @error('department_id') is-invalid @enderror" 
-                            type="number" 
-                            name="department_id" 
-                            value="{{ old('department_id') }}"
-                            placeholder="Enter number"
+                        <label class="form-label">Department</label>
+                        <select 
+                            class="form-control @error('department_name') is-invalid @enderror" 
+                            name="department_name"
                         >
-                        @error('department_id')
+                            <option value="" selected disabled>Select department</option>
+                            <option value="ICS" {{ old('department_name') == 'ICS' ? 'selected' : '' }}>ICS</option>
+                            <option value="ILAS" {{ old('department_name') == 'ILAS' ? 'selected' : '' }}>ILAS</option>
+                            <option value="INET" {{ old('department_name') == 'INET' ? 'selected' : '' }}>INET</option>
+                        </select>
+                        @error('department_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -705,6 +693,11 @@
                     @error('contact_no')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <input class="form-control" name="address" value="{{ old('address') }}" placeholder="Enter your full address">
                 </div>
 
                 <button class="btn btn-primary" type="submit">

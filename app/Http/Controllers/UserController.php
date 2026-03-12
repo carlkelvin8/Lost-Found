@@ -100,8 +100,9 @@ class UserController extends WebBaseController
 
         $user = User::with(['profile','roles'])->findOrFail($id);
         $reportsCount = ItemReport::where('reporter_user_id', $id)->count();
+        $claims = $user->claims()->with(['report'])->orderByDesc('id')->get();
 
-        return view('users.show', compact('user','reportsCount'));
+        return view('users.show', compact('user','reportsCount','claims'));
     }
 
     public function edit(Request $request, int $id)

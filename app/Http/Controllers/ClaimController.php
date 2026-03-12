@@ -233,6 +233,19 @@ class ClaimController extends WebBaseController
                 (int) $this->user()->id,
                 'Claim approved'
             );
+
+            // Notify claimant that their claim was approved
+            $this->notify(
+                (int) $claim->claimant_user_id,
+                'claim',
+                'Claim approved',
+                'Your claim for report #' . $report->id . ' has been approved.',
+                [
+                    'report_id' => $report->id,
+                    'claim_id' => $claim->id,
+                    'status' => 'approved',
+                ]
+            );
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Approved');
@@ -266,6 +279,20 @@ class ClaimController extends WebBaseController
 
             $newStatus = $report->matched_report_id ? 'matched' : 'pending';
             $report->update(['status' => $newStatus]);
+
+            // Notify claimant that their claim was rejected
+            $this->notify(
+                (int) $claim->claimant_user_id,
+                'claim',
+                'Claim rejected',
+                'Your claim for report #' . $report->id . ' has been rejected.' . ($data['note'] ? ' Reason: ' . $data['note'] : ''),
+                [
+                    'report_id' => $report->id,
+                    'claim_id' => $claim->id,
+                    'status' => 'rejected',
+                    'note' => $data['note'] ?? null,
+                ]
+            );
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Rejected');

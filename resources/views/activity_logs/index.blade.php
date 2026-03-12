@@ -85,5 +85,5 @@
   </div>
 </div>
 
-<div class="mt-3">{{ $logs->links() }}</div>
+<div class="mt-3">{{ $logs->links('pagination::simple-bootstrap-5') }}</div>
 @endsection

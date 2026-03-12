@@ -17,6 +17,7 @@ class UserProfile extends Model
         'user_type',
         'department_id',
         'contact_no',
+        'address',
         'avatar_url'
     ];
 

@@ -26,10 +26,11 @@ class UserProfileController extends WebBaseController
         $u = $this->user();
 
         $data = $request->validate([
-            'full_name' => ['required','string','max:190'],
+            'full_name' => ['required','string','min:2','max:190'],
             'school_id_number' => ['nullable','string','max:60'],
-            'department_id' => ['nullable','integer','exists:departments,id'],
+            'department_id' => ['nullable','integer'],
             'contact_no' => ['nullable','string','max:40'],
+            'address' => ['nullable','string','max:255'],
             'avatar' => ['nullable','file','mimes:jpg,jpeg,png,webp','max:4096'],
         ]);
 
@@ -40,6 +41,7 @@ class UserProfileController extends WebBaseController
                 'school_id_number' => $data['school_id_number'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
                 'contact_no' => $data['contact_no'] ?? null,
+                'address' => $data['address'] ?? null,
             ];
 
             if (!empty($data['avatar'] ?? null)) {
@@ -56,9 +58,7 @@ class UserProfileController extends WebBaseController
                 $u->profile->update($payload);
             } else {
                 $payload['user_id'] = $u->id;
-
                 $payload['user_type'] = 'student';
-
                 UserProfile::create($payload);
             }
 
@@ -66,7 +66,7 @@ class UserProfileController extends WebBaseController
                 $request,
                 'profiles.update_me',
                 'user_profiles',
-                (int) $u->id
+                $u->id
             );
         });
 

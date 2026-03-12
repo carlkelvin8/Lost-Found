@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- White background for better visibility at small sizes -->
+  <rect width="256" height="256" fill="white"/>
+  
+  <!-- Blue circle background -->
+  <circle cx="128" cy="128" r="120" fill="#0041C7"/>
+  
+  <!-- Simple plane icon (NAAP - Aviation) -->
+  <g transform="translate(128, 128)">
+    <!-- Fuselage -->
+    <rect x="-8" y="-40" width="16" height="80" fill="white" rx="8"/>
+    
+    <!-- Wings -->
+    <rect x="-60" y="-12" width="120" height="24" fill="white" rx="8"/>
+    
+    <!-- Tail -->
+    <polygon points="0,-50 -15,-65 15,-65" fill="white"/>
+  </g>
+</svg>

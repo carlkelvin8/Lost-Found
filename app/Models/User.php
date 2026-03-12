@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable // implements MustVerifyEmail
 {
     use Notifiable;
 
@@ -51,5 +51,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function reports()
     {
         return $this->hasMany(ItemReport::class, 'reporter_user_id');
+    }
+
+    public function claims()
+    {
+        return $this->hasMany(Claim::class, 'claimant_user_id');
     }
 }

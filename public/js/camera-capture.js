@@ -59,13 +59,13 @@ class CameraCapture {
             <div class="camera-modal-content">
                 <div class="camera-header">
                     <h3><i class="bi bi-camera"></i> Take Photo</h3>
-                    <button class="camera-close" onclick="cameraCapture.close()">
+                    <button class="camera-close" onclick="cameraCapture.close()" title="Cancel">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
                 
                 <div class="camera-body">
-                    <div class="camera-preview">
+                    <div class="camera-preview" id="cameraPreviewContainer">
                         <video id="cameraVideo" autoplay playsinline></video>
                         <canvas id="cameraCanvas" style="display: none;"></canvas>
                         
@@ -79,7 +79,7 @@ class CameraCapture {
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
                         
-                        <button class="btn-camera-capture" onclick="cameraCapture.capture()">
+                        <button class="btn-camera-capture" onclick="cameraCapture.capture()" title="Take Photo">
                             <div class="capture-ring">
                                 <div class="capture-button"></div>
                             </div>
@@ -94,9 +94,14 @@ class CameraCapture {
                     <div class="camera-gallery" id="cameraGallery" style="display: none;">
                         <div class="gallery-header">
                             <h4>Captured Photos (<span id="galleryCount">0</span>/${this.options.maxPhotos})</h4>
-                            <button class="btn btn-sm btn-primary" onclick="cameraCapture.done()">
-                                <i class="bi bi-check-lg"></i> Done
-                            </button>
+                            <div class="gallery-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="cameraCapture.backToCamera()">
+                                    <i class="bi bi-arrow-left"></i> Back
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="cameraCapture.done()">
+                                    <i class="bi bi-check-lg"></i> Done
+                                </button>
+                            </div>
                         </div>
                         <div class="gallery-grid" id="galleryGrid"></div>
                     </div>
@@ -182,6 +187,8 @@ class CameraCapture {
 
     viewGallery() {
         const gallery = this.modal.querySelector('#cameraGallery');
+        const preview = this.modal.querySelector('#cameraPreviewContainer');
+        const controls = this.modal.querySelector('.camera-controls');
         const grid = this.modal.querySelector('#galleryGrid');
         
         // Clear grid
@@ -193,14 +200,19 @@ class CameraCapture {
             item.className = 'gallery-item';
             item.innerHTML = `
                 <img src="${photo.url}" alt="Photo ${index + 1}">
-                <button class="btn-delete-photo" onclick="cameraCapture.deletePhoto(${photo.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
+                <div class="gallery-item-actions">
+                    <button class="btn-delete-photo" onclick="cameraCapture.deletePhoto(${photo.id})" title="Retake">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
             `;
             grid.appendChild(item);
         });
         
-        gallery.style.display = 'block';
+        // Hide camera preview and controls, show gallery
+        preview.style.display = 'none';
+        controls.style.display = 'none';
+        gallery.style.display = 'flex';
         this.updatePhotoCount();
     }
 
@@ -211,6 +223,17 @@ class CameraCapture {
             this.capturedPhotos.splice(index, 1);
             this.viewGallery();
         }
+    }
+
+    backToCamera() {
+        const gallery = this.modal.querySelector('#cameraGallery');
+        const preview = this.modal.querySelector('#cameraPreviewContainer');
+        const controls = this.modal.querySelector('.camera-controls');
+        
+        // Show camera preview and controls, hide gallery
+        preview.style.display = 'block';
+        controls.style.display = 'flex';
+        gallery.style.display = 'none';
     }
 
     async switchCamera() {
@@ -252,14 +275,7 @@ class CameraCapture {
         if (fileInput) {
             const dataTransfer = new DataTransfer();
             
-            // Add existing files
-            if (fileInput.files) {
-                Array.from(fileInput.files).forEach(file => {
-                    dataTransfer.items.add(file);
-                });
-            }
-            
-            // Add captured photos
+            // Add captured photos ONLY (don't add existing files)
             this.capturedPhotos.forEach((photo, index) => {
                 const file = new File([photo.blob], `camera-photo-${Date.now()}-${index}.jpg`, {
                     type: 'image/jpeg',
@@ -270,12 +286,9 @@ class CameraCapture {
             
             fileInput.files = dataTransfer.files;
             
-            // Trigger change event
+            // Trigger change event to update preview
             const event = new Event('change', { bubbles: true });
             fileInput.dispatchEvent(event);
-            
-            // Show preview
-            this.showPreview(fileInput);
         }
 
         this.close();

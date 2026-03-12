@@ -9,7 +9,8 @@
   /* Page Container */
   .profile-page {
     max-width: 1200px;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: 0;
     padding: var(--space-2xl) var(--space-lg);
   }
 
@@ -270,6 +271,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
+  }
+
+  @media (max-width: 992px) {
+    .profile-page {
+      margin: 0 auto;
+    }
   }
 
   .form-section {
@@ -594,7 +601,12 @@
             <div class="user-email">{{ $u->email }}</div>
             <span class="user-type-badge">
               <i class="bi bi-person-badge"></i>
-              {{ $profile?->user_type ?? 'Student' }}
+              @php
+                $roleNames = $u->roles()->pluck('name')->toArray();
+                $isAdmin = in_array('admin', $roleNames) || in_array('osa', $roleNames);
+                $displayRole = $isAdmin ? 'Admin' : ($profile?->user_type ?? 'Student');
+              @endphp
+              {{ ucfirst($displayRole) }}
             </span>
           </div>
         </div>
@@ -637,7 +649,11 @@
             <div class="form-group">
               <label class="form-label">User Type</label>
               <input class="form-control" 
-                     value="{{ strtoupper($profile?->user_type ?? 'Student') }}" 
+                     value="@php
+                       $roleNames = $u->roles()->pluck('name')->toArray();
+                       $isAdmin = in_array('admin', $roleNames) || in_array('osa', $roleNames);
+                       echo $isAdmin ? 'ADMIN' : strtoupper($profile?->user_type ?? 'STUDENT');
+                     @endphp" 
                      disabled>
               <div class="form-text">
                 <i class="bi bi-lock"></i> User type cannot be changed
@@ -690,6 +706,15 @@
               </div>
             </div>
           </div>
+
+          <div class="form-row form-group-full">
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input class="form-control" name="address"
+                     value="{{ old('address',$profile?->address) }}"
+                     placeholder="Enter your full address">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -717,5 +742,21 @@
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="{{ asset('js/image-cropper.js') }}"></script>
+<script>
+  function handleAvatarChange(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const preview = document.getElementById('avatarPreview');
+      preview.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview" class="avatar-preview-img">`;
+      preview.style.display = 'block';
+    };
+
+    reader.readAsDataURL(file);
+  }
+</script>
 @endpush
 @endsection

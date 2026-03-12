@@ -34,6 +34,8 @@ class ItemReportController extends WebBaseController
     {
         if (!$this->user()) return redirect()->route('login');
 
+        $isStaff = $this->hasAnyRole(['admin', 'osa']);
+
         $type       = (string) $request->query('type', '');
         $status     = (string) $request->query('status', '');
         $categoryId = (string) $request->query('category_id', '');
@@ -47,7 +49,6 @@ class ItemReportController extends WebBaseController
         if ($categoryId !== '') $query->where('category_id', (int) $categoryId);
         if ($locationId !== '') $query->where('location_id', (int) $locationId);
 
-        $isStaff = $this->hasAnyRole(['admin', 'osa']);
         if (!$isStaff) {
             $query->where('reporter_user_id', (int) $this->user()->id);
         }
@@ -71,6 +72,26 @@ class ItemReportController extends WebBaseController
         return view('reports.index', compact(
             'reports', 'type', 'status', 'categoryId', 'locationId', 'q', 'categories', 'locations', 'isStaff'
         ));
+    }
+
+    public function gallery(Request $request)
+    {
+        $query = ItemReport::with('photos', 'category', 'location')
+            ->whereIn('status', ['pending', 'matched'])
+            ->orderByDesc('created_at');
+
+        if ($request->filled('type')) $query->where('report_type', $request->type);
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function($sub) use ($q) {
+                $sub->where('item_name', 'like', "%$q%")
+                    ->orWhere('item_description', 'like', "%$q%");
+            });
+        }
+
+        $reports = $query->paginate(24); // Grid view
+
+        return view('gallery.index', compact('reports'));
     }
 
     /* =========================
@@ -682,8 +703,8 @@ class ItemReportController extends WebBaseController
     private function storeReportPhoto(int $reportId, $file): void
     {
         $path = $file->store('report_photos', 'public');
-        // Store relative path so asset() helper works with any domain/port
-        $url  = 'storage/' . $path;
+        // Store full URL path for the new public/storage setup
+        $url  = '/public/storage/' . $path;
 
         ReportPhoto::create([
             'report_id'  => $reportId,
@@ -697,7 +718,7 @@ class ItemReportController extends WebBaseController
     {
         if (!$url) return;
 
-        // If url is like /storage/report_photos/xxx.jpg or http://host/storage/...
+        // If url is like /public/storage/report_photos/xxx.jpg or /storage/report_photos/xxx.jpg
         $pos = strpos($url, '/storage/');
         if ($pos === false) return;
 

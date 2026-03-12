@@ -18,6 +18,13 @@
         <span class="sidebar-item-text">Dashboard</span>
       </a>
 
+      <a href="{{ route('gallery.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'gallery.') ? 'active' : '' }}">
+        <div class="sidebar-item-icon">
+          <i class="bi bi-images"></i>
+        </div>
+        <span class="sidebar-item-text">Items Gallery</span>
+      </a>
+
       <a href="{{ route('reports.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'reports.') ? 'active' : '' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-inbox-fill"></i>
@@ -298,6 +305,29 @@
 .sidebar-item.active .notification-dot {
   border-color: rgba(58, 203, 235, 0.3);
 }
+
+  @media (max-width: 992px) {
+    .main-sidebar {
+      transform: translateX(-100%);
+    }
+    .main-sidebar.show {
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 998;
+  }
+  .sidebar-overlay.show {
+    display: block;
+  }
 
 /* Call-to-Action Button */
 .sidebar-item-cta {

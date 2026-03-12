@@ -91,4 +91,63 @@
     </div>
   </div>
 </div>
+
+<!-- Claims Section -->
+<div class="mt-4">
+  <h2 class="h5 fw-bold mb-3">Claims</h2>
+  @if($claims->count() > 0)
+    <div class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Report</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Reviewed</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($claims as $claim)
+              <tr>
+                <td>#{{ $claim->id }}</td>
+                <td>
+                  <a href="{{ route('reports.show', $claim->report_id) }}" class="text-decoration-none">
+                    Report #{{ $claim->report_id }}
+                  </a>
+                </td>
+                <td>
+                  @php
+                    $statusColors = [
+                      'pending' => 'warning',
+                      'approved' => 'success',
+                      'rejected' => 'danger',
+                      'cancelled' => 'secondary'
+                    ];
+                    $color = $statusColors[$claim->status] ?? 'secondary';
+                  @endphp
+                  <span class="badge text-bg-{{ $color }}">{{ ucfirst($claim->status) }}</span>
+                </td>
+                <td>{{ $claim->created_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                <td>{{ $claim->reviewed_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                <td class="text-end">
+                  <a href="{{ route('claims.show', $claim->id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  @else
+    <div class="alert alert-info d-flex align-items-start gap-2" role="alert">
+      <i class="bi bi-info-circle"></i>
+      <div>No claims submitted by this user</div>
+    </div>
+  @endif
+</div>
 @endsection

@@ -41,11 +41,15 @@ class RegisterRequest extends FormRequest
                 'max:190',
                 'regex:/^[a-zA-Z\s\-\.\']+$/',
             ],
-            'department_id' => [
+            'user_type' => [
+                'required',
+                'string',
+                'in:student,faculty,admin',
+            ],
+            'department_name' => [
                 'nullable',
-                'integer',
-                'exists:departments,id',
-                'min:1',
+                'string',
+                'in:ICS,ILAS,INET',
             ],
             'school_id_number' => [
                 'nullable',
@@ -58,6 +62,11 @@ class RegisterRequest extends FormRequest
                 'string',
                 'max:40',
                 'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/',
+            ],
+            'address' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
         ];
     }

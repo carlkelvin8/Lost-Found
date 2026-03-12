@@ -14,11 +14,17 @@ use App\Http\Controllers\ReportMatchController;
 use App\Http\Controllers\ReportPhotoController;
 use App\Http\Controllers\ReportStatusHistoryController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
+
+// Storage file serving (for Hostinger without symlink support)
+Route::get('/storage/{path}', [StorageController::class, 'serve'])
+    ->where('path', '.*')
+    ->name('storage.serve');
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthWebController::class, 'login'])
@@ -62,6 +68,7 @@ Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/gallery', [ItemReportController::class, 'gallery'])->name('gallery.index');
 
     // My profile
     Route::get('/profile', [UserProfileController::class, 'edit'])->name('profile.edit');

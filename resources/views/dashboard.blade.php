@@ -127,9 +127,6 @@
         <div class="empty-state-simple">
           <i class="bi bi-inbox"></i>
           <p>No reports yet</p>
-          <a href="{{ route('reports.create') }}" class="btn btn-sm btn-primary">
-            <i class="bi bi-plus-circle"></i> Create First Report
-          </a>
         </div>
       @else
         <div class="activity-list">
@@ -723,6 +720,10 @@
   opacity: 0.3;
   margin-bottom: var(--space-lg);
   display: block;
+}
+
+.empty-state-simple .btn i {
+  font-size: 1.125rem;
 }
 
 .empty-state-simple p {

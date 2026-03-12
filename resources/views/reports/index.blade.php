@@ -629,6 +629,10 @@
     z-index: 1;
   }
 
+  .empty-state .btn i {
+    font-size: 1.125rem;
+  }
+
   /* Compact Results Count */
   .results-count {
     display: flex;
@@ -926,7 +930,7 @@
           @endphp
           
           @if($firstPhoto && $firstPhoto->photo_url)
-            <img src="{{ asset($firstPhoto->photo_url) }}" alt="{{ $r->item_name }}">
+            <img src="{{ $firstPhoto->photo_url }}" alt="{{ $r->item_name }}">
           @else
             <div class="report-image-placeholder">
               <i class="bi bi-image"></i>
