@@ -623,37 +623,76 @@ class ItemReportController extends WebBaseController
 
     private function scoreCandidate(ItemReport $a, ItemReport $b, float $relevance): float
     {
-        // Relevance is usually small; scale to 0..60 (cap)
-        $base = min(60.0, max(0.0, $relevance) * 10.0);
-        $bonus = 0.0;
+        $score = 0.0;
 
-        // Category + Location + Color
-        if ($a->category_id && $b->category_id && (int) $a->category_id === (int) $b->category_id) $bonus += 12.0;
-        if ($a->location_id && $b->location_id && (int) $a->location_id === (int) $b->location_id) $bonus += 12.0;
+        // 1. Item Name similarity (max 30 pts)
+        $nameA = trim(mb_strtolower((string) $a->item_name));
+        $nameB = trim(mb_strtolower((string) $b->item_name));
+        if ($nameA !== '' && $nameB !== '') {
+            if ($nameA === $nameB) {
+                $score += 30.0;
+            } else {
+                // Check if one contains the other
+                if (str_contains($nameA, $nameB) || str_contains($nameB, $nameA)) {
+                    $score += 22.0;
+                } else {
+                    // Word overlap scoring
+                    $wordsA = array_filter(explode(' ', $nameA));
+                    $wordsB = array_filter(explode(' ', $nameB));
+                    $common = array_intersect($wordsA, $wordsB);
+                    $totalWords = max(count($wordsA), count($wordsB));
+                    if ($totalWords > 0) {
+                        $score += (count($common) / $totalWords) * 25.0;
+                    }
+                }
+            }
+        }
 
+        // 2. Color match (max 20 pts)
         $colorA = trim(mb_strtolower((string) $a->color));
         $colorB = trim(mb_strtolower((string) $b->color));
-        if ($colorA !== '' && $colorB !== '' && $colorA === $colorB) $bonus += 6.0;
+        if ($colorA !== '' && $colorB !== '') {
+            if ($colorA === $colorB) {
+                $score += 20.0;
+            } elseif (str_contains($colorA, $colorB) || str_contains($colorB, $colorA)) {
+                $score += 12.0;
+            }
+        }
 
-        // Brand model exact match
+        // 3. Location match (max 20 pts)
+        if ($a->location_id && $b->location_id && (int) $a->location_id === (int) $b->location_id) {
+            $score += 20.0;
+        }
+
+        // 4. Category match (max 10 pts)
+        if ($a->category_id && $b->category_id && (int) $a->category_id === (int) $b->category_id) {
+            $score += 10.0;
+        }
+
+        // 5. Brand/Model match (max 10 pts)
         $bmA = trim(mb_strtolower((string) $a->brand_model));
         $bmB = trim(mb_strtolower((string) $b->brand_model));
-        if ($bmA !== '' && $bmB !== '' && $bmA === $bmB) $bonus += 6.0;
+        if ($bmA !== '' && $bmB !== '') {
+            if ($bmA === $bmB) {
+                $score += 10.0;
+            } elseif (str_contains($bmA, $bmB) || str_contains($bmB, $bmA)) {
+                $score += 6.0;
+            }
+        }
 
-        // Incident date proximity (max 10 pts)
+        // 6. Date proximity bonus (max 10 pts) - closer dates = higher score
         if ($a->incident_date && $b->incident_date) {
             try {
                 $da = new \DateTime((string) $a->incident_date);
                 $db = new \DateTime((string) $b->incident_date);
                 $diffDays = (int) $da->diff($db)->format('%a');
-                $bonus += max(0.0, 10.0 - (float) $diffDays);
+                if ($diffDays <= 7) {
+                    $score += max(0.0, 10.0 - ($diffDays * 1.4));
+                }
             } catch (\Throwable $e) {}
         }
 
-        // Type sanity: lost vs found should be opposite already; keep small safety
-        if ($a->report_type !== $b->report_type) $bonus += 2.0;
-
-        return round(min(100.0, $base + $bonus), 2);
+        return round(min(100.0, $score), 2);
     }
 
     private function upsertMatch(Request $request, ItemReport $report, ItemReport $candidate, float $score, string $method): void

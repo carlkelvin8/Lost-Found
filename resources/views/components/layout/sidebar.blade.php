@@ -18,13 +18,6 @@
         <span class="sidebar-item-text">Dashboard</span>
       </a>
 
-      <a href="{{ route('gallery.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'gallery.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-images"></i>
-        </div>
-        <span class="sidebar-item-text">Items Gallery</span>
-      </a>
-
       <a href="{{ route('reports.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'reports.') ? 'active' : '' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-inbox-fill"></i>

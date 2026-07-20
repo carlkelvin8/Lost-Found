@@ -121,6 +121,44 @@
         <div class="text-muted small mt-2">{{ \Illuminate\Support\Str::limit($report->item_description, 120) }}</div>
       </div>
     </div>
+
+    @if($isStaff && $matchScore !== null)
+    <div class="card shadow-sm mt-3 border-{{ $matchRecommendation === 'high' ? 'success' : ($matchRecommendation === 'medium' ? 'warning' : 'danger') }}">
+      <div class="card-body">
+        <h2 class="h6 fw-bold"><i class="bi bi-cpu"></i> AI Match Analysis</h2>
+        
+        {{-- Score Bar --}}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted">Match Score</span>
+            <span class="fw-bold {{ $matchScore >= 70 ? 'text-success' : ($matchScore >= 45 ? 'text-warning' : 'text-danger') }}">{{ $matchScore }}%</span>
+          </div>
+          <div class="progress" style="height: 8px;">
+            <div class="progress-bar {{ $matchScore >= 70 ? 'bg-success' : ($matchScore >= 45 ? 'bg-warning' : 'bg-danger') }}" 
+                 style="width: {{ $matchScore }}%"></div>
+          </div>
+        </div>
+
+        {{-- Recommendation --}}
+        <div class="p-2 rounded {{ $matchRecommendation === 'high' ? 'bg-success bg-opacity-10' : ($matchRecommendation === 'medium' ? 'bg-warning bg-opacity-10' : 'bg-danger bg-opacity-10') }}">
+          @if($matchRecommendation === 'high')
+            <div class="fw-semibold text-success"><i class="bi bi-check-circle-fill"></i> High Confidence</div>
+            <div class="small text-muted">AI suggests approving this claim. Color, location, and item details match strongly.</div>
+          @elseif($matchRecommendation === 'medium')
+            <div class="fw-semibold text-warning"><i class="bi bi-exclamation-triangle-fill"></i> Medium Confidence</div>
+            <div class="small text-muted">Some details match but manual verification is recommended before approval.</div>
+          @else
+            <div class="fw-semibold text-danger"><i class="bi bi-x-circle-fill"></i> Low Confidence</div>
+            <div class="small text-muted">AI suggests rejecting this claim. Few matching details found between reports.</div>
+          @endif
+        </div>
+
+        <div class="small text-muted mt-2">
+          <i class="bi bi-info-circle"></i> Score based on: item name, color, location, category, brand, and date proximity.
+        </div>
+      </div>
+    </div>
+    @endif
   </div>
 </div>
 @endsection

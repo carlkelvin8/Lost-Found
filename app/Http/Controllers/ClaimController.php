@@ -192,12 +192,32 @@ class ClaimController extends WebBaseController
 
         $report = ItemReport::findOrFail((int) $claim->report_id);
 
+        // Get match score if available
+        $matchScore = null;
+        $matchRecommendation = null;
+        if ($report->matched_score) {
+            $matchScore = (float) $report->matched_score;
+        }
+
+        // Calculate AI recommendation based on match score
+        if ($matchScore !== null) {
+            if ($matchScore >= 70) {
+                $matchRecommendation = 'high';  // High confidence - recommend approve
+            } elseif ($matchScore >= 45) {
+                $matchRecommendation = 'medium'; // Medium confidence - manual review needed
+            } else {
+                $matchRecommendation = 'low';    // Low confidence - recommend reject
+            }
+        }
+
         return view('claims.show', compact(
             'claim',
             'documents',
             'report',
             'isStaff',
-            'isOwner'
+            'isOwner',
+            'matchScore',
+            'matchRecommendation'
         ));
     }
 

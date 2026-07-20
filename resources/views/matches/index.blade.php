@@ -68,7 +68,18 @@
             <td>{{ $m->id }}</td>
             <td><a href="{{ route('reports.show', $m->lost_report_id) }}">#{{ $m->lost_report_id }}</a></td>
             <td><a href="{{ route('reports.show', $m->found_report_id) }}">#{{ $m->found_report_id }}</a></td>
-            <td><span class="badge text-bg-primary">{{ $m->score }}</span></td>
+            <td>
+              @php $scoreVal = (float) $m->score; @endphp
+              <span class="badge {{ $scoreVal >= 70 ? 'bg-success' : ($scoreVal >= 45 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                {{ $m->score }}%
+              </span>
+              <div class="small text-muted">
+                @if($scoreVal >= 70) High
+                @elseif($scoreVal >= 45) Medium
+                @else Low
+                @endif
+              </div>
+            </td>
             <td>{{ $m->method }}</td>
             <td><span class="badge text-bg-secondary">{{ $m->status }}</span></td>
             <td class="text-end">

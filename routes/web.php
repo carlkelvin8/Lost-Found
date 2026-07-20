@@ -68,7 +68,6 @@ Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/gallery', [ItemReportController::class, 'gallery'])->name('gallery.index');
 
     // My profile
     Route::get('/profile', [UserProfileController::class, 'edit'])->name('profile.edit');
