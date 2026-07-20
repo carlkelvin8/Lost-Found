@@ -28,7 +28,7 @@ class UserProfileController extends WebBaseController
         $data = $request->validate([
             'full_name' => ['required','string','min:2','max:190'],
             'school_id_number' => ['nullable','string','max:60'],
-            'department_id' => ['nullable','integer'],
+            'department_id' => ['nullable','string','max:60'],
             'contact_no' => ['nullable','string','max:40'],
             'address' => ['nullable','string','max:255'],
             'avatar' => ['nullable','file','mimes:jpg,jpeg,png,webp','max:4096'],

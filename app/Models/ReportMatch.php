@@ -15,4 +15,14 @@ class ReportMatch extends Model
         'method',
         'status'
     ];
+
+    public function lostReport()
+    {
+        return $this->belongsTo(ItemReport::class, 'lost_report_id');
+    }
+
+    public function foundReport()
+    {
+        return $this->belongsTo(ItemReport::class, 'found_report_id');
+    }
 }

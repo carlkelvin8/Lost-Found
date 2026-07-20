@@ -305,7 +305,7 @@ class ClaimController extends WebBaseController
                 (int) $claim->claimant_user_id,
                 'claim',
                 'Claim rejected',
-                'Your claim for report #' . $report->id . ' has been rejected.' . ($data['note'] ? ' Reason: ' . $data['note'] : ''),
+                'Your claim for report #' . $report->id . ' has been rejected.' . (!empty($data['note']) ? ' Reason: ' . $data['note'] : ''),
                 [
                     'report_id' => $report->id,
                     'claim_id' => $claim->id,

@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rule;
 
 class AuthWebController extends WebBaseController
 {
@@ -50,9 +49,9 @@ class AuthWebController extends WebBaseController
                 'user_id' => $user->id,
                 'full_name' => $data['full_name'],
                 'school_id_number' => $data['school_id_number'] ?? null,
-                'department_id' => $data['department_name'] ?? null,
+                'department_id' => $data['department_name'] ?? null, // Stores department name (ICS, ILAS, INET)
                 'contact_no' => $data['contact_no'] ?? null,
-                'user_type' => $data['user_type'], // Save the selected user type
+                'user_type' => $data['user_type'],
                 'address' => $data['address'] ?? null,
             ]);
 

@@ -56,4 +56,20 @@ class ItemReport extends Model
     {
         return $this->hasMany(ReportPhoto::class, 'report_id');
     }
+
+    public function claims()
+    {
+        return $this->hasMany(Claim::class, 'report_id');
+    }
+
+    public function matches()
+    {
+        return $this->hasMany(ReportMatch::class, 'lost_report_id')
+            ->orWhere('found_report_id', $this->id);
+    }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(ReportStatusHistory::class, 'report_id');
+    }
 }

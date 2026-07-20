@@ -156,12 +156,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/{reportId}/history', [ReportStatusHistoryController::class, 'index'])->name('reports.history');
 
     // Test AI Analysis
-    Route::get('/test-ai/{reportId}', function ($reportId) {
+    Route::post('/test-ai/{reportId}', function ($reportId) {
         if (!auth()->user()->hasAnyRole(['admin', 'osa'])) abort(403);
         
         $report = \App\Models\ItemReport::findOrFail($reportId);
         \App\Jobs\ProcessImageAnalysis::dispatchSync($report->id);
         
         return redirect()->route('reports.show', $reportId)->with('success', 'AI Analysis triggered manually');
-    });
+    })->name('test-ai');
 });
