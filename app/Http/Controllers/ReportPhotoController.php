@@ -29,8 +29,8 @@ class ReportPhotoController extends WebBaseController
         ]);
 
         $path = $data['photo']->store('report_photos', 'public');
-        // Store full URL path for the new public/storage setup
-        $url = '/public/storage/' . $path;
+        // Store as storage/xxx so it works with both symlink and StorageController route
+        $url = 'storage/' . $path;
 
         ReportPhoto::create([
             'report_id' => $report->id,

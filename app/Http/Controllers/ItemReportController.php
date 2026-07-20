@@ -74,26 +74,6 @@ class ItemReportController extends WebBaseController
         ));
     }
 
-    public function gallery(Request $request)
-    {
-        $query = ItemReport::with('photos', 'category', 'location')
-            ->whereIn('status', ['pending', 'matched'])
-            ->orderByDesc('created_at');
-
-        if ($request->filled('type')) $query->where('report_type', $request->type);
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function($sub) use ($q) {
-                $sub->where('item_name', 'like', "%$q%")
-                    ->orWhere('item_description', 'like', "%$q%");
-            });
-        }
-
-        $reports = $query->paginate(24); // Grid view
-
-        return view('gallery.index', compact('reports'));
-    }
-
     /* =========================
      * CREATE
      * ========================= */
@@ -742,8 +722,8 @@ class ItemReportController extends WebBaseController
     private function storeReportPhoto(int $reportId, $file): void
     {
         $path = $file->store('report_photos', 'public');
-        // Store full URL path for the new public/storage setup
-        $url  = '/public/storage/' . $path;
+        // Store as storage/xxx so it works with both symlink and StorageController route
+        $url  = 'storage/' . $path;
 
         ReportPhoto::create([
             'report_id'  => $reportId,

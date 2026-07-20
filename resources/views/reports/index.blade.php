@@ -930,7 +930,7 @@
           @endphp
           
           @if($firstPhoto && $firstPhoto->photo_url)
-            <img src="{{ $firstPhoto->photo_url }}" alt="{{ $r->item_name }}">
+            <img src="{{ asset($firstPhoto->photo_url) }}" alt="{{ $r->item_name }}">
           @else
             <div class="report-image-placeholder">
               <i class="bi bi-image"></i>

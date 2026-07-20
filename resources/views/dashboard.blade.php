@@ -20,7 +20,7 @@
       @endif
     </div>
     <div class="dashboard-welcome-text">
-      <h1 class="dashboard-title">Welcome back, {{ $user->profile->full_name ?? 'User' }}</h1>
+      <h1 class="dashboard-title">Welcome back, {{ $user->profile?->full_name ?? 'User' }}</h1>
       <p class="dashboard-subtitle">Here's what's happening with your lost and found items</p>
     </div>
   </div>

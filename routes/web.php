@@ -66,7 +66,7 @@ Route::post('/reset-password', [AuthWebController::class, 'resetPassword'])
 
 Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // My profile

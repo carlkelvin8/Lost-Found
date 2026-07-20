@@ -141,8 +141,8 @@
       @foreach($report->photos as $p)
         <div class="col-6 col-md-3">
           <div class="photo-card">
-            {{-- photo_url is already full URL --}}
-            <img src="{{ $p->photo_url }}" class="report-photo" alt="Report photo">
+            {{-- Use asset() to resolve photo URL --}}
+            <img src="{{ asset($p->photo_url) }}" class="report-photo" alt="Report photo">
             <div class="photo-actions">
               <button type="button"
                 class="btn btn-sm btn-danger w-100"
