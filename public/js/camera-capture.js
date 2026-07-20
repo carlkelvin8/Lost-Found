@@ -43,7 +43,15 @@ class CameraCapture {
 
         } catch (error) {
             console.error('Camera access error:', error);
-            this.showError('Unable to access camera. Please check permissions.');
+            if (error.name === 'NotAllowedError') {
+                this.showError('Camera permission denied. Please allow camera access in your browser settings.');
+            } else if (error.name === 'NotFoundError') {
+                this.showError('No camera found on this device.');
+            } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                this.showError('Camera requires HTTPS. Please access the site via https://');
+            } else {
+                this.showError('Unable to access camera: ' + error.message);
+            }
         }
     }
 
