@@ -3,7 +3,6 @@
 @section('title', 'Create Report · NAAP Lost & Found')
 
 @push('styles')
-<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet">
 <style>
   .page-header-section {
     margin-bottom: var(--space-xl);
@@ -196,14 +195,16 @@
         <label class="form-label">Photos (optional, multiple)</label>
         <div class="photo-upload-section">
           <div class="upload-options">
-            <button type="button" class="btn btn-primary btn-camera" onclick="initCamera()">
+            {{-- Native camera capture for mobile (always works) --}}
+            <label for="cameraInput" class="btn btn-primary btn-camera">
               <i class="bi bi-camera-fill"></i> Take Photo
-            </button>
+            </label>
+            <input id="cameraInput" class="d-none" type="file" name="photos[]" accept="image/*" capture="environment" multiple onchange="previewPhotos(document.getElementById('photoInput'), this)" />
             <span class="upload-divider">or</span>
             <label for="photoInput" class="btn btn-outline-primary">
               <i class="bi bi-upload"></i> Choose Files
             </label>
-            <input id="photoInput" class="form-control d-none" type="file" name="photos[]" multiple accept="image/*" onchange="previewPhotos(this)" />
+            <input id="photoInput" class="form-control d-none" type="file" name="photos[]" multiple accept="image/*" />
           </div>
           <div class="form-text mt-2">
             <i class="bi bi-info-circle"></i> Upload clear photos for better matching (front/back/details). Max 5 photos.
@@ -312,14 +313,44 @@
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/camera-capture.js') }}"></script>
 <script>
-  function previewPhotos(input) {
+  // Collect all files from both camera and file picker
+  let allFiles = [];
+
+  function previewPhotos(sourceInput, cameraInput) {
+    // If called with two args, it's from camera input
+    if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
+      // Add camera files to collection
+      Array.from(cameraInput.files).forEach(file => {
+        if (allFiles.length < 5) {
+          allFiles.push(file);
+        }
+      });
+      // Sync to main photos input
+      syncFilesToInput();
+    } else if (sourceInput && sourceInput.files) {
+      // From file picker - replace with these files
+      allFiles = Array.from(sourceInput.files);
+    }
+    
+    renderPreview();
+  }
+
+  function syncFilesToInput() {
+    const mainInput = document.getElementById('photoInput');
+    const dataTransfer = new DataTransfer();
+    allFiles.forEach(file => dataTransfer.items.add(file));
+    mainInput.files = dataTransfer.files;
+  }
+
+  function renderPreview() {
     const container = document.getElementById('photoPreviewContainer');
     container.innerHTML = '';
     
-    if (input.files && input.files.length > 0) {
-      Array.from(input.files).forEach((file, index) => {
+    const files = allFiles.length > 0 ? allFiles : Array.from(document.getElementById('photoInput').files || []);
+    
+    if (files.length > 0) {
+      files.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const div = document.createElement('div');
@@ -334,6 +365,11 @@
       });
     }
   }
+
+  // Handle file picker change
+  document.getElementById('photoInput').addEventListener('change', function() {
+    previewPhotos(this);
+  });
 </script>
 @endpush
 @endsection
