@@ -3,81 +3,19 @@
 @section('title', 'Create Report · NAAP Lost & Found')
 
 @push('styles')
-<style>
-  .page-header-section {
-    margin-bottom: var(--space-xl);
-  }
-
-  .page-header-section h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: var(--space-sm);
-  }
-
-  .page-subtitle {
-    color: var(--text-muted);
-    font-size: var(--text-base);
-    line-height: 1.6;
-  }
-
-  .form-section {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    margin-bottom: var(--space-lg);
-  }
-
-  .form-section-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    margin-bottom: var(--space-xl);
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border-default);
-  }
-
-  .form-section-icon {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    font-size: 1.5rem;
-    color: var(--text-primary);
-  }
-
-  .form-section-title {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .form-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-md);
-    padding-top: var(--space-xl);
-    margin-top: var(--space-lg);
-  }
-</style>
+<link href="{{ asset('css/reports.css') }}" rel="stylesheet" />
+<link href="{{ asset('css/form.css') }}" rel="stylesheet" />
 @endpush
 
 @section('content')
-<div class="page-header-section">
-  <div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-      <h1>Create Report</h1>
-      <p class="page-subtitle">Submit a lost or found item report with complete details for faster matching.</p>
-    </div>
-    <a class="btn btn-outline-secondary" href="{{ route('reports.index') }}">
-      <i class="bi bi-arrow-left"></i> Back
-    </a>
+<div class="form-page-header">
+  <div>
+    <h1>Create Report</h1>
+    <div class="form-page-subtitle">Submit a lost or found item report with complete details for faster matching.</div>
   </div>
+  <a class="btn btn-outline-secondary" href="{{ route('reports.index') }}">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
 </div>
 
 <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">

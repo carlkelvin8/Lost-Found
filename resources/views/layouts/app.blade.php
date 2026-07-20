@@ -7,6 +7,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="{{ asset('css/white-black-theme.css') }}" rel="stylesheet" />
+  <link href="{{ asset('css/layout.css') }}" rel="stylesheet" />
+  <link href="{{ asset('css/animations.css') }}" rel="stylesheet" />
   
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ asset('storage/image.png') }}" sizes="192x192" />
@@ -50,6 +52,25 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Scroll-triggered animations
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.anim-on-scroll').forEach(el => observer.observe(el));
+
+  // Staggered item delay from data-delay attribute
+  document.querySelectorAll('[data-delay]').forEach(el => {
+    el.style.setProperty('--n', el.dataset.delay);
+  });
+})();
+</script>
 @stack('scripts')
 </body>
 </html>

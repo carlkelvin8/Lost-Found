@@ -2,61 +2,60 @@
 
 @section('title', 'Locations')
 
+@push('styles')
+<link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      <div class="d-flex align-items-center justify-content-between mb-3">
+
+<div class="admin-page-header">
   <div>
-    <h1 class="h4 fw-bold mb-0">Locations</h1>
-    <div class="text-muted small">Manage locations</div>
+    <h1>Locations</h1>
+    <div class="admin-page-subtitle">Manage locations</div>
   </div>
   <div class="d-flex gap-2">
-    <a class="btn btn-sm btn-primary" href="{{ route('locations.create') }}"><i class="bi bi-plus-circle"></i> New</a>
-    <a class="btn btn-sm btn-outline-secondary" href="{{ route('dashboard') }}"><i class="bi bi-house"></i> Dashboard</a>
+    <a class="btn btn-primary" href="{{ route('locations.create') }}"><i class="bi bi-plus-circle"></i> New</a>
+    <a class="btn btn-outline-secondary" href="{{ route('dashboard') }}"><i class="bi bi-house"></i> Dashboard</a>
   </div>
 </div>
 
-<form class="card shadow-sm mb-3" method="GET" action="{{ route('locations.index') }}">
-  <div class="card-body">
-    <div class="row g-2 align-items-end">
-      <div class="col-12 col-md-6">
-        <label class="form-label mb-1">Search</label>
-        <input class="form-control" name="q" value="{{ $q ?? '' }}" placeholder="Type keyword..." />
-      </div>
-      <div class="col-12 col-md-6 text-md-end">
-        <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Filter</button>
-        <a class="btn btn-outline-secondary" href="{{ route('locations.index') }}">Reset</a>
-      </div>
+<form class="admin-filter-card" method="GET" action="{{ route('locations.index') }}">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-6">
+      <label class="form-label">Search</label>
+      <input class="form-control" name="q" value="{{ $q ?? '' }}" placeholder="Type keyword..." />
+    </div>
+    <div class="col-12 col-md-6 text-md-end">
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Filter</button>
+      <a class="btn btn-outline-secondary" href="{{ route('locations.index') }}">Reset</a>
     </div>
   </div>
 </form>
 
-<div class="card shadow-sm">
+<div class="admin-table-card">
   <div class="table-responsive">
-    <table class="table table-striped align-middle mb-0">
+    <table class="admin-table">
       <thead>
         <tr>
           <th>ID</th>
-<th>Name</th>
-<th>Details</th>
-<th>Lat</th>
-<th>Lng</th>
-<th class="text-end">Actions</th>
+          <th>Name</th>
+          <th>Details</th>
+          <th>Lat</th>
+          <th>Lng</th>
+          <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -67,23 +66,25 @@
             <td>{{ $row->details ?? '' }}</td>
             <td>{{ $row->latitude ?? '' }}</td>
             <td>{{ $row->longitude ?? '' }}</td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{{ route('locations.edit', $row->id) }}"><i class="bi bi-pencil"></i></a>
-              <form class="d-inline" method="POST" action="{{ route('locations.destroy', $row->id) }}" onsubmit="return confirm('Delete this record?');">
-                @csrf
-                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
-              </form>
+            <td>
+              <div class="admin-btn-group">
+                <a class="admin-action-btn" href="{{ route('locations.edit', $row->id) }}"><i class="bi bi-pencil"></i></a>
+                <form class="d-inline" method="POST" action="{{ route('locations.destroy', $row->id) }}" onsubmit="return confirm('Delete this record?');">
+                  @csrf
+                  <button class="admin-action-btn admin-action-btn-danger" type="submit"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
             </td>
           </tr>
         @empty
-          <tr><td colspan="6" class="text-center text-muted p-4">No records</td></tr>
+          <tr><td colspan="6" class="admin-empty-state">No records</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
 </div>
 
-<div class="mt-3">
+<div class="admin-pagination">
   {{ $locations->links() }}
 </div>
 @endsection

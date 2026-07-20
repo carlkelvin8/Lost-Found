@@ -2,36 +2,40 @@
 
 @section('title', 'Edit User')
 
+@push('styles')
+<link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      @php
+
+@php
   $roleNames = $user->roles->pluck('name')->toArray();
 @endphp
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-  <h1 class="h4 fw-bold mb-0">Edit User #{{ $user->id }}</h1>
-  <a class="btn btn-sm btn-outline-secondary" href="{{ route('users.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
+<div class="form-page-header">
+  <div>
+    <h1>Edit User #{{ $user->id }}</h1>
+    <div class="form-page-subtitle">Update user account details</div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ route('users.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
-<form method="POST" action="{{ route('users.update', $user->id) }}" class="card shadow-sm">
+<form method="POST" action="{{ route('users.update', $user->id) }}" class="form-card">
   @csrf
-  <div class="card-body p-4">
+  <div class="form-card-body">
     <div class="row g-3">
       <div class="col-12 col-md-6">
         <label class="form-label">Email</label>
@@ -55,9 +59,11 @@
         <label class="form-label">Confirm new password</label>
         <input class="form-control" type="password" name="password_confirmation" />
       </div>
+    </div>
 
-      <hr class="my-2" />
+    <hr class="detail-divider my-3" />
 
+    <div class="row g-3">
       <div class="col-12 col-md-6">
         <label class="form-label">Full name</label>
         <input class="form-control" name="full_name" value="{{ old('full_name', $user->profile?->full_name) }}" required />
@@ -103,7 +109,7 @@
       </div>
     </div>
 
-    <div class="mt-3">
+    <div class="form-actions">
       <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save changes</button>
     </div>
   </div>

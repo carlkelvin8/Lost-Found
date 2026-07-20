@@ -2,36 +2,37 @@
 
 @section('title', 'Claim Details')
 
+@push('styles')
+<link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      @php
+
+@php
   $isPending = ($claim->status === 'pending');
 @endphp
 
-<div class="d-flex align-items-center justify-content-between mb-3">
+<div class="admin-page-header">
   <div>
-    <h1 class="h4 fw-bold mb-0">Claim #{{ $claim->id }}</h1>
-    <div class="text-muted small">
-      Status: <span class="badge text-bg-secondary">{{ $claim->status }}</span> · Report: <a href="{{ route('reports.show', $report->id) }}">#{{ $report->id }}</a>
+    <h1>Claim #{{ $claim->id }}</h1>
+    <div class="admin-page-subtitle">
+      Status: <span class="admin-badge admin-badge-warning">{{ $claim->status }}</span> · Report: <a href="{{ route('reports.show', $report->id) }}">#{{ $report->id }}</a>
     </div>
   </div>
-  <a class="btn btn-sm btn-outline-secondary" href="{{ route('claims.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
+  <a class="btn btn-outline-secondary" href="{{ route('claims.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
 <div class="row g-3">

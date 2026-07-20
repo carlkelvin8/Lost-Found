@@ -2,39 +2,43 @@
 
 @section('title', 'Create Category')
 
+@push('styles')
+<link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      <div class="d-flex align-items-center justify-content-between mb-3">
-  <h1 class="h4 fw-bold mb-0">Create Category</h1>
-  <a class="btn btn-sm btn-outline-secondary" href="{{ route('categories.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
+
+<div class="form-page-header">
+  <div>
+    <h1>Create Category</h1>
+    <div class="form-page-subtitle">Add a new category</div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ route('categories.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
-<form method="POST" action="{{ route('categories.store') }}" class="card shadow-sm">
+<form method="POST" action="{{ route('categories.store') }}" class="form-card">
   @csrf
-  <div class="card-body p-4">
-    
-<div class="mb-3">
-  <label class="form-label">Name</label>
-  <input class="form-control" name="name" value="{{ old('name') }}" required />
-</div>
-
-    <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
+  <div class="form-card-body">
+    <div class="mb-3">
+      <label class="form-label">Name</label>
+      <input class="form-control" name="name" value="{{ old('name') }}" required />
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
+    </div>
   </div>
 </form>
 @endsection

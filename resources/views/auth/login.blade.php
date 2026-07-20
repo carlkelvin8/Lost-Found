@@ -1,536 +1,574 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Login · NAAP Lost & Found</title>
+    <title>Sign In · NAAP Lost & Found</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="{{ asset('storage/image.png') }}" sizes="192x192" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <link href="{{ asset('css/white-black-theme.css') }}" rel="stylesheet" />
-
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue: #0041C7;
+            --blue-dark: #0033A0;
+            --blue-light: #3ACBEB;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-400: #94a3b8;
+            --gray-600: #475569;
+            --gray-800: #1e293b;
+            --red: #ef4444;
+            --green: #22c55e;
         }
 
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
+        html, body { height: 100%; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-        }
-
-        .auth-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            height: 100vh;
-        }
-
-        /* Left Side - Brand */
-        .auth-brand-side {
-            background: linear-gradient(135deg, #0041C7 0%, #0160C9 50%, #0D85D8 100%);
-            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 4rem;
-            position: relative;
+            align-items: stretch;
+            min-height: 100vh;
             overflow: hidden;
         }
 
-        .auth-brand-side::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(58, 203, 235, 0.3) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
+        /* ── LEFT PANEL ── */
+        .panel-left {
+            width: 52%;
+            background: linear-gradient(145deg, #0033A0 0%, #0041C7 45%, #0D85D8 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 3rem;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .auth-brand-side::after {
+        /* Mesh grid overlay */
+        .panel-left::before {
             content: '';
             position: absolute;
-            bottom: -30%;
-            left: -30%;
-            width: 80%;
-            height: 80%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
-            animation: float 25s ease-in-out infinite reverse;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        /* Decorative circles */
-        .decorative-circle {
+        /* Glow blobs */
+        .blob {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            filter: blur(80px);
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .blob-1 { width: 500px; height: 500px; background: #3ACBEB; top: -150px; right: -100px; animation: blobMove 12s ease-in-out infinite; }
+        .blob-2 { width: 400px; height: 400px; background: #ffffff; bottom: -100px; left: -80px; animation: blobMove 15s ease-in-out infinite reverse; }
+
+        @keyframes blobMove {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
         }
 
-        .circle-1 {
-            width: 400px;
-            height: 400px;
-            top: -150px;
-            right: -150px;
-            animation: pulse 8s ease-in-out infinite;
-        }
-
-        .circle-2 {
-            width: 250px;
-            height: 250px;
-            bottom: -80px;
-            left: -80px;
-            animation: pulse 10s ease-in-out infinite 2s;
-        }
-
-        .circle-3 {
-            width: 180px;
-            height: 180px;
-            top: 45%;
-            left: -90px;
-            animation: pulse 12s ease-in-out infinite 4s;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 0.4;
-            }
-            50% {
-                transform: scale(1.15);
-                opacity: 0.6;
-            }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-30px, -30px) rotate(5deg); }
-        }
-
-        .brand-content {
+        .brand-wrap {
             position: relative;
             z-index: 1;
             text-align: center;
-            max-width: 520px;
-            animation: fadeInUp 0.8s ease-out;
+            color: white;
+            max-width: 440px;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .brand-logo {
-            width: 140px;
-            height: 140px;
-            background: #ffffff;
-            border-radius: 35px;
+        .brand-logo-box {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 2.5rem;
-            box-shadow: 0 25px 70px rgba(0, 65, 199, 0.5), 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin: 0 auto 2rem;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1);
             overflow: hidden;
-            animation: logoFloat 3s ease-in-out infinite;
+            animation: logoFloat 4s ease-in-out infinite;
         }
 
         @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
-        .brand-logo img {
-            width: 100%;
-            height: 100%;
+        .brand-logo-box img {
+            width: 90%;
+            height: 90%;
             object-fit: contain;
-            padding: 12px;
+            padding: 8px;
         }
 
-        .brand-content h1 {
-            font-size: 2.5rem;
+        .brand-wrap h1 {
+            font-size: 1.75rem;
             font-weight: 800;
-            margin-bottom: 1.25rem;
+            line-height: 1.25;
             letter-spacing: -0.03em;
-            line-height: 1.15;
-            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.2);
         }
 
-        .brand-content p {
-            font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.95);
-            line-height: 1.7;
-            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
+        .brand-wrap .tagline {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
         }
 
+        .brand-wrap .subtitle {
+            font-size: 0.875rem;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
 
+        /* Feature pills */
+        .feature-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 2.5rem;
+        }
 
-        /* Right Side - Form */
-        .auth-form-side {
-            background: #ffffff;
+        .feature-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 0.875rem 1.25rem;
+            backdrop-filter: blur(10px);
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .feature-pill:hover { background: rgba(255,255,255,0.15); }
+
+        .pill-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 3rem;
-            overflow-y: auto;
-            position: relative;
+            font-size: 1rem;
+            flex-shrink: 0;
         }
 
-        .auth-form-side::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at top right, rgba(58, 203, 235, 0.05) 0%, transparent 50%);
-            pointer-events: none;
-        }
+        .pill-text { font-size: 0.875rem; color: rgba(255,255,255,0.9); font-weight: 500; }
+        .pill-text strong { display: block; font-weight: 700; color: white; font-size: 0.9375rem; }
 
-        .form-container {
-            width: 100%;
-            max-width: 480px;
-            animation: slideIn 0.6s ease-out;
-            position: relative;
-            z-index: 1;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .form-header {
-            margin-bottom: 3rem;
-        }
-
-        .form-header h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #0041C7;
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.04em;
-        }
-
-        .form-header p {
-            color: #64748b;
-            font-size: 1.0625rem;
-        }
-
-        .alert {
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
+        /* ── RIGHT PANEL ── */
+        .panel-right {
+            flex: 1;
             display: flex;
             align-items: center;
+            justify-content: center;
+            padding: 2.5rem 2rem;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .form-wrap {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .form-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--blue);
+            margin-bottom: 1.25rem;
+        }
+
+        .form-eyebrow span {
+            width: 24px;
+            height: 2px;
+            background: var(--blue);
+            display: inline-block;
+            border-radius: 2px;
+        }
+
+        .form-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--gray-800);
+            letter-spacing: -0.04em;
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 0.9375rem;
+            color: var(--gray-400);
+            margin-bottom: 2.25rem;
+        }
+
+        /* Alerts */
+        .form-alert {
+            display: flex;
+            align-items: flex-start;
             gap: 0.75rem;
-            font-size: 0.9375rem;
-            border: none;
-        }
-
-        .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .alert-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .alert i {
-            font-size: 1.25rem;
-        }
-
-        .form-group {
+            padding: 1rem 1.125rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
             margin-bottom: 1.5rem;
+            border: 1px solid;
         }
 
-        .form-label {
+        .form-alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+        .form-alert-danger  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        .form-alert i { font-size: 1.125rem; flex-shrink: 0; margin-top: 1px; }
+
+        /* Field */
+        .field { margin-bottom: 1.25rem; }
+
+        .field-label {
             display: block;
-            font-size: 0.9375rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #0041C7;
-            margin-bottom: 0.625rem;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
         }
 
-        .input-wrapper {
+        .field-input-wrap {
             position: relative;
         }
 
-        .form-control {
-            width: 100%;
-            height: 60px;
-            padding: 0 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 14px;
+        .field-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
             font-size: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #f8fafc;
+            pointer-events: none;
+            transition: color 0.2s;
         }
 
-        .form-control:hover {
-            border-color: #cbd5e1;
-            background: #ffffff;
-        }
-
-        .form-control:focus {
-            border-color: #0041C7;
+        .field-input {
+            width: 100%;
+            height: 52px;
+            padding: 0 1rem 0 2.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            color: var(--gray-800);
+            background: var(--gray-50);
+            transition: all 0.2s;
             outline: none;
-            box-shadow: 0 0 0 4px rgba(0, 65, 199, 0.08), 0 4px 12px rgba(0, 65, 199, 0.1);
-            background: #ffffff;
-            transform: translateY(-1px);
         }
 
-        .form-control::placeholder {
-            color: #9ca3af;
+        .field-input:hover {
+            border-color: #cbd5e1;
+            background: white;
+        }
+
+        .field-input:focus {
+            border-color: var(--blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0,65,199,0.08);
+        }
+
+        .field-input:focus + .field-icon,
+        .field-input-wrap:focus-within .field-icon {
+            color: var(--blue);
+        }
+
+        .field-input::placeholder { color: #bec8d5; }
+
+        .pwd-toggle {
+            position: absolute;
+            right: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-400);
+            padding: 4px;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .pwd-toggle:hover { color: var(--gray-800); }
+
+        /* Forgot link */
+        .field-foot {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.375rem;
         }
 
         .forgot-link {
-            text-align: right;
-            margin-top: 0.5rem;
-        }
-
-        .forgot-link a {
-            color: #000000;
-            font-size: 0.9375rem;
+            font-size: 0.8125rem;
             font-weight: 600;
+            color: var(--blue);
             text-decoration: none;
             transition: opacity 0.2s;
         }
 
-        .forgot-link a:hover {
-            opacity: 0.7;
+        .forgot-link:hover { opacity: 0.7; }
+
+        /* Submit button */
+        .btn-submit {
+            width: 100%;
+            height: 52px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: -0.01em;
         }
 
-        .btn {
+        .btn-submit::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: var(--blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0,65,199,0.3);
+        }
+
+        .btn-submit:hover::after { opacity: 1; }
+        .btn-submit:active { transform: translateY(0); box-shadow: none; }
+
+        /* Divider */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--gray-400);
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        /* Register link button */
+        .btn-outline {
             width: 100%;
-            height: 60px;
-            border: none;
-            border-radius: 14px;
-            font-size: 1.0625rem;
+            height: 52px;
+            background: white;
+            color: var(--gray-800);
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 0.9375rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.625rem;
             text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: #0041C7;
-            color: #ffffff;
-            margin-top: 0.75rem;
-            box-shadow: 0 4px 16px rgba(0, 65, 199, 0.2);
-        }
-
-        .btn-primary:hover {
-            background: #0160C9;
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0, 65, 199, 0.35);
-        }
-
-        .btn-primary:active {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 65, 199, 0.3);
-        }
-
-        .btn-outline {
-            background: #ffffff;
-            color: #0041C7;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s;
         }
 
         .btn-outline:hover {
-            border-color: #0041C7;
-            background: #f8fafc;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 65, 199, 0.12);
+            border-color: var(--blue);
+            color: var(--blue);
+            background: rgba(0,65,199,0.04);
+            transform: translateY(-1px);
         }
 
-        .divider {
+        /* Footer */
+        .form-foot {
             text-align: center;
-            margin: 2rem 0;
-            position: relative;
+            margin-top: 2rem;
+            font-size: 0.8125rem;
+            color: var(--gray-400);
         }
 
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e5e7eb;
-        }
-
-        .divider span {
-            position: relative;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            padding: 0 1rem;
-            color: #0D85D8;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        @media (max-width: 992px) {
-            .auth-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .auth-brand-side {
-                display: none;
-            }
-
-            .auth-form-side {
-                background: #ffffff;
-            }
-
-            .form-container {
-                max-width: 500px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .auth-form-side {
-                padding: 2rem 1.5rem;
-            }
-
-            .form-header h2 {
-                font-size: 1.75rem;
-            }
+        /* Responsive */
+        @media (max-width: 900px) {
+            .panel-left { display: none; }
+            .panel-right { padding: 2rem 1.5rem; }
+            body { overflow-y: auto; }
         }
     </style>
 </head>
-
 <body>
-<div class="auth-layout">
-    <!-- Left Side - Brand -->
-    <div class="auth-brand-side">
-        <!-- Decorative circles -->
-        <div class="decorative-circle circle-1"></div>
-        <div class="decorative-circle circle-2"></div>
-        <div class="decorative-circle circle-3"></div>
 
-        <div class="brand-content">
-            <div class="brand-logo">
-                <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo">
-            </div>
-            <h1>National Aviation Academy<br>of the Philippines</h1>
-            <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Lost and Found Management System</p>
-            <p style="font-size: 0.9375rem; opacity: 0.9;">Piccio Garden, Villamor, Pasay City, Philippines</p>
+<!-- LEFT -->
+<div class="panel-left">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="brand-wrap">
+        <div class="brand-logo-box">
+            <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo">
         </div>
-    </div>
+        <h1>National Aviation Academy<br>of the Philippines</h1>
+        <p class="tagline">Lost and Found Management System</p>
+        <p class="subtitle">Piccio Garden, Villamor, Pasay City</p>
 
-    <!-- Right Side - Form -->
-    <div class="auth-form-side">
-        <div class="form-container">
-            <div class="form-header">
-                <h2>Welcome back</h2>
-                <p>Sign in to continue to your account</p>
+        <div class="feature-pills">
+            <div class="feature-pill">
+                <div class="pill-icon"><i class="bi bi-search"></i></div>
+                <div class="pill-text">
+                    <strong>Smart Matching</strong>
+                    AI-powered lost & found matching
+                </div>
             </div>
-
-            @if (session('success'))
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <div>{{ session('success') }}</div>
+            <div class="feature-pill">
+                <div class="pill-icon"><i class="bi bi-bell"></i></div>
+                <div class="pill-text">
+                    <strong>Real-time Notifications</strong>
+                    Instant alerts when items are found
                 </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <div>Invalid email or password</div>
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-
-                <div class="form-group">
-                    <label class="form-label">Email address</label>
-                    <input
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        placeholder="you@example.com"
-                        value="{{ old('email') }}"
-                        required
-                        autofocus
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        class="form-control"
-                        placeholder="Enter your password"
-                        required
-                    >
-                    <div class="forgot-link">
-                        <a href="{{ route('password.request') }}">Forgot password?</a>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Sign In
-                </button>
-            </form>
-
-            <div class="divider">
-                <span>Don't have an account?</span>
             </div>
-
-            <a href="{{ route('register') }}" class="btn btn-outline">
-                <i class="bi bi-person-plus"></i>
-                Create account
-            </a>
+            <div class="feature-pill">
+                <div class="pill-icon"><i class="bi bi-shield-check"></i></div>
+                <div class="pill-text">
+                    <strong>Secure Claims</strong>
+                    Verified ownership process
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- RIGHT -->
+<div class="panel-right">
+    <div class="form-wrap">
+
+        <div class="form-eyebrow">
+            <span></span> Welcome back
+        </div>
+        <h1 class="form-title">Sign in to<br>your account</h1>
+        <p class="form-subtitle">Enter your credentials to continue</p>
+
+        @if(session('success'))
+            <div class="form-alert form-alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="form-alert form-alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>Invalid email or password. Please try again.</div>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
+
+            <div class="field">
+                <label class="field-label" for="email">Email address</label>
+                <div class="field-input-wrap">
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        class="field-input"
+                        value="{{ old('email') }}"
+                        placeholder="you@naap.edu.ph"
+                        autocomplete="email"
+                        autofocus
+                        required
+                        style="padding-left: 2.75rem;"
+                    >
+                    <i class="bi bi-envelope field-icon"></i>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="password">Password</label>
+                <div class="field-input-wrap">
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        class="field-input"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                        style="padding-left: 2.75rem; padding-right: 3rem;"
+                    >
+                    <i class="bi bi-lock field-icon"></i>
+                    <button type="button" class="pwd-toggle" id="pwdToggle">
+                        <i class="bi bi-eye" id="pwdIcon"></i>
+                    </button>
+                </div>
+                <div class="field-foot">
+                    <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Sign In
+            </button>
+        </form>
+
+        <div class="or-divider">Don't have an account?</div>
+
+        <a href="{{ route('register') }}" class="btn-outline">
+            <i class="bi bi-person-plus"></i>
+            Create an account
+        </a>
+
+        <p class="form-foot">
+            &copy; {{ date('Y') }} NAAP Lost &amp; Found &mdash; All rights reserved.
+        </p>
+    </div>
+</div>
+
+<script>
+const pwdToggle = document.getElementById('pwdToggle');
+const pwdInput  = document.getElementById('password');
+const pwdIcon   = document.getElementById('pwdIcon');
+
+pwdToggle.addEventListener('click', () => {
+    const show = pwdInput.type === 'password';
+    pwdInput.type = show ? 'text' : 'password';
+    pwdIcon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+});
+</script>
 </body>
 </html>

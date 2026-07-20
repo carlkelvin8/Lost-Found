@@ -2,36 +2,43 @@
 
 @section('title', 'Edit Report · NAAP Lost & Found')
 
+@push('styles')
+<link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
-{{-- FLASH --}}
 @if(session('success'))
-  <div class="alert alert-success d-flex gap-2">
-    <i class="bi bi-check-circle"></i> {{ session('success') }}
+  <div class="admin-alert alert-success">
+    <i class="bi bi-check-circle"></i> <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if($errors->any())
-  <div class="alert alert-danger">
-    <strong><i class="bi bi-exclamation-triangle"></i> Fix the errors:</strong>
-    <ul class="mb-0 mt-1">
-      @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-    </ul>
+  <div class="admin-alert alert-danger">
+    <i class="bi bi-exclamation-triangle"></i> <div>Please fix the errors below</div>
   </div>
 @endif
 
-{{-- HEADER --}}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 fw-bold mb-0">Edit Report #{{ $report->id }}</h1>
-  <a class="btn btn-outline-secondary btn-sm" href="{{ route('reports.show',$report->id) }}">
+<div class="form-page-header">
+  <div>
+    <h1>Edit Report #{{ $report->id }}</h1>
+    <div class="form-page-subtitle">Update report details</div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ route('reports.show',$report->id) }}">
     <i class="bi bi-arrow-left"></i> Back
   </a>
 </div>
 
-{{-- FORM --}}
-<form id="editForm" method="POST" action="{{ route('reports.update',$report->id) }}" class="glass-card p-4 mb-4">
+<form id="editForm" method="POST" action="{{ route('reports.update',$report->id) }}" class="form-section">
 @csrf
 
-<div class="section-title"><i class="bi bi-pencil-square"></i> Report Information</div>
+<div class="form-section-header">
+  <div class="form-section-icon"><i class="bi bi-pencil-square"></i></div>
+  <div>
+    <div class="form-section-title">Report Information</div>
+    <div class="form-section-subtitle">Edit the report fields below</div>
+  </div>
+</div>
 
 <div class="row g-3">
   @if($isStaff)
@@ -125,32 +132,28 @@
   </div>
 </div>
 
-<div class="sticky-actions mt-3">
-  <button type="button" class="btn btn-primary px-4" onclick="confirmSave()">
+<div class="form-actions">
+  <button type="button" class="btn btn-primary" onclick="confirmSave()">
     <i class="bi bi-save"></i> Save Changes
   </button>
 </div>
 </form>
 
 {{-- PHOTOS --}}
-<div class="glass-card p-4">
-  <div class="section-title"><i class="bi bi-images"></i> Photos</div>
+<div class="form-section">
+  <div class="form-section-header">
+    <div class="form-section-icon"><i class="bi bi-images"></i></div>
+    <div>
+      <div class="form-section-title">Photos</div>
+      <div class="form-section-subtitle">Manage report photos</div>
+    </div>
+  </div>
 
   @if($report->photos->count())
     <div class="row g-3 mb-3">
       @foreach($report->photos as $p)
         <div class="col-6 col-md-3">
-          <div class="photo-card">
-            {{-- Use asset() to resolve photo URL --}}
-            <img src="{{ asset($p->photo_url) }}" class="report-photo" alt="Report photo">
-            <div class="photo-actions">
-              <button type="button"
-                class="btn btn-sm btn-danger w-100"
-                onclick="confirmDelete({{ $p->id }})">
-                <i class="bi bi-trash"></i> Delete
-              </button>
-            </div>
-          </div>
+          <img src="{{ asset($p->photo_url) }}" class="img-fluid rounded" alt="Report photo" style="border:1px solid var(--border-default);">
         </div>
       @endforeach
     </div>
@@ -184,42 +187,6 @@
     </div>
   </form>
 </div>
-
-@push('styles')
-<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet">
-<style>
-  .photo-upload-section {
-    background: var(--bg-secondary);
-    border: 2px dashed var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    text-align: center;
-  }
-
-  .upload-options {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-md);
-    flex-wrap: wrap;
-  }
-
-  .btn-camera {
-    min-width: 140px;
-  }
-
-  .upload-divider {
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  #singlePhotoPreview img {
-    max-width: 200px;
-    border-radius: var(--radius-md);
-    border: 2px solid var(--border-default);
-  }
-</style>
-@endpush
 
 @push('scripts')
 <script src="{{ asset('js/camera-capture.js') }}"></script>

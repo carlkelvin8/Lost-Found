@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotificationMail;
 use App\Models\ActivityLog;
 use App\Models\Notification;
 use App\Models\ReportStatusHistory;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class WebBaseController extends Controller
 {
@@ -43,6 +47,7 @@ class WebBaseController extends Controller
 
     protected function notify(int $userId, string $type, string $title, string $body, array $data = []): void
     {
+        // Save to database
         Notification::create([
             'user_id' => $userId,
             'notif_type' => $type,
@@ -50,6 +55,19 @@ class WebBaseController extends Controller
             'body' => $body,
             'data_json' => $data ? json_encode($data) : null,
         ]);
+
+        // Send email notification (non-blocking)
+        try {
+            $user = User::find($userId);
+            if ($user && $user->email) {
+                Mail::to($user->email)->send(new NotificationMail($title, $body, $type));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Email notification failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function pushReportStatus(int $reportId, ?string $old, string $new, ?int $changedByUserId = null, ?string $note = null): void

@@ -2,103 +2,108 @@
 
 @section('title', 'User Details')
 
+@push('styles')
+<link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+<link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      <div class="d-flex align-items-center justify-content-between mb-3">
-  <h1 class="h4 fw-bold mb-0">User #{{ $user->id }}</h1>
+
+<div class="form-page-header">
+  <div>
+    <h1>User #{{ $user->id }}</h1>
+    <div class="form-page-subtitle">Account details and activity</div>
+  </div>
   <div class="d-flex gap-2">
-    <a class="btn btn-sm btn-outline-secondary" href="{{ route('users.edit', $user->id) }}"><i class="bi bi-pencil"></i> Edit</a>
-    <a class="btn btn-sm btn-outline-secondary" href="{{ route('users.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
+    <a class="btn btn-outline-primary" href="{{ route('users.edit', $user->id) }}"><i class="bi bi-pencil"></i> Edit</a>
+    <a class="btn btn-outline-secondary" href="{{ route('users.index') }}"><i class="bi bi-arrow-left"></i> Back</a>
   </div>
 </div>
 
 <div class="row g-3">
   <div class="col-12 col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          @if(!empty($user->profile?->avatar_url))
-            <img src="{{ asset($user->profile->avatar_url) }}" alt="Avatar"
-                 class="rounded-circle" style="width:56px;height:56px;object-fit:cover">
-          @else
-            @php $initial = strtoupper(substr($user->email,0,1)); @endphp
-            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
-                 style="width:56px;height:56px;background:#e0e7ff;color:#2563eb;font-weight:800;font-size:1.25rem">
-              {{ $initial }}
-            </div>
-          @endif
-          <div>
-            <div class="text-muted small">Email</div>
-            <div class="fw-semibold">{{ $user->email }}</div>
-          </div>
-        </div>
-
-        <div class="text-muted small mt-3">Name</div>
-        <div class="fw-semibold">{{ $user->profile?->full_name ?? '—' }}</div>
-
-        <div class="text-muted small mt-3">Roles</div>
-        <div>
-          @php $names = $user->roles->pluck('name')->values(); @endphp
-          @if($names->count())
-            @foreach($names as $n)
-              <span class="badge text-bg-secondary">{{ $n }}</span>
-            @endforeach
-          @else
-            <span class="text-muted">—</span>
-          @endif
-        </div>
-
-        <div class="text-muted small mt-3">Status</div>
-        @if((int)$user->is_active===1)
-          <span class="badge text-bg-success">Active</span>
+    <div class="detail-card">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        @if(!empty($user->profile?->avatar_url))
+          <img src="{{ asset($user->profile->avatar_url) }}" alt="Avatar"
+               class="rounded-circle" style="width:56px;height:56px;object-fit:cover">
         @else
-          <span class="badge text-bg-danger">Disabled</span>
+          @php $initial = strtoupper(substr($user->email,0,1)); @endphp
+          <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+               style="width:56px;height:56px;background:#e0e7ff;color:#2563eb;font-weight:800;font-size:1.25rem">
+            {{ $initial }}
+          </div>
         @endif
-
-        <div class="text-muted small mt-3">Reports created</div>
-        <div class="fw-semibold">{{ $reportsCount }}</div>
+        <div>
+          <div class="detail-label">Email</div>
+          <div class="detail-value">{{ $user->email }}</div>
+        </div>
       </div>
+
+      <div class="detail-label">Name</div>
+      <div class="detail-value">{{ $user->profile?->full_name ?? '—' }}</div>
+
+      <div class="detail-label mt-3">Roles</div>
+      <div>
+        @php $names = $user->roles->pluck('name')->values(); @endphp
+        @if($names->count())
+          @foreach($names as $n)
+            <span class="admin-badge admin-badge-secondary">{{ $n }}</span>
+          @endforeach
+        @else
+          <span class="text-muted">—</span>
+        @endif
+      </div>
+
+      <div class="detail-label mt-3">Status</div>
+      <div>
+        @if((int)$user->is_active===1)
+          <span class="admin-badge admin-badge-success">Active</span>
+        @else
+          <span class="admin-badge admin-badge-danger">Disabled</span>
+        @endif
+      </div>
+
+      <div class="detail-label mt-3">Reports created</div>
+      <div class="detail-value">{{ $reportsCount }}</div>
     </div>
   </div>
 
   <div class="col-12 col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <div class="text-muted small">Profile fields</div>
-        <div class="mt-2">
-          <div><span class="text-muted">User type:</span> <span class="fw-semibold">{{ $user->profile?->user_type ?? '—' }}</span></div>
-          <div><span class="text-muted">Department ID:</span> <span class="fw-semibold">{{ $user->profile?->department_id ?? '—' }}</span></div>
-          <div><span class="text-muted">School ID:</span> <span class="fw-semibold">{{ $user->profile?->school_id_number ?? '—' }}</span></div>
-          <div><span class="text-muted">Contact:</span> <span class="fw-semibold">{{ $user->profile?->contact_no ?? '—' }}</span></div>
-        </div>
-      </div>
+    <div class="detail-card">
+      <div class="detail-card-title"><i class="bi bi-person-badge"></i> Profile Fields</div>
+      <div class="detail-label mt-2">User type</div>
+      <div class="detail-value">{{ $user->profile?->user_type ?? '—' }}</div>
+      <div class="detail-label mt-2">Department ID</div>
+      <div class="detail-value">{{ $user->profile?->department_id ?? '—' }}</div>
+      <div class="detail-label mt-2">School ID</div>
+      <div class="detail-value">{{ $user->profile?->school_id_number ?? '—' }}</div>
+      <div class="detail-label mt-2">Contact</div>
+      <div class="detail-value">{{ $user->profile?->contact_no ?? '—' }}</div>
     </div>
   </div>
 </div>
 
 <!-- Claims Section -->
 <div class="mt-4">
-  <h2 class="h5 fw-bold mb-3">Claims</h2>
+  <h2 style="font-size:1.25rem;font-weight:700;color:var(--text-primary);margin-bottom:var(--space-lg);">Claims</h2>
   @if($claims->count() > 0)
-    <div class="card shadow-sm">
+    <div class="admin-table-card">
       <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0">
+        <table class="admin-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -120,22 +125,19 @@
                 </td>
                 <td>
                   @php
-                    $statusColors = [
-                      'pending' => 'warning',
-                      'approved' => 'success',
-                      'rejected' => 'danger',
-                      'cancelled' => 'secondary'
-                    ];
-                    $color = $statusColors[$claim->status] ?? 'secondary';
+                    $badgeMap = ['pending' => 'admin-badge-warning', 'approved' => 'admin-badge-success', 'rejected' => 'admin-badge-danger', 'cancelled' => 'admin-badge-secondary'];
+                    $bc = $badgeMap[$claim->status] ?? 'admin-badge-secondary';
                   @endphp
-                  <span class="badge text-bg-{{ $color }}">{{ ucfirst($claim->status) }}</span>
+                  <span class="admin-badge {{ $bc }}">{{ ucfirst($claim->status) }}</span>
                 </td>
                 <td>{{ $claim->created_at?->format('Y-m-d H:i') ?? '—' }}</td>
                 <td>{{ $claim->reviewed_at?->format('Y-m-d H:i') ?? '—' }}</td>
-                <td class="text-end">
-                  <a href="{{ route('claims.show', $claim->id) }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-eye"></i>
-                  </a>
+                <td>
+                  <div class="admin-btn-group">
+                    <a href="{{ route('claims.show', $claim->id) }}" class="admin-action-btn">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </div>
                 </td>
               </tr>
             @endforeach
@@ -144,10 +146,7 @@
       </div>
     </div>
   @else
-    <div class="alert alert-info d-flex align-items-start gap-2" role="alert">
-      <i class="bi bi-info-circle"></i>
-      <div>No claims submitted by this user</div>
-    </div>
+    <div class="admin-empty-state" style="background:white;border:1px solid var(--border-default);border-radius:12px;padding:2rem;">No claims submitted by this user</div>
   @endif
 </div>
 @endsection

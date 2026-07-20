@@ -2,74 +2,70 @@
 
 @section('title', 'Users')
 
+@push('styles')
+<link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+@endpush
+
 @section('content')
 @if (session('success'))
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="admin-alert alert-success" role="alert">
     <i class="bi bi-check-circle"></i>
     <div>{{ session('success') }}</div>
   </div>
 @endif
 
 @if ($errors->any())
-  <div class="alert alert-danger" role="alert">
-    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Please fix the errors below</div>
-    <ul class="mb-0">
-      @foreach ($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
+  <div class="admin-alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>{{ $errors->first() }}</div>
   </div>
 @endif
-      @php
+
+@php
   $roleFilter = $role ?? '';
   $activeFilter = $active ?? '';
 @endphp
 
-  
-<div class="d-flex align-items-center justify-content-between mb-3">
+<div class="admin-page-header">
   <div>
-    <h1 class="h4 fw-bold mb-0">Users</h1>
-    <div class="text-muted small">Manage accounts</div>
+    <h1>Users</h1>
+    <div class="admin-page-subtitle">Manage accounts</div>
   </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-sm btn-primary" href="{{ route('users.create') }}"><i class="bi bi-plus-circle"></i> New</a>
-  </div>
+  <a class="btn btn-primary" href="{{ route('users.create') }}"><i class="bi bi-plus-circle"></i> New</a>
 </div>
 
-<form class="card shadow-sm mb-3" method="GET" action="{{ route('users.index') }}">
-  <div class="card-body">
-    <div class="row g-2 align-items-end">
-      <div class="col-12 col-md-4">
-        <label class="form-label mb-1">Search (email or name)</label>
-        <input class="form-control" name="q" value="{{ $q ?? '' }}" />
-      </div>
-      <div class="col-12 col-md-3">
-        <label class="form-label mb-1">Role</label>
-        <select class="form-select" name="role">
-          <option value="">Any</option>
-          @foreach($roles as $r)
-            <option value="{{ $r->name }}" @selected($roleFilter===$r->name)>{{ $r->name }}</option>
-          @endforeach
-        </select>
-      </div>
-      <div class="col-12 col-md-3">
-        <label class="form-label mb-1">Active</label>
-        <select class="form-select" name="active">
-          <option value="">Any</option>
-          <option value="1" @selected((string)$activeFilter==='1')>Active</option>
-          <option value="0" @selected((string)$activeFilter==='0')>Disabled</option>
-        </select>
-      </div>
-      <div class="col-12 col-md-2 text-md-end">
-        <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
-      </div>
+<form class="admin-filter-card" method="GET" action="{{ route('users.index') }}">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-4">
+      <label class="form-label">Search (email or name)</label>
+      <input class="form-control" name="q" value="{{ $q ?? '' }}" />
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label">Role</label>
+      <select class="form-select" name="role">
+        <option value="">Any</option>
+        @foreach($roles as $r)
+          <option value="{{ $r->name }}" @selected($roleFilter===$r->name)>{{ $r->name }}</option>
+        @endforeach
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label">Active</label>
+      <select class="form-select" name="active">
+        <option value="">Any</option>
+        <option value="1" @selected((string)$activeFilter==='1')>Active</option>
+        <option value="0" @selected((string)$activeFilter==='0')>Disabled</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-2 text-md-end">
+      <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
     </div>
   </div>
 </form>
 
-<div class="card shadow-sm">
+<div class="admin-table-card">
   <div class="table-responsive">
-    <table class="table table-striped align-middle mb-0">
+    <table class="admin-table">
       <thead>
         <tr>
           <th>Avatar</th>
@@ -103,7 +99,7 @@
               @php $names = $u->roles->pluck('name')->values(); @endphp
               @if($names->count())
                 @foreach($names as $n)
-                  <span class="badge text-bg-secondary">{{ $n }}</span>
+                  <span class="admin-badge admin-badge-secondary">{{ $n }}</span>
                 @endforeach
               @else
                 <span class="text-muted">—</span>
@@ -111,37 +107,36 @@
             </td>
             <td>
               @if((int)$u->is_active===1)
-                <span class="badge text-bg-success">Active</span>
+                <span class="admin-badge admin-badge-success">Active</span>
               @else
-                <span class="badge text-bg-danger">Disabled</span>
+                <span class="admin-badge admin-badge-danger">Disabled</span>
               @endif
             </td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{{ route('users.show', $u->id) }}"><i class="bi bi-eye"></i></a>
-              <a class="btn btn-sm btn-outline-secondary" href="{{ route('users.edit', $u->id) }}"><i class="bi bi-pencil"></i></a>
-              <form class="d-inline" method="POST" action="{{ route('users.destroy', $u->id) }}">
-                @csrf
-                <button 
-                  class="btn btn-sm btn-outline-danger" 
-                  type="submit"
-                  data-confirm="Are you sure you want to delete this user? This action cannot be undone."
-                  data-confirm-text="Delete User"
-                  data-confirm-danger="true"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
+            <td>
+              <div class="admin-btn-group">
+                <a class="admin-action-btn" href="{{ route('users.show', $u->id) }}"><i class="bi bi-eye"></i></a>
+                <a class="admin-action-btn" href="{{ route('users.edit', $u->id) }}"><i class="bi bi-pencil"></i></a>
+                <form class="d-inline" method="POST" action="{{ route('users.destroy', $u->id) }}">
+                  @csrf
+                  <button class="admin-action-btn admin-action-btn-danger" type="submit"
+                    data-confirm="Are you sure you want to delete this user? This action cannot be undone."
+                    data-confirm-text="Delete User"
+                    data-confirm-danger="true">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
         @empty
-          <tr><td colspan="6" class="text-center text-muted p-4">No users</td></tr>
+          <tr><td colspan="7" class="admin-empty-state">No users</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
 </div>
 
-<div class="mt-3">
+<div class="admin-pagination">
   {{ $users->links() }}
 </div>
 @endsection
