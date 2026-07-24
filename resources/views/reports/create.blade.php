@@ -137,7 +137,7 @@
             <label for="cameraInput" class="btn btn-primary btn-camera">
               <i class="bi bi-camera-fill"></i> Take Photo
             </label>
-            <input id="cameraInput" class="d-none" type="file" name="photos[]" accept="image/*" capture="environment" multiple onchange="previewPhotos(document.getElementById('photoInput'), this)" />
+            <input id="cameraInput" class="d-none" type="file" accept="image/*" capture="environment" multiple onchange="previewPhotos(document.getElementById('photoInput'), this)" />
             <span class="upload-divider">or</span>
             <label for="photoInput" class="btn btn-outline-primary">
               <i class="bi bi-upload"></i> Choose Files

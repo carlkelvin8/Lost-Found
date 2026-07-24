@@ -14,6 +14,7 @@ class ClaimDocument extends Model
         'claim_id',
         'file_url',
         'file_type',
-        'file_hash_sha256'
+        'file_hash_sha256',
+        'created_at',
     ];
 }

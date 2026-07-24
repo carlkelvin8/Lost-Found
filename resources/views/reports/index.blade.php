@@ -31,11 +31,14 @@
 
 {{-- QUICK STATS --}}
 @php
-  $lostCount = \App\Models\ItemReport::where('report_type', 'lost')->count();
-  $foundCount = \App\Models\ItemReport::where('report_type', 'found')->count();
-  $pendingCount = \App\Models\ItemReport::where('status', 'pending')->count();
-  $matchedCount = \App\Models\ItemReport::where('status', 'matched')->count();
-  $claimedCount = \App\Models\ItemReport::where('status', 'claimed')->count();
+  $statsQuery = $isStaff 
+    ? \App\Models\ItemReport::query() 
+    : \App\Models\ItemReport::where('reporter_user_id', auth()->id());
+  $lostCount = (clone $statsQuery)->where('report_type', 'lost')->count();
+  $foundCount = (clone $statsQuery)->where('report_type', 'found')->count();
+  $pendingCount = (clone $statsQuery)->where('status', 'pending')->count();
+  $matchedCount = (clone $statsQuery)->where('status', 'matched')->count();
+  $claimedCount = (clone $statsQuery)->where('status', 'claimed')->count();
 @endphp
 
 <div class="quick-stats">
