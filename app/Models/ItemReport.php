@@ -62,10 +62,14 @@ class ItemReport extends Model
         return $this->hasMany(Claim::class, 'report_id');
     }
 
-    public function matches()
+    public function lostMatches()
     {
-        return $this->hasMany(ReportMatch::class, 'lost_report_id')
-            ->orWhere('found_report_id', $this->id);
+        return $this->hasMany(ReportMatch::class, 'lost_report_id');
+    }
+
+    public function foundMatches()
+    {
+        return $this->hasMany(ReportMatch::class, 'found_report_id');
     }
 
     public function statusHistory()

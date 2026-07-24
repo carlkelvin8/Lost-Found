@@ -133,7 +133,7 @@
 </div>
 
 <div class="form-actions">
-  <button type="button" class="btn btn-primary" onclick="confirmSave()">
+  <button type="submit" class="btn btn-primary">
     <i class="bi bi-save"></i> Save Changes
   </button>
 </div>

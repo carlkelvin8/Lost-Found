@@ -552,7 +552,6 @@
                         <option value="" disabled selected>Select user type</option>
                         <option value="student" {{ old('user_type')=='student' ? 'selected' : '' }}>Student</option>
                         <option value="faculty" {{ old('user_type')=='faculty' ? 'selected' : '' }}>Faculty / Staff</option>
-                        <option value="admin"   {{ old('user_type')=='admin'   ? 'selected' : '' }}>Administrator</option>
                     </select>
                     <i class="bi bi-chevron-down select-arrow"></i>
                 </div>

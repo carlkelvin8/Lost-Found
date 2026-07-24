@@ -76,7 +76,7 @@
                 {{ ucfirst($c->status) }}
               </span>
             </td>
-            <td>{{ $c->claimant->name ?? '—' }}</td>
+            <td>{{ $c->claimant?->profile?->full_name ?? $c->claimant?->email ?? '—' }}</td>
             <td>{{ $c->reviewed_at?->format('Y-m-d H:i') ?? '—' }}</td>
             <td>
               <div class="admin-btn-group">

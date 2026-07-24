@@ -67,7 +67,7 @@ class UserController extends WebBaseController
         DB::transaction(function () use ($request, $data) {
             $user = User::create([
                 'email' => $data['email'],
-                'password_hash' => Hash::make($data['password']),
+                'password' => Hash::make($data['password']),
                 'is_active' => array_key_exists('is_active', $data) ? (int) (bool) $data['is_active'] : 1,
                 'email_verified_at' => null,
                 'last_login_at' => null,
@@ -143,7 +143,7 @@ class UserController extends WebBaseController
                 $update['is_active'] = (int) (bool) $data['is_active'];
             }
             if (!empty($data['password'] ?? null)) {
-                $update['password_hash'] = Hash::make($data['password']);
+                $update['password'] = Hash::make($data['password']);
             }
 
             $user->update($update);

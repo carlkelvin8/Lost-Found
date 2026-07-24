@@ -14,13 +14,13 @@ class StorageController extends Controller
         $fullPath = 'public/' . $path;
 
         if (!Storage::exists($fullPath)) {
-            abort(404, 'File not found: ' . $fullPath);
+            abort(404);
         }
 
         $file = Storage::path($fullPath);
         
         if (!file_exists($file)) {
-            abort(404, 'File does not exist: ' . $file);
+            abort(404);
         }
 
         $mimeType = mime_content_type($file) ?: 'application/octet-stream';

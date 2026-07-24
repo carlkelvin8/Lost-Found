@@ -57,4 +57,9 @@ class User extends Authenticatable // implements MustVerifyEmail
     {
         return $this->hasMany(Claim::class, 'claimant_user_id');
     }
+
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles()->whereIn('name', $roleNames)->exists();
+    }
 }

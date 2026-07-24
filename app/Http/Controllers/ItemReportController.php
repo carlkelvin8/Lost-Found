@@ -42,7 +42,7 @@ class ItemReportController extends WebBaseController
         $locationId = (string) $request->query('location_id', '');
         $q          = trim((string) $request->query('q', ''));
 
-        $query = ItemReport::query();
+        $query = ItemReport::with(['photos', 'category', 'location']);
 
         if ($type !== '') $query->where('report_type', $type);
         if ($status !== '') $query->where('status', $status);
@@ -737,12 +737,21 @@ class ItemReportController extends WebBaseController
     {
         if (!$url) return;
 
-        // If url is like /public/storage/report_photos/xxx.jpg or /storage/report_photos/xxx.jpg
+        // Handle format: "storage/report_photos/xxx.jpg" (no leading slash)
+        if (str_starts_with($url, 'storage/')) {
+            $relative = substr($url, strlen('storage/'));
+            if ($relative && Storage::disk('public')->exists($relative)) {
+                Storage::disk('public')->delete($relative);
+            }
+            return;
+        }
+
+        // Handle format: "/storage/report_photos/xxx.jpg" or "/public/storage/..."
         $pos = strpos($url, '/storage/');
         if ($pos === false) return;
 
-        $relative = substr($url, $pos + strlen('/storage/')); // report_photos/xxx.jpg
-        if ($relative === '') return;
+        $relative = substr($url, $pos + strlen('/storage/'));
+        if ($relative === '' || $relative === false) return;
 
         if (Storage::disk('public')->exists($relative)) {
             Storage::disk('public')->delete($relative);
