@@ -4,7 +4,7 @@
     <title>Forgot Password &middot; NAAP Lost & Found</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/png" href="{{ asset('storage/image.png') }}" sizes="192x192" />
+    <link rel="icon" type="image/png" href="{{ asset('image.png') }}" sizes="192x192" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="{{ asset('css/auth.css') }}" rel="stylesheet" />
@@ -20,7 +20,7 @@
 
         <div class="brand-content">
             <div class="brand-logo">
-                <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo">
+                <img src="{{ asset('image.png') }}" alt="NAAP Logo">
             </div>
             <h1>National Aviation Academy<br>of the Philippines</h1>
             <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Lost and Found Management System</p>
@@ -33,7 +33,7 @@
         <!-- Mobile condensed header -->
         <div class="auth-mobile-header">
             <div class="mobile-logo">
-                <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo">
+                <img src="{{ asset('image.png') }}" alt="NAAP Logo">
             </div>
             <div class="mobile-text">
                 <span class="mobile-title">NAAP Lost & Found</span>

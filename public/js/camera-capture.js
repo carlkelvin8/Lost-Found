@@ -239,7 +239,7 @@ class CameraCapture {
         const controls = this.modal.querySelector('.camera-controls');
         
         // Show camera preview and controls, hide gallery
-        preview.style.display = 'block';
+        preview.style.display = '';
         controls.style.display = 'flex';
         gallery.style.display = 'none';
     }
@@ -371,8 +371,11 @@ let cameraCapture = null;
 
 // Initialize function
 function initCamera(options = {}) {
-    if (!cameraCapture) {
-        cameraCapture = new CameraCapture(options);
+    // Always close previous instance and create fresh with new options
+    if (cameraCapture) {
+        cameraCapture.close();
+        cameraCapture = null;
     }
+    cameraCapture = new CameraCapture(options);
     cameraCapture.open();
 }

@@ -5,6 +5,7 @@
 @push('styles')
 <link href="{{ asset('css/reports.css') }}" rel="stylesheet" />
 <link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet" />
 @endpush
 
 @section('content')
@@ -133,16 +134,15 @@
         <label class="form-label">Photos (optional, multiple)</label>
         <div class="photo-upload-section">
           <div class="upload-options">
-            {{-- Native camera capture for mobile (always works) --}}
-            <label for="cameraInput" class="btn btn-primary btn-camera">
+            {{-- Camera capture using modal --}}
+            <button type="button" class="btn btn-primary btn-camera" id="takePhotoBtn">
               <i class="bi bi-camera-fill"></i> Take Photo
-            </label>
-            <input id="cameraInput" class="d-none" type="file" accept="image/*" capture="environment" multiple onchange="previewPhotos(document.getElementById('photoInput'), this)" />
+            </button>
             <span class="upload-divider">or</span>
             <label for="photoInput" class="btn btn-outline-primary">
               <i class="bi bi-upload"></i> Choose Files
             </label>
-            <input id="photoInput" class="form-control d-none" type="file" name="photos[]" multiple accept="image/*" />
+            <input id="photoInput" class="d-none" type="file" name="photos[]" multiple accept="image/*" />
           </div>
           <div class="form-text mt-2">
             <i class="bi bi-info-circle"></i> Upload clear photos for better matching (front/back/details). Max 5 photos.
@@ -251,63 +251,44 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('js/camera-capture.js') }}"></script>
 <script>
-  // Collect all files from both camera and file picker
-  let allFiles = [];
+  const photoInput = document.getElementById('photoInput');
+  const takePhotoBtn = document.getElementById('takePhotoBtn');
 
-  function previewPhotos(sourceInput, cameraInput) {
-    // If called with two args, it's from camera input
-    if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
-      // Add camera files to collection
-      Array.from(cameraInput.files).forEach(file => {
-        if (allFiles.length < 5) {
-          allFiles.push(file);
-        }
-      });
-      // Sync to main photos input
-      syncFilesToInput();
-    } else if (sourceInput && sourceInput.files) {
-      // From file picker - replace with these files
-      allFiles = Array.from(sourceInput.files);
-    }
-    
+  // Take Photo button opens the camera modal
+  takePhotoBtn.addEventListener('click', function() {
+    initCamera({
+      maxPhotos: 5,
+      targetInput: 'input[name="photos[]"]'
+    });
+  });
+
+  // File picker change — show preview
+  photoInput.addEventListener('change', function() {
     renderPreview();
-  }
-
-  function syncFilesToInput() {
-    const mainInput = document.getElementById('photoInput');
-    const dataTransfer = new DataTransfer();
-    allFiles.forEach(file => dataTransfer.items.add(file));
-    mainInput.files = dataTransfer.files;
-  }
+  });
 
   function renderPreview() {
     const container = document.getElementById('photoPreviewContainer');
     container.innerHTML = '';
-    
-    const files = allFiles.length > 0 ? allFiles : Array.from(document.getElementById('photoInput').files || []);
-    
-    if (files.length > 0) {
-      files.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const div = document.createElement('div');
-          div.className = 'photo-preview-item fade-in';
-          div.innerHTML = `
-            <img src="${e.target.result}" alt="Photo ${index + 1}">
-            <span class="photo-number">${index + 1}</span>
-          `;
-          container.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  }
 
-  // Handle file picker change
-  document.getElementById('photoInput').addEventListener('change', function() {
-    previewPhotos(this);
-  });
+    const files = Array.from(photoInput.files || []);
+
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.className = 'photo-preview-item fade-in';
+        div.innerHTML = `
+          <img src="${e.target.result}" alt="Photo ${index + 1}">
+          <span class="photo-number">${index + 1}</span>
+        `;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 </script>
 @endpush
 @endsection

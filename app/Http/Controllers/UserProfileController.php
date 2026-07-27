@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class UserProfileController extends WebBaseController
 {
@@ -45,13 +45,25 @@ class UserProfileController extends WebBaseController
             ];
 
             if (!empty($data['avatar'] ?? null)) {
+                // Delete old avatar from public/avatars/
                 if ($u->profile && !empty($u->profile->avatar_url)) {
                     $old = $u->profile->avatar_url;
-                    $oldPath = str_starts_with($old, 'storage/') ? substr($old, 8) : $old;
-                    Storage::disk('public')->delete($oldPath);
+                    $oldPath = public_path($old);
+                    if (File::exists($oldPath)) {
+                        File::delete($oldPath);
+                    }
                 }
-                $path = $data['avatar']->store('avatars', 'public');
-                $payload['avatar_url'] = 'storage/' . $path;
+
+                // Store new avatar directly in public/avatars/
+                $dir = public_path('avatars');
+                if (!File::isDirectory($dir)) {
+                    File::makeDirectory($dir, 0755, true);
+                }
+
+                $filename = 'avatar_' . $u->id . '_' . time() . '.' . $data['avatar']->getClientOriginalExtension();
+                $data['avatar']->move($dir, $filename);
+
+                $payload['avatar_url'] = 'avatars/' . $filename;
             }
 
             if ($u->profile) {

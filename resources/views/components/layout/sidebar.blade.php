@@ -3,14 +3,15 @@
   $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
   $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
   $currentRoute = request()->route()->getName();
+  $initial = strtoupper(substr($user->email ?? 'U', 0, 1));
 @endphp
 
 <aside class="main-sidebar" id="mainSidebar">
   <div class="sidebar-content">
     <!-- Main Navigation -->
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Main Menu</div>
-      
+      <div class="sidebar-section-title">Navigation</div>
+
       <a href="{{ route('dashboard') }}" class="sidebar-item {{ $currentRoute === 'dashboard' ? 'active' : '' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-grid-fill"></i>
@@ -45,10 +46,10 @@
     </div>
 
     @if($isStaff)
-    <!-- Staff Section -->
+    <!-- Staff Tools -->
     <div class="sidebar-section">
       <div class="sidebar-section-title">Staff Tools</div>
-      
+
       <a href="{{ route('matches.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'matches.') ? 'active' : '' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-diagram-2-fill"></i>
@@ -64,10 +65,10 @@
       </a>
     </div>
 
-    <!-- Management Section -->
+    <!-- Management -->
     <div class="sidebar-section">
       <div class="sidebar-section-title">Management</div>
-      
+
       <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-diagram-3-fill"></i>
@@ -107,24 +108,21 @@
     </div>
     @endif
 
-    <!-- Quick Actions -->
-    <div class="sidebar-section">
-      <a href="{{ route('reports.create') }}" class="sidebar-item-cta">
-        <i class="bi bi-plus-lg"></i>
-        <span>Create New Report</span>
-      </a>
-    </div>
+    <!-- New Report CTA -->
+    <a href="{{ route('reports.create') }}" class="sidebar-item-cta">
+      <i class="bi bi-plus-lg"></i>
+      <span>New Report</span>
+    </a>
   </div>
 
-  <!-- Sidebar Footer -->
+  <!-- Footer -->
   <div class="sidebar-footer">
     <a href="{{ route('profile.edit') }}" class="sidebar-footer-link">
       <div class="sidebar-footer-icon">
-        <i class="bi bi-gear-fill"></i>
+        <i class="bi bi-gear"></i>
       </div>
       <div class="sidebar-footer-text">
         <div class="sidebar-footer-label">Settings</div>
-        <div class="sidebar-footer-sublabel">Manage your account</div>
       </div>
       <i class="bi bi-chevron-right sidebar-footer-arrow"></i>
     </a>
@@ -138,21 +136,15 @@
 document.addEventListener('DOMContentLoaded', function() {
   const sidebar = document.getElementById('mainSidebar');
   const overlay = document.getElementById('sidebarOverlay');
-  const sidebarToggle = document.getElementById('sidebarToggle');
 
-  // Close sidebar when clicking overlay
   if (overlay) {
     overlay.addEventListener('click', function() {
-      if (sidebar) {
-        sidebar.classList.remove('show');
-      }
+      if (sidebar) sidebar.classList.remove('show');
     });
   }
 
-  // Close sidebar when clicking a link on mobile
   if (sidebar && window.innerWidth <= 991) {
-    const sidebarLinks = sidebar.querySelectorAll('.sidebar-item');
-    sidebarLinks.forEach(link => {
+    sidebar.querySelectorAll('.sidebar-item, .sidebar-item-cta, .sidebar-footer-link').forEach(link => {
       link.addEventListener('click', function() {
         sidebar.classList.remove('show');
       });

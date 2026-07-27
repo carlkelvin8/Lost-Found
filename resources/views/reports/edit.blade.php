@@ -4,6 +4,7 @@
 
 @push('styles')
 <link href="{{ asset('css/form.css') }}" rel="stylesheet" />
+<link href="{{ asset('css/camera-capture.css') }}" rel="stylesheet" />
 @endpush
 
 @section('content')

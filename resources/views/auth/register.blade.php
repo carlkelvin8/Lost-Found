@@ -4,14 +4,19 @@
     <title>Create Account · NAAP Lost & Found</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/png" href="{{ asset('storage/image.png') }}" sizes="192x192" />
+    <link rel="icon" type="image/png" href="{{ asset('image.png') }}" sizes="192x192" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             --blue: #0041C7;
             --blue-dark: #0033A0;
+            --blue-light: #3ACBEB;
+            --blue-glow: rgba(0,65,199,0.15);
             --white: #ffffff;
             --gray-50: #f8fafc;
             --gray-100: #f1f5f9;
@@ -20,13 +25,20 @@
             --gray-400: #94a3b8;
             --gray-600: #475569;
             --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --red: #ef4444;
+            --red-bg: #fef2f2;
+            --red-border: #fecaca;
+            --green: #22c55e;
+            --green-bg: #f0fdf4;
+            --green-border: #bbf7d0;
         }
 
         html, body { height: 100%; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
             display: flex;
             min-height: 100vh;
         }
@@ -35,7 +47,7 @@
         .panel-left {
             width: 420px;
             flex-shrink: 0;
-            background: linear-gradient(145deg, #0033A0 0%, #0041C7 50%, #0D85D8 100%);
+            background: linear-gradient(145deg, #002060 0%, #0041C7 40%, #0D85D8 100%);
             position: sticky;
             top: 0;
             height: 100vh;
@@ -52,18 +64,38 @@
             position: absolute;
             inset: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-            background-size: 36px 36px;
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 48px 48px;
         }
 
-        .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2; pointer-events: none; }
-        .blob-1 { width: 400px; height: 400px; background: #3ACBEB; top: -120px; right: -80px; animation: blobMove 12s ease-in-out infinite; }
-        .blob-2 { width: 300px; height: 300px; background: white; bottom: -80px; left: -60px; animation: blobMove 16s ease-in-out infinite reverse; }
+        .panel-left::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(to top, rgba(0,0,0,0.15), transparent);
+            pointer-events: none;
+        }
 
-        @keyframes blobMove {
-            0%,100% { transform: translate(0,0) scale(1); }
-            50% { transform: translate(20px,-20px) scale(1.08); }
+        /* Animated orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.2;
+            pointer-events: none;
+        }
+        .orb-1 { width: 450px; height: 450px; background: var(--blue-light); top: -150px; right: -100px; animation: orbDrift 14s ease-in-out infinite; }
+        .orb-2 { width: 350px; height: 350px; background: #fff; bottom: -100px; left: -80px; animation: orbDrift 18s ease-in-out infinite reverse; }
+        .orb-3 { width: 200px; height: 200px; background: #818cf8; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: orbDrift 10s ease-in-out infinite 2s; }
+
+        @keyframes orbDrift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(20px, -25px) scale(1.05); }
+            66% { transform: translate(-15px, 15px) scale(0.95); }
         }
 
         .brand-wrap {
@@ -74,42 +106,47 @@
         }
 
         .brand-logo-box {
-            width: 100px;
-            height: 100px;
+            width: 112px;
+            height: 112px;
             background: white;
-            border-radius: 24px;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.75rem;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            margin: 0 auto 2rem;
+            box-shadow:
+                0 24px 60px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(255,255,255,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.4);
             overflow: hidden;
-            animation: logoFloat 4s ease-in-out infinite;
+            animation: logoFloat 5s ease-in-out infinite;
         }
 
         @keyframes logoFloat {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+            0%,100% { transform: translateY(0); box-shadow: 0 24px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1); }
+            50% { transform: translateY(-10px); box-shadow: 0 32px 70px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1); }
         }
 
-        .brand-logo-box img { width: 88%; height: 88%; object-fit: contain; padding: 6px; }
+        .brand-logo-box img { width: 88%; height: 88%; object-fit: contain; padding: 8px; }
 
         .brand-wrap h1 {
-            font-size: 1.375rem;
+            font-size: 1.5rem;
             font-weight: 800;
-            line-height: 1.3;
-            letter-spacing: -0.02em;
+            line-height: 1.25;
+            letter-spacing: -0.03em;
             margin-bottom: 0.625rem;
+            text-shadow: 0 2px 16px rgba(0,0,0,0.25);
         }
 
-        .brand-wrap .tagline { font-size: 0.9rem; font-weight: 600; opacity: 0.9; margin-bottom: 0.375rem; }
-        .brand-wrap .loc { font-size: 0.8125rem; opacity: 0.65; }
+        .brand-wrap .tagline { font-size: 0.9375rem; font-weight: 600; opacity: 0.92; margin-bottom: 0.375rem; }
+        .brand-wrap .loc { font-size: 0.8125rem; opacity: 0.6; }
 
+        /* Steps */
         .steps {
             display: flex;
             flex-direction: column;
             gap: 0.625rem;
-            margin-top: 2rem;
+            margin-top: 2.25rem;
             width: 100%;
         }
 
@@ -117,18 +154,34 @@
             display: flex;
             align-items: center;
             gap: 0.875rem;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            padding: 0.875rem 1rem;
             text-align: left;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: stepSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .step:nth-child(1) { animation-delay: 0.1s; }
+        .step:nth-child(2) { animation-delay: 0.2s; }
+        .step:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes stepSlideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step:hover {
+            background: rgba(255,255,255,0.14);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateX(4px);
         }
 
         .step-num {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.18);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -136,10 +189,13 @@
             font-weight: 700;
             flex-shrink: 0;
             color: white;
+            transition: background 0.3s;
         }
 
+        .step:hover .step-num { background: rgba(255,255,255,0.28); }
+
         .step-label { font-size: 0.8125rem; color: rgba(255,255,255,0.85); font-weight: 500; }
-        .step-label strong { display: block; font-weight: 700; color: white; font-size: 0.875rem; }
+        .step-label strong { display: block; font-weight: 700; color: white; font-size: 0.875rem; margin-bottom: 1px; }
 
         /* ── RIGHT PANEL ── */
         .panel-right {
@@ -150,33 +206,95 @@
             align-items: flex-start;
             justify-content: center;
             padding: 3rem 2.5rem;
+            position: relative;
+        }
+
+        /* Subtle dot pattern */
+        .panel-right::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, var(--gray-200) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.4;
+            pointer-events: none;
         }
 
         .form-wrap {
             width: 100%;
             max-width: 560px;
+            position: relative;
+            z-index: 1;
+            animation: formFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+        }
+
+        @keyframes formFadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile branding */
+        .mobile-brand {
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .mobile-brand-logo {
+            width: 44px;
+            height: 44px;
+            background: var(--blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .mobile-brand-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .mobile-brand-text {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1.3;
+        }
+
+        .mobile-brand-text span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gray-400);
         }
 
         .form-eyebrow {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             color: var(--blue);
             margin-bottom: 1rem;
+            background: var(--blue-glow);
+            padding: 0.375rem 0.875rem;
+            border-radius: 9999px;
         }
 
-        .form-eyebrow span { width: 24px; height: 2px; background: var(--blue); display: inline-block; border-radius: 2px; }
-
         .form-title {
-            font-size: 2rem;
+            font-size: 1.875rem;
             font-weight: 800;
-            color: var(--gray-800);
+            color: var(--gray-900);
             letter-spacing: -0.04em;
-            line-height: 1.2;
+            line-height: 1.15;
             margin-bottom: 0.375rem;
         }
 
@@ -193,15 +311,15 @@
         }
 
         .section-head-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 9px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
             background: rgba(0,65,199,0.08);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--blue);
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
         }
 
         .section-head-label { font-size: 0.875rem; font-weight: 700; color: var(--gray-800); }
@@ -212,14 +330,20 @@
             align-items: flex-start;
             gap: 0.75rem;
             padding: 1rem 1.125rem;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 0.875rem;
             margin-bottom: 1.5rem;
             border: 1px solid;
+            animation: alertSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .form-alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-        .form-alert-danger  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        @keyframes alertSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-alert-success { background: var(--green-bg); border-color: var(--green-border); color: #166534; }
+        .form-alert-danger  { background: var(--red-bg); border-color: var(--red-border); color: #991b1b; }
         .form-alert i { font-size: 1.125rem; flex-shrink: 0; margin-top: 1px; }
         .form-alert ul { padding-left: 1rem; margin: 0.25rem 0 0; }
 
@@ -241,26 +365,26 @@
 
         .field-icon {
             position: absolute;
-            left: 0.875rem;
+            left: 0.9375rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray-400);
-            font-size: 0.9375rem;
+            font-size: 1rem;
             pointer-events: none;
-            transition: color 0.2s;
+            transition: all 0.2s;
         }
 
         .field-input,
         .field-select {
             width: 100%;
-            height: 48px;
-            padding: 0 0.875rem 0 2.5rem;
+            height: 50px;
+            padding: 0 0.9375rem 0 2.75rem;
             border: 2px solid var(--gray-200);
-            border-radius: 11px;
+            border-radius: 14px;
             font-size: 0.9rem;
             color: var(--gray-800);
             background: var(--gray-50);
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
             appearance: none;
         }
@@ -270,23 +394,40 @@
         .field-input:focus, .field-select:focus {
             border-color: var(--blue);
             background: white;
-            box-shadow: 0 0 0 3px rgba(0,65,199,0.08);
+            box-shadow: 0 0 0 4px var(--blue-glow);
         }
 
-        .field-input::placeholder { color: #bec8d5; }
+        .field-input::placeholder { color: #b0bac9; }
 
         .field-input-wrap:focus-within .field-icon { color: var(--blue); }
+
+        /* Error state */
+        .field-input.is-error, .field-select.is-error {
+            border-color: var(--red);
+            background: var(--red-bg);
+        }
+
+        .field-input.is-error:focus, .field-select.is-error:focus {
+            box-shadow: 0 0 0 4px rgba(239,68,68,0.1);
+        }
+
+        .field-error {
+            font-size: 0.775rem;
+            color: var(--red);
+            margin-top: 0.35rem;
+            display: block;
+        }
 
         /* Select arrow */
         .select-wrap { position: relative; }
         .select-wrap .select-arrow {
             position: absolute;
-            right: 0.875rem;
+            right: 0.9375rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray-400);
             pointer-events: none;
-            font-size: 0.75rem;
+            font-size: 0.8125rem;
         }
 
         /* Password toggle */
@@ -299,69 +440,118 @@
             border: none;
             cursor: pointer;
             color: var(--gray-400);
-            padding: 4px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: color 0.2s;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .pwd-toggle:hover { color: var(--gray-800); }
+        .pwd-toggle:hover { color: var(--gray-600); background: var(--gray-100); }
 
-        /* Strength meter */
+        .pwd-toggle:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        /* Password strength */
         .strength-bar {
             display: none;
             gap: 4px;
-            margin-top: 6px;
+            margin-top: 8px;
             align-items: center;
         }
         .strength-bar.show { display: flex; }
+
         .strength-seg {
             flex: 1;
-            height: 3px;
+            height: 4px;
             background: var(--gray-200);
-            border-radius: 3px;
-            transition: background 0.3s;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .strength-seg.weak   { background: #ef4444; }
         .strength-seg.fair   { background: #f59e0b; }
         .strength-seg.good   { background: #3b82f6; }
         .strength-seg.strong { background: #22c55e; }
-        .strength-txt { font-size: 0.75rem; color: var(--gray-400); min-width: 60px; text-align: right; }
+        .strength-txt { font-size: 0.75rem; color: var(--gray-400); min-width: 60px; text-align: right; font-weight: 500; }
 
         /* Submit */
         .btn-submit {
             width: 100%;
-            height: 52px;
-            background: var(--blue);
+            height: 54px;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 1rem;
             font-weight: 700;
+            font-family: inherit;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.625rem;
             margin-top: 1.5rem;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
             letter-spacing: -0.01em;
         }
 
-        .btn-submit:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(0,65,199,0.28);
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.25s;
         }
 
-        .btn-submit:active { transform: translateY(0); box-shadow: none; }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(0,65,199,0.35), 0 4px 12px rgba(0,65,199,0.2);
+        }
+
+        .btn-submit:hover::before { opacity: 1; }
+        .btn-submit:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,65,199,0.2); }
+
+        .btn-submit:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        .btn-submit .btn-text { position: relative; z-index: 1; }
+        .btn-submit .btn-icon { position: relative; z-index: 1; transition: transform 0.25s; }
+        .btn-submit:hover .btn-icon { transform: translateX(3px); }
+
+        /* Loading state */
+        .btn-submit.loading {
+            pointer-events: none;
+            opacity: 0.85;
+        }
+        .btn-submit.loading .btn-text,
+        .btn-submit.loading .btn-icon { opacity: 0; }
+        .btn-submit.loading::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: btnSpin 0.7s linear infinite;
+        }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
 
         /* Divider */
         .or-divider {
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin: 1.25rem 0;
+            margin: 1.5rem 0;
             color: var(--gray-400);
             font-size: 0.8125rem;
             font-weight: 500;
@@ -371,54 +561,90 @@
         /* Outline button */
         .btn-outline {
             width: 100%;
-            height: 52px;
+            height: 54px;
             background: white;
             color: var(--gray-800);
             border: 2px solid var(--gray-200);
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 0.9375rem;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.625rem;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn-outline:hover {
             border-color: var(--blue);
             color: var(--blue);
-            background: rgba(0,65,199,0.04);
+            background: rgba(0,65,199,0.03);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,65,199,0.08);
+        }
+        .btn-outline:active { transform: translateY(0); }
+
+        .btn-outline:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
         }
 
-        .form-foot { text-align: center; margin-top: 1.75rem; font-size: 0.8125rem; color: var(--gray-400); }
+        /* Security badge */
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            margin-top: 1.25rem;
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            font-weight: 500;
+        }
+        .security-badge i { color: var(--green); font-size: 0.875rem; }
 
-        /* Error state */
-        .field-input.is-error, .field-select.is-error { border-color: #ef4444; }
-        .field-error { font-size: 0.775rem; color: #ef4444; margin-top: 0.3rem; display: block; }
+        .form-foot {
+            text-align: center;
+            margin-top: 1.75rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--gray-200);
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
 
+        /* ── Responsive ── */
         @media (max-width: 960px) {
             .panel-left { display: none; }
-            .panel-right { padding: 2rem 1.25rem; }
+            .panel-right { padding: 2rem 1.25rem; min-height: 100vh; }
+            body { overflow-y: auto; }
+            .mobile-brand { display: flex; }
+            .form-title { font-size: 1.625rem; }
         }
 
         @media (max-width: 520px) {
             .field-row { grid-template-columns: 1fr; }
+            .panel-right { padding: 1.5rem 1rem; }
+            .form-title { font-size: 1.5rem; }
+            .field-input, .field-select { height: 46px; font-size: 0.875rem; }
+            .btn-submit, .btn-outline { height: 48px; }
         }
+
+        :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
     </style>
 </head>
 <body>
 
 <!-- LEFT PANEL -->
 <div class="panel-left">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="brand-wrap">
         <div class="brand-logo-box">
-            <img src="{{ asset('storage/image.png') }}" alt="NAAP Logo">
+            <img src="{{ asset('image.png') }}" alt="NAAP Logo">
         </div>
         <h1>National Aviation Academy<br>of the Philippines</h1>
         <p class="tagline">Lost and Found Management System</p>
@@ -454,8 +680,19 @@
 <div class="panel-right">
     <div class="form-wrap">
 
+        <!-- Mobile branding -->
+        <div class="mobile-brand">
+            <div class="mobile-brand-logo">
+                <img src="{{ asset('image.png') }}" alt="NAAP">
+            </div>
+            <div class="mobile-brand-text">
+                NAAP Lost & Found
+                <span>Management System</span>
+            </div>
+        </div>
+
         <div class="form-eyebrow">
-            <span></span> Get started
+            <i class="bi bi-rocket-takeoff-fill"></i> Get started
         </div>
         <h1 class="form-title">Create your account</h1>
         <p class="form-subtitle">Fill in the details below to register</p>
@@ -481,7 +718,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('register.post') }}" novalidate>
+        <form method="POST" action="{{ route('register.post') }}" novalidate id="registerForm">
             @csrf
 
             {{-- ── ACCOUNT INFO ── --}}
@@ -515,8 +752,8 @@
                     <label class="field-label" for="password">Password</label>
                     <div class="field-input-wrap">
                         <i class="bi bi-lock field-icon"></i>
-                        <input id="password" type="password" name="password" class="field-input @error('password') is-error @enderror" placeholder="Min. 8 characters" style="padding-right:2.5rem;" required>
-                        <button type="button" class="pwd-toggle" data-for="password"><i class="bi bi-eye"></i></button>
+                        <input id="password" type="password" name="password" class="field-input @error('password') is-error @enderror" placeholder="Min. 8 characters" style="padding-right:2.75rem;" required>
+                        <button type="button" class="pwd-toggle" data-for="password" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
                     </div>
                     <div class="strength-bar" id="strength-bar">
                         <div class="strength-seg" id="s1"></div>
@@ -532,8 +769,8 @@
                     <label class="field-label" for="password_confirmation">Confirm password</label>
                     <div class="field-input-wrap">
                         <i class="bi bi-shield-lock field-icon"></i>
-                        <input id="password_confirmation" type="password" name="password_confirmation" class="field-input" placeholder="Re-enter password" style="padding-right:2.5rem;" required>
-                        <button type="button" class="pwd-toggle" data-for="password_confirmation"><i class="bi bi-eye"></i></button>
+                        <input id="password_confirmation" type="password" name="password_confirmation" class="field-input" placeholder="Re-enter password" style="padding-right:2.75rem;" required>
+                        <button type="button" class="pwd-toggle" data-for="password_confirmation" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
                     </div>
                 </div>
             </div>
@@ -548,13 +785,14 @@
                 <label class="field-label" for="user_type">I am a</label>
                 <div class="field-input-wrap select-wrap">
                     <i class="bi bi-people field-icon"></i>
-                    <select id="user_type" name="user_type" class="field-select" required>
+                    <select id="user_type" name="user_type" class="field-select @error('user_type') is-error @enderror" required>
                         <option value="" disabled selected>Select user type</option>
                         <option value="student" {{ old('user_type')=='student' ? 'selected' : '' }}>Student</option>
                         <option value="faculty" {{ old('user_type')=='faculty' ? 'selected' : '' }}>Faculty / Staff</option>
                     </select>
                     <i class="bi bi-chevron-down select-arrow"></i>
                 </div>
+                @error('user_type')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
             <div class="field-row">
@@ -599,11 +837,16 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">
-                <i class="bi bi-person-check"></i>
-                Create Account
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span class="btn-text">Create Account</span>
+                <i class="bi bi-check-circle btn-icon"></i>
             </button>
         </form>
+
+        <div class="security-badge">
+            <i class="bi bi-shield-lock-fill"></i>
+            Your data is protected with SSL encryption
+        </div>
 
         <div class="or-divider">Already have an account?</div>
 
@@ -625,20 +868,21 @@ document.querySelectorAll('.pwd-toggle').forEach(btn => {
         const show  = input.type === 'password';
         input.type  = show ? 'text' : 'password';
         icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+        input.focus();
     });
 });
 
 // Password strength
-const pwdInput   = document.getElementById('password');
+const pwdInput    = document.getElementById('password');
 const strengthBar = document.getElementById('strength-bar');
-const segs       = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
+const segs        = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
 const strengthTxt = document.getElementById('strength-txt');
 
 const levels = [
-    { label: 'Weak',        cls: 'weak',   fill: 1 },
-    { label: 'Fair',        cls: 'fair',   fill: 2 },
-    { label: 'Good',        cls: 'good',   fill: 3 },
-    { label: 'Strong',      cls: 'strong', fill: 4 },
+    { label: 'Weak',   cls: 'weak',   fill: 1 },
+    { label: 'Fair',   cls: 'fair',   fill: 2 },
+    { label: 'Good',   cls: 'good',   fill: 3 },
+    { label: 'Strong', cls: 'strong', fill: 4 },
 ];
 
 pwdInput.addEventListener('input', () => {
@@ -660,6 +904,28 @@ pwdInput.addEventListener('input', () => {
         s.className = 'strength-seg' + (i < fill ? ' ' + cls : '');
     });
     strengthTxt.textContent = label;
+});
+
+// Form submit loading state
+const form = document.getElementById('registerForm');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', function() {
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+});
+
+// Re-enable on back button (bfcache)
+window.addEventListener('pageshow', function() {
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+});
+
+// Remove error class on input
+document.querySelectorAll('.field-input.is-error, .field-select.is-error').forEach(function(input) {
+    input.addEventListener('input', function() {
+        this.classList.remove('is-error');
+    });
 });
 </script>
 </body>

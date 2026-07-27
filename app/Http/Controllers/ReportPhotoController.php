@@ -28,9 +28,9 @@ class ReportPhotoController extends WebBaseController
             'caption' => ['nullable','string','max:255'],
         ]);
 
-        $path = $data['photo']->store('report_photos', 'public');
-        // Store as storage/xxx so it works with both symlink and StorageController route
-        $url = 'storage/' . $path;
+        $filename = uniqid() . '_' . $data['photo']->getClientOriginalName();
+        $data['photo']->move(public_path('report_photos'), $filename);
+        $url = 'report_photos/' . $filename;
 
         ReportPhoto::create([
             'report_id' => $report->id,
@@ -59,11 +59,13 @@ class ReportPhotoController extends WebBaseController
             return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'Report is locked']);
         }
 
-        // Delete file from storage if it exists
+        // Delete file from public folder
         if ($photo->photo_url) {
-            // Handle both old format (storage/...) and new format (/public/storage/...)
-            $path = str_replace(['/public/storage/', 'storage/'], '', $photo->photo_url);
-            Storage::disk('public')->delete($path);
+            $path = str_replace('storage/', '', $photo->photo_url);
+            $filePath = public_path($path);
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
         }
 
         $photo->delete();

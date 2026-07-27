@@ -141,8 +141,12 @@ class ItemReportController extends WebBaseController
                     $this->storeReportPhoto($report->id, $file);
                 }
                 
-                // Trigger AI Analysis
-                ProcessImageAnalysis::dispatch((int) $report->id);
+                // Trigger AI Analysis (synchronous, wrapped in try-catch so report still saves if AI fails)
+                try {
+                    ProcessImageAnalysis::dispatch((int) $report->id);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
+                }
             }
 
             $this->audit($request, 'reports.create', 'item_reports', $report->id, [
@@ -333,7 +337,11 @@ class ItemReportController extends WebBaseController
             $this->audit($request, 'reports.photo.upload', 'item_reports', $report->id);
             
             // Trigger AI Analysis for new photo
-            ProcessImageAnalysis::dispatch((int) $report->id);
+            try {
+                ProcessImageAnalysis::dispatch((int) $report->id);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
+            }
         });
 
         return redirect()->route('reports.edit', $id)->with('success', 'Photo uploaded');
@@ -485,17 +493,46 @@ class ItemReportController extends WebBaseController
         $oppositeType = $report->report_type === 'lost' ? 'found' : 'lost';
         $matchExpr    = "MATCH(item_name,item_description,brand_model,color,circumstances) AGAINST (? IN NATURAL LANGUAGE MODE)";
 
-        $candidates = ItemReport::query()
-            ->select('item_reports.*')
-            ->selectRaw("$matchExpr AS relevance", [$text])
-            ->where('report_type', $oppositeType)
-            ->whereIn('status', self::ACTIVE_STATUSES)
-            ->where('id', '<>', $report->id)
-            ->whereRaw($matchExpr, [$text])
-            ->orderByDesc('relevance')
-            ->orderByDesc('id')
-            ->limit(self::MATCH_CANDIDATE_LIMIT)
-            ->get();
+        try {
+            $candidates = ItemReport::query()
+                ->select('item_reports.*')
+                ->selectRaw("$matchExpr AS relevance", [$text])
+                ->where('report_type', $oppositeType)
+                ->whereIn('status', self::ACTIVE_STATUSES)
+                ->where('id', '<>', $report->id)
+                ->whereRaw($matchExpr, [$text])
+                ->orderByDesc('relevance')
+                ->orderByDesc('id')
+                ->limit(self::MATCH_CANDIDATE_LIMIT)
+                ->get();
+        } catch (\Exception $e) {
+            // FULLTEXT index may not exist yet — fall back to simple LIKE search
+            \Illuminate\Support\Facades\Log::warning('FULLTEXT match failed, falling back to LIKE: ' . $e->getMessage());
+
+            $keywords = array_filter(explode(' ', $text), fn($w) => mb_strlen($w) > 2);
+            if (empty($keywords)) return;
+
+            $candidates = ItemReport::query()
+                ->select('item_reports.*')
+                ->where('report_type', $oppositeType)
+                ->whereIn('status', self::ACTIVE_STATUSES)
+                ->where('id', '<>', $report->id)
+                ->where(function ($q) use ($keywords) {
+                    foreach ($keywords as $kw) {
+                        $q->orWhere('item_name', 'LIKE', "%{$kw}%")
+                          ->orWhere('item_description', 'LIKE', "%{$kw}%")
+                          ->orWhere('brand_model', 'LIKE', "%{$kw}%")
+                          ->orWhere('color', 'LIKE', "%{$kw}%");
+                    }
+                })
+                ->limit(self::MATCH_CANDIDATE_LIMIT)
+                ->get();
+
+            // Add synthetic relevance score for fallback
+            foreach ($candidates as $c) {
+                $c->relevance = 1.0;
+            }
+        }
 
         $best = null;
         $bestScore = 0.0;
@@ -721,9 +758,9 @@ class ItemReportController extends WebBaseController
 
     private function storeReportPhoto(int $reportId, $file): void
     {
-        $path = $file->store('report_photos', 'public');
-        // Store as storage/xxx so it works with both symlink and StorageController route
-        $url  = 'storage/' . $path;
+        $filename = uniqid() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('report_photos'), $filename);
+        $url = 'report_photos/' . $filename;
 
         ReportPhoto::create([
             'report_id'  => $reportId,
@@ -737,24 +774,20 @@ class ItemReportController extends WebBaseController
     {
         if (!$url) return;
 
-        // Handle format: "storage/report_photos/xxx.jpg" (no leading slash)
-        if (str_starts_with($url, 'storage/')) {
-            $relative = substr($url, strlen('storage/'));
-            if ($relative && Storage::disk('public')->exists($relative)) {
-                Storage::disk('public')->delete($relative);
-            }
+        // Handle new format: "report_photos/xxx.jpg"
+        $filePath = public_path($url);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
             return;
         }
 
-        // Handle format: "/storage/report_photos/xxx.jpg" or "/public/storage/..."
-        $pos = strpos($url, '/storage/');
-        if ($pos === false) return;
-
-        $relative = substr($url, $pos + strlen('/storage/'));
-        if ($relative === '' || $relative === false) return;
-
-        if (Storage::disk('public')->exists($relative)) {
-            Storage::disk('public')->delete($relative);
+        // Handle old format: "storage/report_photos/xxx.jpg"
+        if (str_starts_with($url, 'storage/')) {
+            $relative = substr($url, strlen('storage/'));
+            $oldPath = public_path($relative);
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
         }
     }
 }

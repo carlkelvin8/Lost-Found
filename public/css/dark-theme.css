@@ -96,6 +96,57 @@ body {
    NAVBAR
    ============================================ */
 
+.main-navbar {
+  background: rgba(15, 23, 42, 0.88) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+}
+
+.navbar-logo {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+}
+
+.search-input {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.search-input:focus {
+  background: var(--bg-primary) !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(0, 65, 199, 0.15) !important;
+}
+
+.search-kbd {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-muted) !important;
+}
+
+.user-menu-trigger:hover,
+.user-menu-trigger.active {
+  background: var(--bg-hover) !important;
+  border-color: var(--border-default) !important;
+}
+
+.user-dropdown {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dropdown-header {
+  background: var(--bg-secondary) !important;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
 .navbar {
   background: var(--bg-secondary) !important;
   border-bottom: 1px solid var(--border-default) !important;
@@ -165,6 +216,73 @@ body {
 .dropdown-item:hover {
   background: var(--bg-hover) !important;
   color: var(--text-primary) !important;
+}
+
+/* ============================================
+   SIDEBAR — DARK MODE
+   ============================================ */
+
+.main-sidebar {
+  background: var(--bg-primary) !important;
+  border-right-color: var(--border-default) !important;
+}
+
+.sb-profile-card:hover {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+}
+
+.sb-avatar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sb-avatar-status {
+  border-color: var(--bg-primary) !important;
+}
+
+.sb-item-icon {
+  background: var(--bg-secondary) !important;
+}
+
+.sb-item:hover .sb-item-icon {
+  background: var(--bg-tertiary) !important;
+}
+
+.sb-item.active .sb-item-icon {
+  background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%) !important;
+  box-shadow: 0 4px 14px rgba(0, 65, 199, 0.4) !important;
+}
+
+.sb-cta {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sb-cta:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sb-settings-icon {
+  background: var(--bg-secondary) !important;
+}
+
+.sb-settings:hover {
+  background: var(--bg-secondary) !important;
+}
+
+.sb-settings:hover .sb-settings-icon {
+  background: var(--bg-tertiary) !important;
+}
+
+.sb-notif-dot {
+  border-color: var(--bg-secondary) !important;
+}
+
+.sb-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--border-default) !important;
+}
+
+.sb-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong) !important;
 }
 
 /* ============================================

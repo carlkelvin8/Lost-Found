@@ -10,9 +10,27 @@
   <link href="{{ asset('css/layout.css') }}" rel="stylesheet" />
   <link href="{{ asset('css/animations.css') }}" rel="stylesheet" />
   
+  <!-- Fallback relative paths in case asset() generates wrong URLs -->
+  <link href="/css/white-black-theme.css" rel="stylesheet" />
+  <link href="/css/layout.css" rel="stylesheet" />
+  
+  <!-- Critical inline styles for images -->
+  <style>
+    img { max-width: 100%; height: auto; }
+    .navbar-logo { width: 36px; height: 36px; overflow: hidden; flex-shrink: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .navbar-logo img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: contain; display: block; }
+    .user-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; }
+    .user-avatar img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; }
+    .dropdown-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; }
+    .dropdown-avatar img { width: 36px !important; height: 36px !important; object-fit: cover; display: block; }
+    .dash-avatar { width: 56px; height: 56px; overflow: hidden; border-radius: 16px; flex-shrink: 0; }
+    .dash-avatar img { width: 56px !important; height: 56px !important; max-width: 56px !important; object-fit: cover; display: block; }
+    body.has-navbar { padding-top: 70px; }
+  </style>
+  
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ asset('storage/image.png') }}" sizes="192x192" />
-  <link rel="apple-touch-icon" href="{{ asset('storage/image.png') }}" sizes="180x180" />
+  <link rel="icon" type="image/png" href="{{ asset('image.png') }}" sizes="192x192" />
+  <link rel="apple-touch-icon" href="{{ asset('image.png') }}" sizes="180x180" />
   <meta name="theme-color" content="#0041C7" />
   
   @stack('styles')

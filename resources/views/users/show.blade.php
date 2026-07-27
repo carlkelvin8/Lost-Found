@@ -38,7 +38,8 @@
     <div class="detail-card">
       <div class="d-flex align-items-center gap-3 mb-3">
         @if(!empty($user->profile?->avatar_url))
-          <img src="{{ asset($user->profile->avatar_url) }}" alt="Avatar"
+          @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
+          <img src="{{ asset($avatarSrc) }}" alt="Avatar"
                class="rounded-circle" style="width:56px;height:56px;object-fit:cover">
         @else
           @php $initial = strtoupper(substr($user->email,0,1)); @endphp

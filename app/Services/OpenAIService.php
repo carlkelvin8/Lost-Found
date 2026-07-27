@@ -89,27 +89,24 @@ class OpenAIService
 
     private function getImageAsBase64(string $url): ?string
     {
-        // Check if it's a local storage path
-        // URL format: http://127.0.0.1:8000/storage/reports/filename.jpg
-        // Local path: storage/app/public/reports/filename.jpg
-        
         try {
-            // Attempt to resolve local path from URL if hosted locally
-            $path = parse_url($url, PHP_URL_PATH); // /storage/reports/xyz.jpg
-            
-            // Remove /storage prefix to get relative path in storage/app/public
-            $relativePath = preg_replace('/^\/?storage\//', '', $path);
-            $localPath = storage_path("app/public/{$relativePath}");
+            // Photo URLs are relative paths like "report_photos/xxx.jpg"
+            // stored in public/report_photos/
+            $relativePath = ltrim($url, '/');
+            $relativePath = preg_replace('#^storage/#', '', $relativePath);
+            $localPath = public_path($relativePath);
 
             if (file_exists($localPath)) {
                 $imageData = file_get_contents($localPath);
                 return base64_encode($imageData);
             }
 
-            // Fallback: try to fetch via HTTP (works for external URLs)
-            $response = Http::get($url);
-            if ($response->successful()) {
-                return base64_encode($response->body());
+            // Fallback: try to fetch via HTTP (works for external URLs or full URLs)
+            if (str_starts_with($url, 'http')) {
+                $response = Http::get($url);
+                if ($response->successful()) {
+                    return base64_encode($response->body());
+                }
             }
 
         } catch (\Exception $e) {
