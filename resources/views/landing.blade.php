@@ -71,18 +71,18 @@
         </div>
 
         <h1 class="hero-title">
-            Lost something?<br>
-            <span class="hero-title-gradient">We'll help you find it.</span>
+            Report. Match.<br>
+            <span class="hero-title-gradient">Recover.</span>
         </h1>
 
         <p class="hero-subtitle">
-            The smart lost and found system for NAAP. Report lost items, upload photos, and let our AI match them with found items automatically.
+            NAAP's intelligent lost & found platform. Upload a photo of your lost item and our AI will scan all found reports to find a match — in seconds, not days.
         </p>
 
         <div class="hero-cta">
             <a href="{{ route('register') }}" class="hero-btn hero-btn-primary">
                 <i class="bi bi-rocket-takeoff"></i>
-                Create Account
+                Get Started Free
             </a>
             <a href="#how-it-works" class="hero-btn hero-btn-outline">
                 <i class="bi bi-play-circle"></i>
@@ -90,32 +90,70 @@
             </a>
         </div>
 
-        <div class="hero-trust">
-            <div class="hero-trust-avatars">
-                <div class="trust-avatar">S</div>
-                <div class="trust-avatar">F</div>
-                <div class="trust-avatar">V</div>
-                <div class="trust-avatar">+</div>
+        <div class="hero-metrics">
+            <div class="hero-metric">
+                <span class="hero-metric-value">500+</span>
+                <span class="hero-metric-label">Items Reported</span>
             </div>
-            <span>Trusted by students, faculty & visitors at NAAP</span>
+            <div class="hero-metric-divider"></div>
+            <div class="hero-metric">
+                <span class="hero-metric-value">95%</span>
+                <span class="hero-metric-label">Recovery Rate</span>
+            </div>
+            <div class="hero-metric-divider"></div>
+            <div class="hero-metric">
+                <span class="hero-metric-value">&lt;24h</span>
+                <span class="hero-metric-label">Avg. Match Time</span>
+            </div>
         </div>
     </div>
 
     <div class="hero-visual">
-        <div class="hero-card hero-card-lost">
-            <div class="card-status card-status-lost">Lost</div>
-            <div class="card-icon"><i class="bi bi-phone"></i></div>
-            <div class="card-title">iPhone 14 Pro</div>
-            <div class="card-meta"><i class="bi bi-geo-alt"></i> Library, 2nd Floor</div>
+        <div class="hero-phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+                <div class="phone-header">
+                    <div class="phone-header-dot"></div>
+                    <span>Lost & Found</span>
+                    <i class="bi bi-bell"></i>
+                </div>
+                <div class="phone-card phone-card-lost">
+                    <div class="phone-card-badge phone-badge-lost"><i class="bi bi-exclamation-circle"></i> Lost</div>
+                    <div class="phone-card-body">
+                        <div class="phone-card-icon"><i class="bi bi-phone"></i></div>
+                        <div class="phone-card-info">
+                            <strong>iPhone 14 Pro</strong>
+                            <span><i class="bi bi-geo-alt-fill"></i> Library, 2nd Floor</span>
+                            <span><i class="bi bi-clock"></i> 2 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-match-alert">
+                    <div class="match-pulse"></div>
+                    <i class="bi bi-diagram-2-fill"></i>
+                    <div class="match-alert-text">
+                        <strong>Match Found!</strong>
+                        <span>95% confidence score</span>
+                    </div>
+                </div>
+                <div class="phone-card phone-card-found">
+                    <div class="phone-card-badge phone-badge-found"><i class="bi bi-check-circle"></i> Found</div>
+                    <div class="phone-card-body">
+                        <div class="phone-card-icon"><i class="bi bi-phone"></i></div>
+                        <div class="phone-card-info">
+                            <strong>iPhone 14 Pro</strong>
+                            <span><i class="bi bi-geo-alt-fill"></i> Cafeteria Counter</span>
+                            <span><i class="bi bi-clock"></i> 1 hour ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="hero-card hero-card-found">
-            <div class="card-status card-status-found">Found</div>
-            <div class="card-icon"><i class="bi bi-phone"></i></div>
-            <div class="card-title">iPhone 14 Pro</div>
-            <div class="card-meta"><i class="bi bi-geo-alt"></i> Cafeteria</div>
+        <div class="hero-float-badge hero-float-1">
+            <i class="bi bi-camera-fill"></i> Photo AI
         </div>
-        <div class="hero-match-line">
-            <div class="match-badge"><i class="bi bi-check-lg"></i> 95% Match</div>
+        <div class="hero-float-badge hero-float-2">
+            <i class="bi bi-shield-check"></i> Verified
         </div>
     </div>
 </section>
