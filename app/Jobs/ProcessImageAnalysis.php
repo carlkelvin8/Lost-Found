@@ -5,11 +5,15 @@ namespace App\Jobs;
 use App\Models\ItemReport;
 use App\Services\MatchService;
 use App\Services\OpenAIService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ProcessImageAnalysis
+class ProcessImageAnalysis implements ShouldQueue
 {
-    use SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $reportId;
 

@@ -299,6 +299,11 @@ class CameraCapture {
             fileInput.dispatchEvent(event);
         }
 
+        // Call onDone callback if provided
+        if (typeof this.options.onDone === 'function') {
+            this.options.onDone();
+        }
+
         this.close();
     }
 

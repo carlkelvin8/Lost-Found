@@ -19,7 +19,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landing');
+})->name('landing');
 
 // Storage file serving (for Hostinger without symlink support)
 Route::get('/storage/{path}', [StorageController::class, 'serve'])
@@ -36,13 +41,13 @@ Route::post('/register', [AuthWebController::class, 'register'])
     ->middleware('throttle:3,1')
     ->name('register.post');
 
-// Email Verification Routes
+// Email Verification Routes (OTP-based)
 Route::get('/email/verify', [AuthWebController::class, 'showVerifyEmail'])
     ->middleware('auth')
     ->name('verification.notice');
 
-Route::get('/email/verify/{id}/{hash}', [AuthWebController::class, 'verifyEmail'])
-    ->middleware(['auth', 'signed'])
+Route::post('/email/verify', [AuthWebController::class, 'verifyEmail'])
+    ->middleware('auth')
     ->name('verification.verify');
 
 Route::post('/email/verification-notification', [AuthWebController::class, 'resendVerificationEmail'])
@@ -66,7 +71,7 @@ Route::post('/reset-password', [AuthWebController::class, 'resetPassword'])
 
 Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // My profile

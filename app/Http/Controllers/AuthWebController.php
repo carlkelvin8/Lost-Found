@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterRequest;
+use App\Mail\OtpVerificationMail;
+use App\Models\EmailOtp;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -10,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 
 class AuthWebController extends WebBaseController
@@ -60,6 +63,7 @@ class AuthWebController extends WebBaseController
                 'admin' => 'admin',
                 'faculty' => 'osa', // Treat faculty as staff (osa)
                 'student' => 'student',
+                'visitor' => 'visitor',
             ];
             
             $roleName = $roleMap[$data['user_type']] ?? 'student';
@@ -75,12 +79,15 @@ class AuthWebController extends WebBaseController
             return $user;
         });
 
-        // Send email verification notification (commented out for testing)
-        // $user->sendEmailVerificationNotification();
+        // Send OTP email verification
+        $this->sendOtp($user);
+
+        // Auto-login the user
+        Auth::login($user);
 
         return redirect()
-            ->route('login')
-            ->with('success', 'Account created successfully. You can now log in.');
+            ->route('verification.notice')
+            ->with('success', 'Account created! Please verify your email with the OTP code sent to your inbox.');
     }
 
     /* =========================
@@ -126,6 +133,21 @@ class AuthWebController extends WebBaseController
 
         $this->audit($request, 'auth.login', 'users', $user->id);
 
+        // If email not verified, redirect to verification
+        if (!$user->hasVerifiedEmail()) {
+            // Send OTP if needed
+            $hasValidOtp = EmailOtp::where('user_id', $user->id)
+                ->where('used', false)
+                ->where('expires_at', '>', now())
+                ->exists();
+
+            if (!$hasValidOtp) {
+                $this->sendOtp($user);
+            }
+
+            return redirect()->route('verification.notice');
+        }
+
         // ADMIN / OSA CHECK
         $isAdmin = $user->roles()
             ->whereIn('name', ['admin', 'osa'])
@@ -155,10 +177,16 @@ class AuthWebController extends WebBaseController
     }
 
     /* =========================
-     * EMAIL VERIFICATION
+     * EMAIL VERIFICATION (OTP-BASED)
      * ========================= */
     public function showVerifyEmail()
     {
+        $user = Auth::user();
+        
+        if ($user && $user->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+
         return view('auth.verify-email');
     }
 
@@ -170,20 +198,68 @@ class AuthWebController extends WebBaseController
             return redirect()->route('dashboard');
         }
 
+        $data = $request->validate([
+            'otp' => ['required', 'string', 'size:6'],
+        ]);
+
+        $otpRecord = EmailOtp::where('user_id', $user->id)
+            ->where('otp', $data['otp'])
+            ->where('used', false)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (!$otpRecord) {
+            return back()->withErrors(['otp' => 'Invalid or expired verification code. Please request a new one.']);
+        }
+
+        // Mark OTP as used
+        $otpRecord->update(['used' => true]);
+
+        // Mark email as verified
         $user->markEmailAsVerified();
+
+        $this->audit($request, 'auth.email_verified', 'users', $user->id);
 
         return redirect()->route('dashboard')->with('success', 'Email verified successfully!');
     }
 
     public function resendVerificationEmail(Request $request)
     {
-        if ($request->user()->hasVerifiedEmail()) {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
             return redirect()->route('dashboard');
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        $this->sendOtp($user);
 
-        return back()->with('success', 'Verification link sent!');
+        return back()->with('success', 'A new verification code has been sent to your email.');
+    }
+
+    /**
+     * Generate and send OTP to user's email
+     */
+    private function sendOtp(User $user): void
+    {
+        // Invalidate any existing OTPs
+        EmailOtp::where('user_id', $user->id)
+            ->where('used', false)
+            ->update(['used' => true]);
+
+        // Generate 6-digit OTP
+        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store OTP (expires in 10 minutes)
+        EmailOtp::create([
+            'user_id' => $user->id,
+            'otp' => $otp,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Send email
+        $userName = $user->profile?->full_name ?? 'User';
+        Mail::to($user->email)->send(new OtpVerificationMail($otp, $userName));
     }
 
     /* =========================

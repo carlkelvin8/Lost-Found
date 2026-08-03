@@ -143,7 +143,7 @@ class ItemReportController extends WebBaseController
                 
                 // Trigger AI Analysis (synchronous, wrapped in try-catch so report still saves if AI fails)
                 try {
-                    ProcessImageAnalysis::dispatch((int) $report->id);
+                    ProcessImageAnalysis::dispatchSync((int) $report->id);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
                 }
@@ -338,7 +338,7 @@ class ItemReportController extends WebBaseController
             
             // Trigger AI Analysis for new photo
             try {
-                ProcessImageAnalysis::dispatch((int) $report->id);
+                ProcessImageAnalysis::dispatchSync((int) $report->id);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
             }

@@ -44,7 +44,7 @@ class RegisterRequest extends FormRequest
             'user_type' => [
                 'required',
                 'string',
-                'in:student,faculty',
+                'in:student,faculty,visitor',
             ],
             'department_name' => [
                 'nullable',

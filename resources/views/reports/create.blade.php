@@ -260,7 +260,10 @@
   takePhotoBtn.addEventListener('click', function() {
     initCamera({
       maxPhotos: 5,
-      targetInput: 'input[name="photos[]"]'
+      targetInput: '#photoInput',
+      onDone: function() {
+        renderPreview();
+      }
     });
   });
 

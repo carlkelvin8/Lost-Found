@@ -17,8 +17,8 @@
   <!-- Critical inline styles for images -->
   <style>
     img { max-width: 100%; height: auto; }
-    .navbar-logo { width: 36px; height: 36px; overflow: hidden; flex-shrink: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    .navbar-logo img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: contain; display: block; }
+    .navbar-logo { width: 36px; height: 36px; overflow: hidden; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .navbar-logo img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; border-radius: 50%; }
     .user-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; }
     .user-avatar img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; }
     .dropdown-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; }
