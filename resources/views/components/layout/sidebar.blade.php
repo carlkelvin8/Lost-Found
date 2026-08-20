@@ -62,57 +62,88 @@
           <i class="bi bi-people-fill"></i>
         </div>
         <span class="sidebar-item-text">Users</span>
+        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </a>
     </div>
 
-    <!-- Management -->
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Management</div>
-
-      <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-diagram-3-fill"></i>
+    <!-- Management (Collapsible) -->
+    <div class="sidebar-section sidebar-section-collapsible">
+      <div class="sidebar-section-title sidebar-section-toggle" id="managementToggle" role="button" tabindex="0">
+        <div class="sidebar-section-title-left">
+          <i class="bi bi-list sidebar-section-burger"></i>
+          <span>Management</span>
         </div>
-        <span class="sidebar-item-text">Departments</span>
-      </a>
+        <i class="bi bi-chevron-down sidebar-section-chevron" id="managementChevron"></i>
+      </div>
 
-      <a href="{{ route('categories.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'categories.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-tags-fill"></i>
-        </div>
-        <span class="sidebar-item-text">Categories</span>
-      </a>
+      <div class="sidebar-section-items" id="managementItems">
+        <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}">
+          <div class="sidebar-item-icon">
+            <i class="bi bi-diagram-3-fill"></i>
+          </div>
+          <span class="sidebar-item-text">Departments</span>
+        </a>
 
-      <a href="{{ route('locations.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'locations.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-geo-alt-fill"></i>
-        </div>
-        <span class="sidebar-item-text">Locations</span>
-      </a>
+        <a href="{{ route('categories.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'categories.') ? 'active' : '' }}">
+          <div class="sidebar-item-icon">
+            <i class="bi bi-tags-fill"></i>
+          </div>
+          <span class="sidebar-item-text">Categories</span>
+        </a>
 
-      @if(in_array('admin', $roleNames, true))
-      <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-shield-fill"></i>
-        </div>
-        <span class="sidebar-item-text">Roles</span>
-      </a>
+        <a href="{{ route('locations.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'locations.') ? 'active' : '' }}">
+          <div class="sidebar-item-icon">
+            <i class="bi bi-geo-alt-fill"></i>
+          </div>
+          <span class="sidebar-item-text">Locations</span>
+        </a>
 
-      <a href="{{ route('activity_logs.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'activity_logs.') ? 'active' : '' }}">
-        <div class="sidebar-item-icon">
-          <i class="bi bi-clock-history"></i>
-        </div>
-        <span class="sidebar-item-text">Activity Logs</span>
-      </a>
-      @endif
+        @if(in_array('admin', $roleNames, true))
+        <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}">
+          <div class="sidebar-item-icon">
+            <i class="bi bi-shield-fill"></i>
+          </div>
+          <span class="sidebar-item-text">Roles</span>
+        </a>
+
+        <a href="{{ route('activity_logs.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'activity_logs.') ? 'active' : '' }}">
+          <div class="sidebar-item-icon">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <span class="sidebar-item-text">Activity Logs</span>
+        </a>
+        @endif
+      </div>
     </div>
     @endif
 
-    <!-- New Report CTA -->
-    <a href="{{ route('reports.create') }}" class="sidebar-item-cta">
-      <i class="bi bi-plus-lg"></i>
-      <span>New Report</span>
-    </a>
+    <!-- Quick Actions Grid -->
+    <div class="sidebar-quick-grid">
+      <a href="{{ route('reports.create') }}" class="sidebar-quick-item" title="New Report">
+        <div class="sidebar-quick-icon sidebar-quick-blue">
+          <i class="bi bi-plus-circle"></i>
+        </div>
+        <span class="sidebar-quick-label">Report</span>
+      </a>
+      <a href="{{ route('reports.index') }}" class="sidebar-quick-item" title="View Reports">
+        <div class="sidebar-quick-icon sidebar-quick-violet">
+          <i class="bi bi-inbox"></i>
+        </div>
+        <span class="sidebar-quick-label">Reports</span>
+      </a>
+      <a href="{{ route('claims.index') }}" class="sidebar-quick-item" title="My Claims">
+        <div class="sidebar-quick-icon sidebar-quick-emerald">
+          <i class="bi bi-person-check"></i>
+        </div>
+        <span class="sidebar-quick-label">Claims</span>
+      </a>
+      <a href="{{ route('notifications.index') }}" class="sidebar-quick-item" title="Notifications">
+        <div class="sidebar-quick-icon sidebar-quick-rose">
+          <i class="bi bi-bell"></i>
+        </div>
+        <span class="sidebar-quick-label">Alerts</span>
+      </a>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -136,6 +167,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   const sidebar = document.getElementById('mainSidebar');
   const overlay = document.getElementById('sidebarOverlay');
+  const managementToggle = document.getElementById('managementToggle');
+  const managementItems = document.getElementById('managementItems');
+  const managementChevron = document.getElementById('managementChevron');
 
   if (overlay) {
     overlay.addEventListener('click', function() {
@@ -144,10 +178,32 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (sidebar && window.innerWidth <= 991) {
-    sidebar.querySelectorAll('.sidebar-item, .sidebar-item-cta, .sidebar-footer-link').forEach(link => {
+    sidebar.querySelectorAll('.sidebar-item, .sidebar-item-cta, .sidebar-footer-link, .sidebar-quick-item').forEach(link => {
       link.addEventListener('click', function() {
         sidebar.classList.remove('show');
       });
+    });
+  }
+
+  // Management collapsible section
+  if (managementToggle && managementItems) {
+    const savedState = localStorage.getItem('sidebar_management_collapsed');
+    if (savedState === 'true') {
+      managementItems.classList.add('collapsed');
+      if (managementChevron) managementChevron.classList.add('collapsed');
+    }
+
+    managementToggle.addEventListener('click', function() {
+      managementItems.classList.toggle('collapsed');
+      if (managementChevron) managementChevron.classList.toggle('collapsed');
+      localStorage.setItem('sidebar_management_collapsed', managementItems.classList.contains('collapsed'));
+    });
+
+    managementToggle.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        managementToggle.click();
+      }
     });
   }
 });

@@ -4,6 +4,14 @@
 
 @push('styles')
 <link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+<style>
+  .admin-filter-card .row {
+    gap: 1rem !important;
+  }
+  .admin-filter-card .form-label {
+    margin-bottom: 0.5rem;
+  }
+</style>
 @endpush
 
 @section('content')

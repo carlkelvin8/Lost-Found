@@ -297,4 +297,30 @@
   </div>
 @endif
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleBtns = document.querySelectorAll('.view-toggle-btn');
+  const reportsGrid = document.querySelector('.reports-grid');
+
+  if (!toggleBtns.length || !reportsGrid) return;
+
+  toggleBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      toggleBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+
+      const isGrid = btn.querySelector('.bi-grid-3x3-gap-fill');
+      if (isGrid) {
+        reportsGrid.classList.remove('reports-list-view');
+        reportsGrid.classList.add('reports-grid');
+      } else {
+        reportsGrid.classList.remove('reports-grid');
+        reportsGrid.classList.add('reports-list-view');
+      }
+    });
+  });
+});
+</script>
+@endpush
 @endsection

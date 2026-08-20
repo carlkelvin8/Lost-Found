@@ -758,7 +758,7 @@
         </div>
 
         <!-- Contact Information -->
-        <div class="profile-section">
+        <div class="profile-section" style="margin-bottom: 2rem;">
           <div class="profile-section-header">
             <div class="profile-section-icon"><i class="bi bi-telephone"></i></div>
             <div>

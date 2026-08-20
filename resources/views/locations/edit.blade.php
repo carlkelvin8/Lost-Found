@@ -43,11 +43,13 @@
       </div>
       <div class="col-12 col-md-6">
         <label class="form-label">Latitude</label>
-        <input class="form-control" name="latitude" value="{{ old('latitude', $location->latitude) }}" />
+        <input class="form-control" name="latitude" value="{{ old('latitude', $location->latitude) }}" placeholder="e.g. 14.5995" />
+        <div class="form-text">Range: -90 to 90. North (positive) or South (negative) position on the globe.</div>
       </div>
       <div class="col-12 col-md-6">
         <label class="form-label">Longitude</label>
-        <input class="form-control" name="longitude" value="{{ old('longitude', $location->longitude) }}" />
+        <input class="form-control" name="longitude" value="{{ old('longitude', $location->longitude) }}" placeholder="e.g. 120.9842" />
+        <div class="form-text">Range: -180 to 180. East (positive) or West (negative) position on the globe.</div>
       </div>
     </div>
     <div class="form-actions">

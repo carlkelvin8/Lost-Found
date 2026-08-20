@@ -4,6 +4,30 @@
 
 @push('styles')
 <link href="{{ asset('css/admin.css') }}" rel="stylesheet" />
+<style>
+  .admin-manual-card .form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+  }
+  .admin-manual-card .form-select,
+  .admin-manual-card .form-control {
+    height: 40px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+    background: white;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+  }
+  .admin-manual-card .btn {
+    height: 40px;
+  }
+</style>
 @endpush
 
 @section('content')

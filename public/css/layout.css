@@ -83,6 +83,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
 }
 
 .navbar-logo img {
@@ -91,6 +92,7 @@
   object-fit: cover;
   display: block;
   border-radius: 50%;
+  mix-blend-mode: multiply;
 }
 
 .navbar-search {
@@ -306,6 +308,128 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+}
+
+.sidebar-section-collapsible .sidebar-section-title {
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.sidebar-section-collapsible .sidebar-section-title:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-section-title-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.sidebar-section-burger {
+  font-size: 0.875rem;
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-section-chevron {
+  font-size: 0.625rem;
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-section-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.sidebar-section-items {
+  max-height: 500px;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  opacity: 1;
+}
+
+.sidebar-section-items.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Sidebar Item Arrow */
+.sidebar-item-arrow {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Quick Actions Grid */
+.sidebar-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.sidebar-quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-default);
+}
+
+.sidebar-quick-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar-quick-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.sidebar-quick-blue { background: rgba(0, 65, 199, 0.08); color: #0041C7; }
+.sidebar-quick-violet { background: rgba(139, 92, 246, 0.08); color: #8b5cf6; }
+.sidebar-quick-emerald { background: rgba(16, 185, 129, 0.08); color: #10b981; }
+.sidebar-quick-rose { background: rgba(244, 63, 94, 0.08); color: #f43f5e; }
+
+.sidebar-quick-item:hover .sidebar-quick-blue { background: #0041C7; color: white; }
+.sidebar-quick-item:hover .sidebar-quick-violet { background: #8b5cf6; color: white; }
+.sidebar-quick-item:hover .sidebar-quick-emerald { background: #10b981; color: white; }
+.sidebar-quick-item:hover .sidebar-quick-rose { background: #f43f5e; color: white; }
+
+.sidebar-quick-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sidebar-quick-item:hover .sidebar-quick-label {
+  color: var(--text-primary);
 }
 
 .sidebar-item {
@@ -653,11 +777,31 @@
   }
 
   .user-chevron {
-    display: none;
+    font-size: 0.75rem;
   }
 
   .navbar-brand-text {
     font-size: var(--text-base);
+  }
+
+  .sidebar-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.375rem;
+    padding: 0 var(--space-sm);
+  }
+
+  .sidebar-quick-item {
+    padding: var(--space-sm) var(--space-xs);
+  }
+
+  .sidebar-quick-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9375rem;
+  }
+
+  .sidebar-quick-label {
+    font-size: 0.5625rem;
   }
 }
 
