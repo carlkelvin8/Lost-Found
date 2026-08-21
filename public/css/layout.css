@@ -2,6 +2,145 @@
    LAYOUT STYLES - NAVBAR & SIDEBAR
    ============================================ */
 
+/* Skip to content (accessibility) */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-primary, #0041C7);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 8px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  z-index: 10000;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #0041C7;
+  outline-offset: 2px;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+body.dark-mode {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-hover: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-default: #334155;
+  --border-light: #1e293b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .main-navbar {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+body.dark-mode .main-sidebar {
+  background: #1e293b;
+  border-right-color: #334155;
+}
+
+body.dark-mode .sidebar-item:hover {
+  background: #334155;
+}
+
+body.dark-mode .sidebar-item.active {
+  background: rgba(0, 65, 199, 0.15);
+  color: #60a5fa;
+}
+
+body.dark-mode .user-dropdown {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark-mode .dropdown-item:hover {
+  background: #334155;
+}
+
+body.dark-mode .content-wrap .container {
+  color: #f1f5f9;
+}
+
+body.dark-mode .alert-success {
+  background: rgba(16,185,129,0.15);
+  border-color: rgba(16,185,129,0.3);
+  color: #6ee7b7;
+}
+
+body.dark-mode .alert-danger {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.3);
+  color: #fca5a5;
+}
+
+body.dark-mode .card,
+body.dark-mode .dash-stat,
+body.dark-mode .dash-card,
+body.dark-mode .dash-action,
+body.dark-mode .cl-card,
+body.dark-mode .cl-stat,
+body.dark-mode .cl-filter,
+body.dark-mode .cc-card,
+body.dark-mode .cs-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+body.dark-mode .pagination .page-link {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+body.dark-mode .pagination .page-item.active .page-link {
+  background: #0041C7;
+  border-color: #0041C7;
+  color: white;
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.dark-mode-toggle:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
 /* ============================================
    NAVBAR
    ============================================ */

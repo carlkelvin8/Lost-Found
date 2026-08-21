@@ -377,7 +377,7 @@
         <div class="footer-grid">
             <div class="footer-brand">
                 <div class="footer-logo">
-                    <img src="{{ asset('image.png') }}" alt="NAAP Logo">
+                    <img src="{{ asset('image.png') }}" alt="NAAP Logo" loading="lazy">
                 </div>
                 <div class="footer-brand-text">
                     <strong>NAAP Lost & Found</strong>
@@ -397,6 +397,11 @@
                     <h4>Support</h4>
                     <a href="#faq">FAQ</a>
                     <a href="mailto:naaplostandfound@gmail.com">Contact Us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <a href="{{ route('terms') }}">Terms of Service</a>
+                    <a href="{{ route('privacy') }}">Privacy Policy</a>
                 </div>
             </div>
         </div>

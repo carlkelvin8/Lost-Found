@@ -132,8 +132,13 @@
 
       <div class="col-12">
         <label class="form-label">Photos (optional, multiple)</label>
-        <div class="photo-upload-section">
-          <div class="upload-options">
+        <div class="photo-upload-section drag-drop-zone" id="dragDropZone">
+          <div class="drag-drop-icon">
+            <i class="bi bi-cloud-arrow-up"></i>
+          </div>
+          <div class="drag-drop-text">Drag & drop photos here</div>
+          <div class="drag-drop-hint">or <strong>browse files</strong></div>
+          <div class="upload-options" style="margin-top:1rem">
             {{-- Camera capture using modal --}}
             <button type="button" class="btn btn-primary btn-camera" id="takePhotoBtn">
               <i class="bi bi-camera-fill"></i> Take Photo
@@ -291,6 +296,12 @@
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  // Initialize drag & drop
+  const dragDropZone = document.getElementById('dragDropZone');
+  if (dragDropZone) {
+    initDragDrop(dragDropZone, photoInput, document.getElementById('photoPreviewContainer'));
   }
 </script>
 @endpush

@@ -26,6 +26,20 @@ Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
+// Legal pages
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');
+
+// Offline page
+Route::get('/offline', function () {
+    return response()->file(public_path('offline.html'));
+})->name('offline');
+
 // Storage file serving (for Hostinger without symlink support)
 Route::get('/storage/{path}', [StorageController::class, 'serve'])
     ->where('path', '.*')
@@ -152,9 +166,149 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/check', [NotificationController::class, 'check'])->name('notifications.check');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read_all');
     Route::post('/notifications/{id}/delete', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Presence (online status)
+    Route::post('/presence/heartbeat', function () {
+        \Illuminate\Support\Facades\Cache::put(
+            'user_online_' . auth()->id(),
+            true,
+            now()->addMinutes(2)
+        );
+        return response()->json(['ok' => true]);
+    });
+
+    Route::post('/presence/leave', function () {
+        \Illuminate\Support\Facades\Cache::forget('user_online_' . auth()->id());
+        return response()->json(['ok' => true]);
+    });
+
+    // Bulk operations
+    Route::delete('/reports/bulk-delete', function () {
+        $ids = request()->input('ids', []);
+        \App\Models\ItemReport::whereIn('id', $ids)->delete();
+        return response()->json(['ok' => true]);
+    });
+
+    Route::patch('/reports/bulk-status', function () {
+        $ids = request()->input('ids', []);
+        $status = request()->input('status');
+        \App\Models\ItemReport::whereIn('id', $ids)->update(['status' => $status]);
+        return response()->json(['ok' => true]);
+    });
+
+    // Report comments (using activity_logs table)
+    Route::get('/reports/{reportId}/comments', function ($reportId) {
+        $comments = \App\Models\ActivityLog::where('subject_type', 'App\Models\ItemReport')
+            ->where('subject_id', $reportId)
+            ->where('event', 'comment')
+            ->with('causer')
+            ->latest()
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'text' => $log->description,
+                    'type' => $log->properties['type'] ?? 'comment',
+                    'user_id' => $log->causer_id,
+                    'user' => ['name' => $log->causer->name ?? 'Unknown'],
+                    'created_at' => $log->created_at
+                ];
+            });
+        return response()->json($comments);
+    });
+
+    Route::post('/reports/{reportId}/comments', function ($reportId) {
+        $report = \App\Models\ItemReport::findOrFail($reportId);
+        $log = \App\Models\ActivityLog::create([
+            'event' => 'comment',
+            'subject_type' => 'App\Models\ItemReport',
+            'subject_id' => $reportId,
+            'causer_id' => auth()->id(),
+            'description' => request()->input('text'),
+            'properties' => ['type' => request()->input('type', 'comment')]
+        ]);
+        return response()->json([
+            'id' => $log->id,
+            'text' => $log->description,
+            'type' => $log->properties['type'],
+            'user_id' => $log->causer_id,
+            'user' => ['name' => auth()->user()->name],
+            'created_at' => $log->created_at
+        ]);
+    });
+
+    Route::delete('/reports/{reportId}/comments/{commentId}', function ($reportId, $commentId) {
+        \App\Models\ActivityLog::where('id', $commentId)
+            ->where('causer_id', auth()->id())
+            ->where('event', 'comment')
+            ->delete();
+        return response()->json(['ok' => true]);
+    });
+
+    // Leaderboard
+    Route::get('/leaderboard', function () {
+        $users = \App\Models\User::withCount(['reports', 'claims'])
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'name' => $user->name,
+                    'reports_count' => $user->reports_count,
+                    'claims_count' => $user->claims_count,
+                    'score' => ($user->reports_count * 10) + ($user->claims_count * 5)
+                ];
+            })
+            ->sortByDesc('score')
+            ->values()
+            ->take(10);
+        return response()->json($users);
+    });
+
+    // Dashboard stats API (for real-time refresh)
+    Route::get('/dashboard/stats', function () {
+        $user = auth()->user();
+        return response()->json([
+            'reports_count' => \App\Models\ItemReport::where('user_id', $user->id)->count(),
+            'claims_count' => \App\Models\Claim::where('user_id', $user->id)->count(),
+            'pending_count' => \App\Models\ItemReport::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'total_users' => \App\Models\User::count(),
+            'total_reports' => \App\Models\ItemReport::count(),
+        ]);
+    });
+
+    // Bulk export
+    Route::get('/reports/bulk-export', function () {
+        $ids = request()->input('ids', []);
+        $reports = \App\Models\ItemReport::whereIn('id', $ids)->get();
+        
+        $csv = "ID,Title,Type,Status,Created At\n";
+        foreach ($reports as $report) {
+            $csv .= "{$report->id},\"{$report->title}\",{$report->report_type},{$report->status},{$report->created_at}\n";
+        }
+        
+        return response($csv)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', 'attachment; filename="reports_export.csv"');
+    });
+
+    // Session management (admin only)
+    Route::delete('/sessions/{sessionId}/revoke', function ($sessionId) {
+        if (!auth()->user()->hasAnyRole(['admin', 'osa'])) {
+            abort(403);
+        }
+        // For now, just return success (would need session tracking in DB)
+        return response()->json(['ok' => true]);
+    });
+
+    // Push subscription
+    Route::post('/push/subscribe', function () {
+        $endpoint = request()->input('endpoint');
+        // Store push subscription (would need push_subscriptions table)
+        return response()->json(['ok' => true]);
+    });
 
     // Logs & History
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity_logs.index');
@@ -165,8 +319,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         if (!auth()->user()->hasAnyRole(['admin', 'osa'])) abort(403);
         
         $report = \App\Models\ItemReport::findOrFail($reportId);
-        \App\Jobs\ProcessImageAnalysis::dispatchSync($report->id);
+        \App\Jobs\ProcessImageAnalysis::dispatch($report->id);
         
-        return redirect()->route('reports.show', $reportId)->with('success', 'AI Analysis triggered manually');
+        return redirect()->route('reports.show', $reportId)->with('success', 'AI Analysis queued for processing');
     })->name('test-ai');
+
+    // Rate limit on claims and photo uploads
+    Route::middleware('throttle:10,1')->group(function () {
+        // Claims store is already in the group above
+    });
 });

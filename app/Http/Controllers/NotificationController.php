@@ -52,4 +52,17 @@ class NotificationController extends WebBaseController
 
         return back()->with('success', 'Deleted');
     }
+
+    public function check(Request $request)
+    {
+        if (!$this->user()) return response()->json(['count' => 0, 'latest' => 0]);
+
+        $count = Notification::where('user_id', (int) $this->user()->id)->whereNull('read_at')->count();
+        $latest = Notification::where('user_id', (int) $this->user()->id)->whereNull('read_at')->count();
+
+        return response()->json([
+            'count' => $count,
+            'latest' => $latest
+        ]);
+    }
 }

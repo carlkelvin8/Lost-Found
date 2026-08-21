@@ -6,22 +6,22 @@
   $initial = strtoupper(substr($user->email ?? 'U', 0, 1));
 @endphp
 
-<aside class="main-sidebar" id="mainSidebar">
+<aside class="main-sidebar" id="mainSidebar" role="complementary" aria-label="Sidebar navigation">
   <div class="sidebar-content">
     <!-- Main Navigation -->
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Navigation</div>
+      <div class="sidebar-section-title" id="nav-heading">Navigation</div>
 
-      <a href="{{ route('dashboard') }}" class="sidebar-item {{ $currentRoute === 'dashboard' ? 'active' : '' }}">
+      <a href="{{ route('dashboard') }}" class="sidebar-item {{ $currentRoute === 'dashboard' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'dashboard' ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
-          <i class="bi bi-grid-fill"></i>
+          <i class="bi bi-grid-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Dashboard</span>
       </a>
 
-      <a href="{{ route('reports.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'reports.') ? 'active' : '' }}">
+      <a href="{{ route('reports.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'reports.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'reports.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
-          <i class="bi bi-inbox-fill"></i>
+          <i class="bi bi-inbox-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Reports</span>
         @if(isset($pendingReportsCount) && $pendingReportsCount > 0)
@@ -29,16 +29,16 @@
         @endif
       </a>
 
-      <a href="{{ route('claims.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'claims.') ? 'active' : '' }}">
+      <a href="{{ route('claims.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'claims.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'claims.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
-          <i class="bi bi-person-check-fill"></i>
+          <i class="bi bi-person-check-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Claims</span>
       </a>
 
-      <a href="{{ route('notifications.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'notifications.') ? 'active' : '' }}">
+      <a href="{{ route('notifications.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'notifications.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'notifications.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon sidebar-item-icon-notification">
-          <i class="bi bi-bell-fill"></i>
+          <i class="bi bi-bell-fill" aria-hidden="true"></i>
           <span class="notification-dot"></span>
         </div>
         <span class="sidebar-item-text">Notifications</span>
@@ -50,16 +50,16 @@
     <div class="sidebar-section">
       <div class="sidebar-section-title">Staff Tools</div>
 
-      <a href="{{ route('matches.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'matches.') ? 'active' : '' }}">
+      <a href="{{ route('matches.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'matches.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'matches.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
-          <i class="bi bi-diagram-2-fill"></i>
+          <i class="bi bi-diagram-2-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Matches</span>
       </a>
 
-      <a href="{{ route('users.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'users.') ? 'active' : '' }}">
+      <a href="{{ route('users.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'users.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'users.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
-          <i class="bi bi-people-fill"></i>
+          <i class="bi bi-people-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Users</span>
         <i class="bi bi-chevron-down sidebar-item-arrow"></i>
@@ -76,39 +76,39 @@
         <i class="bi bi-chevron-down sidebar-section-chevron" id="managementChevron"></i>
       </div>
 
-      <div class="sidebar-section-items" id="managementItems">
-        <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}">
+      <div class="sidebar-section-items" id="managementItems" role="group" aria-labelledby="managementToggle">
+        <a href="{{ route('departments.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'departments.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'departments.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
-            <i class="bi bi-diagram-3-fill"></i>
+            <i class="bi bi-diagram-3-fill" aria-hidden="true"></i>
           </div>
           <span class="sidebar-item-text">Departments</span>
         </a>
 
-        <a href="{{ route('categories.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'categories.') ? 'active' : '' }}">
+        <a href="{{ route('categories.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'categories.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'categories.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
-            <i class="bi bi-tags-fill"></i>
+            <i class="bi bi-tags-fill" aria-hidden="true"></i>
           </div>
           <span class="sidebar-item-text">Categories</span>
         </a>
 
-        <a href="{{ route('locations.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'locations.') ? 'active' : '' }}">
+        <a href="{{ route('locations.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'locations.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'locations.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
-            <i class="bi bi-geo-alt-fill"></i>
+            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
           </div>
           <span class="sidebar-item-text">Locations</span>
         </a>
 
         @if(in_array('admin', $roleNames, true))
-        <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}">
+        <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'roles.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
-            <i class="bi bi-shield-fill"></i>
+            <i class="bi bi-shield-fill" aria-hidden="true"></i>
           </div>
           <span class="sidebar-item-text">Roles</span>
         </a>
 
-        <a href="{{ route('activity_logs.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'activity_logs.') ? 'active' : '' }}">
+        <a href="{{ route('activity_logs.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'activity_logs.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'activity_logs.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
-            <i class="bi bi-clock-history"></i>
+            <i class="bi bi-clock-history" aria-hidden="true"></i>
           </div>
           <span class="sidebar-item-text">Activity Logs</span>
         </a>
@@ -118,32 +118,32 @@
     @endif
 
     <!-- Quick Actions Grid -->
-    <div class="sidebar-quick-grid">
-      <a href="{{ route('reports.create') }}" class="sidebar-quick-item" title="New Report">
+    <nav class="sidebar-quick-grid" aria-label="Quick actions">
+      <a href="{{ route('reports.create') }}" class="sidebar-quick-item" title="New Report" aria-label="Create new report">
         <div class="sidebar-quick-icon sidebar-quick-blue">
-          <i class="bi bi-plus-circle"></i>
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
         </div>
         <span class="sidebar-quick-label">Report</span>
       </a>
-      <a href="{{ route('reports.index') }}" class="sidebar-quick-item" title="View Reports">
+      <a href="{{ route('reports.index') }}" class="sidebar-quick-item" title="View Reports" aria-label="View all reports">
         <div class="sidebar-quick-icon sidebar-quick-violet">
-          <i class="bi bi-inbox"></i>
+          <i class="bi bi-inbox" aria-hidden="true"></i>
         </div>
         <span class="sidebar-quick-label">Reports</span>
       </a>
-      <a href="{{ route('claims.index') }}" class="sidebar-quick-item" title="My Claims">
+      <a href="{{ route('claims.index') }}" class="sidebar-quick-item" title="My Claims" aria-label="View my claims">
         <div class="sidebar-quick-icon sidebar-quick-emerald">
-          <i class="bi bi-person-check"></i>
+          <i class="bi bi-person-check" aria-hidden="true"></i>
         </div>
         <span class="sidebar-quick-label">Claims</span>
       </a>
-      <a href="{{ route('notifications.index') }}" class="sidebar-quick-item" title="Notifications">
+      <a href="{{ route('notifications.index') }}" class="sidebar-quick-item" title="Notifications" aria-label="View notifications">
         <div class="sidebar-quick-icon sidebar-quick-rose">
-          <i class="bi bi-bell"></i>
+          <i class="bi bi-bell" aria-hidden="true"></i>
         </div>
         <span class="sidebar-quick-label">Alerts</span>
       </a>
-    </div>
+    </nav>
   </div>
 
   <!-- Footer -->

@@ -24,10 +24,45 @@
       @endif
     </p>
   </div>
-  <a class="btn btn-primary" href="{{ route('reports.create') }}">
-    <i class="bi bi-plus-lg"></i> New Report
-  </a>
+  <div class="d-flex gap-2 align-items-center">
+    @if($isStaff)
+      <button onclick="batch.toggleSelectionMode()" class="btn btn-outline-secondary btn-sm" title="Select Mode">
+        <i class="bi bi-check2-square"></i>
+      </button>
+    @endif
+    <button onclick="advancedSearch.showSearchModal()" class="btn btn-outline-secondary btn-sm" title="Advanced Search (Ctrl+Shift+F)">
+      <i class="bi bi-search"></i>
+    </button>
+    <a class="btn btn-primary" href="{{ route('reports.create') }}">
+      <i class="bi bi-plus-lg"></i> New Report
+    </a>
+  </div>
 </div>
+
+{{-- BATCH TOOLBAR --}}
+@if($isStaff)
+<div id="batch-toolbar" class="batch-toolbar" style="display:none;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:#0041C7;color:white;border-radius:12px;margin-bottom:1rem">
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <span><span id="batch-count">0</span> selected</span>
+    <button onclick="batch.selectAll()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.8125rem">Select All</button>
+    <button onclick="batch.deselectAll()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.8125rem">Deselect All</button>
+  </div>
+  <div style="display:flex;gap:0.5rem">
+    <select id="batch-status-select" style="padding:0.25rem 0.5rem;border-radius:6px;border:none;font-size:0.8125rem">
+      <option value="">Change Status...</option>
+      <option value="pending">Pending</option>
+      <option value="matched">Matched</option>
+      <option value="claimed">Claimed</option>
+      <option value="returned">Returned</option>
+      <option value="archived">Archived</option>
+    </select>
+    <button onclick="batch.bulkStatusChange(document.getElementById('batch-status-select').value)" style="padding:0.25rem 0.75rem;background:rgba(255,255,255,0.2);border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8125rem">Apply</button>
+    <button onclick="batch.bulkExport()" style="padding:0.25rem 0.75rem;background:rgba(255,255,255,0.2);border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8125rem"><i class="bi bi-download"></i> Export</button>
+    <button onclick="batch.bulkDelete()" style="padding:0.25rem 0.75rem;background:rgba(239,68,68,0.8);border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8125rem"><i class="bi bi-trash"></i> Delete</button>
+    <button onclick="batch.toggleSelectionMode()" style="padding:0.25rem 0.75rem;background:rgba(255,255,255,0.2);border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8125rem"><i class="bi bi-x-lg"></i></button>
+  </div>
+</div>
+@endif
 
 {{-- QUICK STATS --}}
 @php
@@ -198,7 +233,12 @@
 @else
   <div class="reports-grid">
     @foreach($reports as $r)
-      <div class="report-card">
+      <div class="report-card" style="position:relative">
+        @if($isStaff)
+        <input type="checkbox" class="batch-checkbox" data-id="{{ $r->id }}" data-title="{{ $r->item_name }}"
+            style="display:none;position:absolute;top:8px;right:8px;width:20px;height:20px;z-index:10;cursor:pointer"
+            onchange="batch.toggleItem({{ $r->id }}, this)">
+        @endif
         {{-- Image --}}
         <div class="report-image">
           @php

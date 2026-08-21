@@ -30,12 +30,29 @@
 
     <!-- Right: Actions -->
     <div class="navbar-actions">
+      <!-- Language Toggle -->
+      <button class="lang-toggle" id="langToggle" type="button" onclick="toggleLanguage()" aria-label="Toggle language">
+        <i class="bi bi-translate"></i>
+        <span>EN</span>
+      </button>
+
+      <!-- Bookmarks -->
+      <button class="navbar-icon-btn" onclick="showBookmarksPanel()" title="Bookmarks" aria-label="Bookmarks" style="position:relative">
+        <i class="bi bi-bookmark"></i>
+        <span class="bookmark-count notification-badge" style="display:none">0</span>
+      </button>
+
+      <!-- Dark Mode Toggle -->
+      <button class="dark-mode-toggle" id="darkModeToggle" type="button" aria-label="Toggle dark mode">
+        <i class="bi bi-moon-fill"></i>
+      </button>
+
       <!-- Notifications -->
       @php
         $unreadCount = $user ? \App\Models\Notification::where('user_id', $user->id)->whereNull('read_at')->count() : 0;
       @endphp
-      <a href="{{ route('notifications.index') }}" class="navbar-icon-btn {{ $unreadCount > 0 ? 'has-unread' : '' }}" title="Notifications">
-        <i class="bi bi-bell"></i>
+      <a href="{{ route('notifications.index') }}" class="navbar-icon-btn {{ $unreadCount > 0 ? 'has-unread' : '' }}" title="Notifications" aria-label="Notifications{{ $unreadCount > 0 ? " ({$unreadCount} unread)" : '' }}">
+        <i class="bi bi-bell" aria-hidden="true"></i>
         @if($unreadCount > 0)
           <span class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
         @endif

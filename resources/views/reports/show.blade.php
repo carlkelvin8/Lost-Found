@@ -20,7 +20,18 @@
       System-managed status
     </div>
   </div>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 align-items-center">
+    <button onclick="bookmarks.toggle({{ $report->id }}, 'Report #{{ $report->id }}')" 
+        class="bookmark-btn {{ in_array($report->id, session('bookmarks', [])) ? 'bookmarked' : '' }}" 
+        data-report-id="{{ $report->id }}" aria-label="Bookmark this report">
+      <i class="bi bi-bookmark"></i>
+    </button>
+    <button onclick="printReport()" class="btn btn-outline-secondary btn-sm" title="Print">
+      <i class="bi bi-printer"></i>
+    </button>
+    <button onclick="shareReport({{ $report->id }}, 'Report #{{ $report->id }}')" class="btn btn-outline-secondary btn-sm" title="Share">
+      <i class="bi bi-share"></i>
+    </button>
     @if($isStaff || $isOwner)
       <a class="btn btn-outline-primary" href="{{ route('reports.edit',$report->id) }}">
         <i class="bi bi-pencil"></i> Edit
@@ -84,6 +95,12 @@
     @endif
   </div>
 
+  {{-- STATUS TIMELINE --}}
+  <div class="detail-card mt-3">
+    <div class="detail-card-title"><i class="bi bi-diagram-3"></i> Status Progress</div>
+    {!! createStatusTimeline($report->status) !!}
+  </div>
+
   {{-- PHOTOS --}}
   <div class="detail-card mt-3">
     <div class="detail-card-title"><i class="bi bi-images"></i> Photos</div>
@@ -91,12 +108,25 @@
     @if($report->photos->count())
       <div class="detail-photo-grid">
         @foreach($report->photos as $p)
-          <img src="{{ asset($p->photo_url) }}" alt="Report photo">
+          <img src="{{ asset($p->photo_url) }}" alt="Report photo" loading="lazy" 
+               style="cursor:pointer" 
+               onclick="lightbox.open({{ $report->photos->map(fn($photo) => asset($photo->photo_url))->toJson() }}, {{ $loop->index }})">
         @endforeach
       </div>
     @else
       <div class="text-muted">No photos uploaded</div>
     @endif
+  </div>
+
+  {{-- QR CODE --}}
+  <div class="detail-card mt-3">
+    <div class="detail-card-title"><i class="bi bi-qr-code"></i> Report QR Code</div>
+    <div style="text-align:center;padding:1rem">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(route('reports.show', $report->id)) }}&bgcolor=FFFFFF&color=0041C7&margin=10" 
+           alt="QR Code for Report #{{ $report->id }}" 
+           style="border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+      <div style="margin-top:0.75rem;font-size:0.8125rem;color:#94a3b8">Scan to view this report</div>
+    </div>
   </div>
 
   {{-- AI ANALYSIS (STAFF ONLY) --}}
@@ -132,6 +162,16 @@
       </div>
     </div>
   @endif
+
+  {{-- COMMENTS / NOTES --}}
+  <div class="detail-card mt-3">
+    <div id="comments-container">
+      <div style="text-align:center;padding:2rem;color:#94a3b8">
+        <div class="spinner" style="margin:0 auto"></div>
+        <div style="margin-top:0.5rem;font-size:0.875rem">Loading comments...</div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -224,4 +264,35 @@
 
 </div>
 </div>
+
+@if($report->status === 'returned')
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => launchConfetti(), 500);
+});
+</script>
+@endpush
+@endif
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize comments
+    window.currentUserId = {{ auth()->id() ?? 0 }};
+    window.commentManager = new CommentManager({{ $report->id }});
+    commentManager.loadComments();
+
+    // Initialize bookmarks
+    if (window.bookmarks) {
+        bookmarks.updateUI();
+    }
+
+    // Initialize breadcrumbs
+    if (typeof generateBreadcrumbs === 'function') {
+        generateBreadcrumbs();
+    }
+});
+</script>
+@endpush
 @endsection

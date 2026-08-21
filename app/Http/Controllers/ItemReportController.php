@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Models\ReportMatch;
 use App\Models\ReportPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -66,8 +67,12 @@ class ItemReportController extends WebBaseController
 
         $reports = $query->paginate(20)->withQueryString();
 
-        $categories = Category::orderBy('name')->get();
-        $locations  = Location::orderBy('name')->get();
+        $categories = Cache::remember('categories_list', 3600, fn() =>
+            Category::orderBy('name')->get()
+        );
+        $locations  = Cache::remember('locations_list', 3600, fn() =>
+            Location::orderBy('name')->get()
+        );
 
         return view('reports.index', compact(
             'reports', 'type', 'status', 'categoryId', 'locationId', 'q', 'categories', 'locations', 'isStaff'
@@ -81,8 +86,12 @@ class ItemReportController extends WebBaseController
     {
         if (!$this->user()) return redirect()->route('login');
 
-        $categories = Category::orderBy('name')->get();
-        $locations  = Location::orderBy('name')->get();
+        $categories = Cache::remember('categories_list', 3600, fn() =>
+            Category::orderBy('name')->get()
+        );
+        $locations  = Cache::remember('locations_list', 3600, fn() =>
+            Location::orderBy('name')->get()
+        );
 
         return view('reports.create', compact('categories', 'locations'));
     }
@@ -141,11 +150,11 @@ class ItemReportController extends WebBaseController
                     $this->storeReportPhoto($report->id, $file);
                 }
                 
-                // Trigger AI Analysis (synchronous, wrapped in try-catch so report still saves if AI fails)
+                // Trigger AI Analysis (async via queue)
                 try {
-                    ProcessImageAnalysis::dispatchSync((int) $report->id);
+                    ProcessImageAnalysis::dispatch((int) $report->id);
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
                 }
             }
 
@@ -219,8 +228,12 @@ class ItemReportController extends WebBaseController
             return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
         }
 
-        $categories = Category::orderBy('name')->get();
-        $locations  = Location::orderBy('name')->get();
+        $categories = Cache::remember('categories_list', 3600, fn() =>
+            Category::orderBy('name')->get()
+        );
+        $locations  = Cache::remember('locations_list', 3600, fn() =>
+            Location::orderBy('name')->get()
+        );
 
         return view('reports.edit', compact('report', 'categories', 'locations', 'isStaff', 'isOwner'));
     }
@@ -336,11 +349,11 @@ class ItemReportController extends WebBaseController
             $this->storeReportPhoto($report->id, $data['photo']);
             $this->audit($request, 'reports.photo.upload', 'item_reports', $report->id);
             
-            // Trigger AI Analysis for new photo
+            // Trigger AI Analysis for new photo (async via queue)
             try {
-                ProcessImageAnalysis::dispatchSync((int) $report->id);
+                ProcessImageAnalysis::dispatch((int) $report->id);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('AI analysis failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
             }
         });
 
@@ -758,8 +771,19 @@ class ItemReportController extends WebBaseController
 
     private function storeReportPhoto(int $reportId, $file): void
     {
-        $filename = uniqid() . '_' . $file->getClientOriginalName();
-        $file->move(public_path('report_photos'), $filename);
+        $filename = uniqid() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg';
+        $destination = public_path('report_photos');
+        $filePath = $destination . '/' . $filename;
+
+        // Compress image using GD
+        try {
+            $this->compressImage($file->getPathname(), $filePath, 82);
+        } catch (\Exception $e) {
+            // Fallback: store original file
+            $filename = uniqid() . '_' . $file->getClientOriginalName();
+            $file->move($destination, $filename);
+        }
+
         $url = 'report_photos/' . $filename;
 
         ReportPhoto::create([
@@ -768,6 +792,46 @@ class ItemReportController extends WebBaseController
             'caption'    => null,
             'created_at' => now(),
         ]);
+    }
+
+    private function compressImage(string $source, string $destination, int $quality = 82): void
+    {
+        $imageInfo = getimagesize($source);
+        if (!$imageInfo) {
+            throw new \RuntimeException('Cannot read image');
+        }
+
+        $mime = $imageInfo['mime'];
+        $src = match ($mime) {
+            'image/jpeg' => imagecreatefromjpeg($source),
+            'image/png' => imagecreatefrompng($source),
+            'image/webp' => imagecreatefromwebp($source),
+            'image/gif' => imagecreatefromgif($source),
+            default => throw new \RuntimeException('Unsupported image type: ' . $mime),
+        };
+
+        if (!$src) {
+            throw new \RuntimeException('Failed to create image resource');
+        }
+
+        // Resize if larger than 1200px
+        $maxWidth = 1200;
+        $maxHeight = 1200;
+        [$origWidth, $origHeight] = [$imageInfo[0], $imageInfo[1]];
+
+        if ($origWidth > $maxWidth || $origHeight > $maxHeight) {
+            $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+            $newWidth = (int) ($origWidth * $ratio);
+            $newHeight = (int) ($origHeight * $ratio);
+
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled($resized, $src, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+            imagedestroy($src);
+            $src = $resized;
+        }
+
+        imagejpeg($src, $destination, $quality);
+        imagedestroy($src);
     }
 
     private function tryDeletePublicUrlFile(?string $url): void
