@@ -187,10 +187,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Management collapsible section
   if (managementToggle && managementItems) {
-    const savedState = localStorage.getItem('sidebar_management_collapsed');
-    if (savedState === 'true') {
-      managementItems.classList.add('collapsed');
-      if (managementChevron) managementChevron.classList.add('collapsed');
+    const managementRoutes = ['departments.', 'categories.', 'locations.', 'roles.', 'activity_logs.'];
+    const currentRoute = '{{ $currentRoute }}';
+    const onManagementPage = managementRoutes.some(r => currentRoute.startsWith(r));
+
+    if (onManagementPage) {
+      managementItems.classList.remove('collapsed');
+      if (managementChevron) managementChevron.classList.remove('collapsed');
+    } else {
+      const savedState = localStorage.getItem('sidebar_management_collapsed');
+      if (savedState === 'true' || savedState === null) {
+        managementItems.classList.add('collapsed');
+        if (managementChevron) managementChevron.classList.add('collapsed');
+      }
     }
 
     managementToggle.addEventListener('click', function() {

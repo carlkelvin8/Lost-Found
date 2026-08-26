@@ -109,30 +109,25 @@
         .brand-logo-box {
             width: 128px;
             height: 128px;
-            background: white;
+            background: transparent;
             border-radius: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 2.5rem;
-            box-shadow:
-                0 24px 60px rgba(0,0,0,0.3),
-                0 0 0 1px rgba(255,255,255,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.4);
             overflow: hidden;
             animation: logoFloat 5s ease-in-out infinite;
         }
 
         @keyframes logoFloat {
-            0%,100% { transform: translateY(0); box-shadow: 0 24px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1); }
-            50% { transform: translateY(-10px); box-shadow: 0 32px 70px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1); }
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         .brand-logo-box img {
-            width: 88%;
-            height: 88%;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
-            padding: 10px;
         }
 
         .brand-wrap h1 {

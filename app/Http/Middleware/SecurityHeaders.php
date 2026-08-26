@@ -14,7 +14,7 @@ class SecurityHeaders
         // Content Security Policy
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
             "img-src 'self' data: blob: https:",
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",

@@ -11,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        // This migration is intentionally left empty.
+        // The avatar_url column is already added by the prior migration
+        // 2026_01_29_072254_add_avatar_url_to_user_profiles_table.php.
     }
 
     /**

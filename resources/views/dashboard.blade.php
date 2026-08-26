@@ -4,8 +4,6 @@
 
 @section('content')
 @php
-  $roleNames = auth()->check() ? auth()->user()->roles()->pluck('name')->toArray() : [];
-  $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
   $initial = strtoupper(substr($user->email,0,1));
   $hour = now()->hour;
   $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');

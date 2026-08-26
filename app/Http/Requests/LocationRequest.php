@@ -37,10 +37,20 @@ class LocationRequest extends FormRequest
                 'max:20',
                 'regex:/^[a-zA-Z0-9\s\-]+$/',
             ],
-            'description' => [
+            'details' => [
                 'nullable',
                 'string',
-                'max:500',
+                'max:255',
+            ],
+            'latitude' => [
+                'nullable',
+                'numeric',
+                'between:-90,90',
+            ],
+            'longitude' => [
+                'nullable',
+                'numeric',
+                'between:-180,180',
             ],
         ];
     }
@@ -55,7 +65,9 @@ class LocationRequest extends FormRequest
             'name.unique' => 'This location name already exists.',
             'building.regex' => 'Building name contains invalid characters.',
             'floor.regex' => 'Floor contains invalid characters.',
-            'description.max' => 'Description cannot exceed 500 characters.',
+            'details.max' => 'Details cannot exceed 255 characters.',
+            'latitude.between' => 'Latitude must be between -90 and 90.',
+            'longitude.between' => 'Longitude must be between -180 and 180.',
         ];
     }
 
@@ -65,7 +77,7 @@ class LocationRequest extends FormRequest
             'name' => trim($this->name ?? ''),
             'building' => trim($this->building ?? ''),
             'floor' => trim($this->floor ?? ''),
-            'description' => trim($this->description ?? ''),
+            'details' => trim($this->details ?? $this->description ?? ''),
         ]);
     }
 }

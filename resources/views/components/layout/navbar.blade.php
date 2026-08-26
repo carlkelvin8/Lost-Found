@@ -30,23 +30,6 @@
 
     <!-- Right: Actions -->
     <div class="navbar-actions">
-      <!-- Language Toggle -->
-      <button class="lang-toggle" id="langToggle" type="button" onclick="toggleLanguage()" aria-label="Toggle language">
-        <i class="bi bi-translate"></i>
-        <span>EN</span>
-      </button>
-
-      <!-- Bookmarks -->
-      <button class="navbar-icon-btn" onclick="showBookmarksPanel()" title="Bookmarks" aria-label="Bookmarks" style="position:relative">
-        <i class="bi bi-bookmark"></i>
-        <span class="bookmark-count notification-badge" style="display:none">0</span>
-      </button>
-
-      <!-- Dark Mode Toggle -->
-      <button class="dark-mode-toggle" id="darkModeToggle" type="button" aria-label="Toggle dark mode">
-        <i class="bi bi-moon-fill"></i>
-      </button>
-
       <!-- Notifications -->
       @php
         $unreadCount = $user ? \App\Models\Notification::where('user_id', $user->id)->whereNull('read_at')->count() : 0;

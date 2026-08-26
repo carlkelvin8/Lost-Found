@@ -8,6 +8,7 @@ class ClaimDocument extends Model
 {
     protected $table = 'claim_documents';
 
+    const CREATED_AT = null;
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -15,6 +16,5 @@ class ClaimDocument extends Model
         'file_url',
         'file_type',
         'file_hash_sha256',
-        'created_at',
     ];
 }

@@ -96,26 +96,11 @@ class ItemReportController extends WebBaseController
         return view('reports.create', compact('categories', 'locations'));
     }
 
-    public function store(Request $request)
+    public function store(ItemReportRequest $request)
     {
         if (!$this->user()) return redirect()->route('login');
 
-        $data = $request->validate([
-            'report_type'      => ['required', Rule::in(['lost', 'found'])],
-            'owner_user_id'    => ['nullable', 'integer', 'exists:users,id'], // staff can set; for normal users it’s harmless if you later ignore
-            'category_id'      => ['nullable', 'integer', 'exists:categories,id'],
-            'item_name'        => ['nullable', 'string', 'max:190'],
-            'item_description' => ['required', 'string', 'min:10'],
-            'brand_model'      => ['nullable', 'string', 'max:190'],
-            'color'            => ['nullable', 'string', 'max:60'],
-            'incident_date'    => ['nullable', 'date'],
-            'incident_time'    => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'location_id'      => ['nullable', 'integer', 'exists:locations,id'],
-            'circumstances'    => ['nullable', 'string'],
-            'contact_override' => ['nullable', 'string', 'max:255'],
-            'photos'           => ['nullable', 'array'],
-            'photos.*'         => ['file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-        ]);
+        $data = $request->validated();
 
         $reporterId = (int) $this->user()->id;
         $isStaff    = $this->hasAnyRole(['admin', 'osa']);
@@ -238,7 +223,7 @@ class ItemReportController extends WebBaseController
         return view('reports.edit', compact('report', 'categories', 'locations', 'isStaff', 'isOwner'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(ItemReportRequest $request, int $id)
     {
         if (!$this->user()) return redirect()->route('login');
 
@@ -252,26 +237,15 @@ class ItemReportController extends WebBaseController
             return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
         }
 
-        $rules = [
-            // owner_user_id should be staff-only; accept input but ignore if not staff
-            'owner_user_id'    => ['nullable', 'integer', 'exists:users,id'],
-            'category_id'      => ['nullable', 'integer', 'exists:categories,id'],
-            'item_name'        => ['nullable', 'string', 'max:190'],
-            'item_description' => ['required', 'string', 'min:10'],
-            'brand_model'      => ['nullable', 'string', 'max:190'],
-            'color'            => ['nullable', 'string', 'max:60'],
-            'incident_date'    => ['nullable', 'date'],
-            'incident_time'    => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'location_id'      => ['nullable', 'integer', 'exists:locations,id'],
-            'circumstances'    => ['nullable', 'string'],
-            'contact_override' => ['nullable', 'string', 'max:255'],
-        ];
+        $data = $request->validated();
 
+        // Staff-only fields
         if ($isStaff) {
-            $rules['status'] = ['required', Rule::in(array_merge(self::ACTIVE_STATUSES, self::LOCKED_STATUSES))];
+            $rules = [
+                'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(self::ACTIVE_STATUSES, self::LOCKED_STATUSES))],
+            ];
+            $request->validate($rules);
         }
-
-        $data = $request->validate($rules);
 
         DB::transaction(function () use ($request, $report, $data, $isStaff) {
             $beforeStatus = $report->status;
@@ -404,6 +378,10 @@ class ItemReportController extends WebBaseController
         $report = ItemReport::findOrFail($id);
 
         if (!$this->hasAnyRole(['admin','osa'])) abort(403);
+
+        if ($this->isLocked($report->status)) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        }
 
         DB::transaction(function () use ($request, $report) {
             $oldStatus = $report->status;

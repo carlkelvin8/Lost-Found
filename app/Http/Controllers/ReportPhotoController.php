@@ -59,18 +59,35 @@ class ReportPhotoController extends WebBaseController
             return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'Report is locked']);
         }
 
-        // Delete file from public folder
         if ($photo->photo_url) {
-            $path = str_replace('storage/', '', $photo->photo_url);
-            $filePath = public_path($path);
-            if (file_exists($filePath)) {
-                @unlink($filePath);
-            }
+            $this->tryDeletePublicUrlFile($photo->photo_url);
         }
 
         $photo->delete();
         $this->audit($request, 'photos.delete', 'report_photos', $id, ['report_id' => $report->id]);
 
         return redirect()->route('reports.edit', $report->id)->with('success', 'Deleted');
+    }
+
+    /**
+     * Attempt to delete a file referenced by a public URL.
+     */
+    private function tryDeletePublicUrlFile(?string $url): void
+    {
+        if (!$url) return;
+
+        $filePath = public_path($url);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+            return;
+        }
+
+        if (str_starts_with($url, 'storage/')) {
+            $relative = substr($url, strlen('storage/'));
+            $oldPath = public_path($relative);
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
     }
 }

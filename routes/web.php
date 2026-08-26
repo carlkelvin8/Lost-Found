@@ -43,6 +43,7 @@ Route::get('/offline', function () {
 // Storage file serving (for Hostinger without symlink support)
 Route::get('/storage/{path}', [StorageController::class, 'serve'])
     ->where('path', '.*')
+    ->middleware('auth')
     ->name('storage.serve');
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
@@ -186,16 +187,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['ok' => true]);
     });
 
-    // Bulk operations
+    // Bulk operations (staff only)
     Route::delete('/reports/bulk-delete', function () {
+        $user = auth()->user();
+        $isStaff = $user->hasAnyRole(['admin', 'osa']);
         $ids = request()->input('ids', []);
-        \App\Models\ItemReport::whereIn('id', $ids)->delete();
+
+        if (empty($ids)) {
+            return response()->json(['ok' => true]);
+        }
+
+        $query = \App\Models\ItemReport::whereIn('id', $ids);
+        if (!$isStaff) {
+            $query->where('reporter_user_id', $user->id);
+        }
+        $query->delete();
+
         return response()->json(['ok' => true]);
     });
 
     Route::patch('/reports/bulk-status', function () {
+        $user = auth()->user();
+        $isStaff = $user->hasAnyRole(['admin', 'osa']);
         $ids = request()->input('ids', []);
         $status = request()->input('status');
+
+        if (!$isStaff) {
+            abort(403);
+        }
+
+        $allowedStatuses = ['pending', 'matched', 'claimed', 'returned', 'archived'];
+        if (!in_array($status, $allowedStatuses, true)) {
+            abort(422, 'Invalid status');
+        }
+
         \App\Models\ItemReport::whereIn('id', $ids)->update(['status' => $status]);
         return response()->json(['ok' => true]);
     });
@@ -281,14 +306,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Bulk export
     Route::get('/reports/bulk-export', function () {
+        $user = auth()->user();
+        $isStaff = $user->hasAnyRole(['admin', 'osa']);
         $ids = request()->input('ids', []);
-        $reports = \App\Models\ItemReport::whereIn('id', $ids)->get();
-        
-        $csv = "ID,Title,Type,Status,Created At\n";
-        foreach ($reports as $report) {
-            $csv .= "{$report->id},\"{$report->title}\",{$report->report_type},{$report->status},{$report->created_at}\n";
+
+        $query = \App\Models\ItemReport::whereIn('id', $ids);
+        if (!$isStaff) {
+            $query->where('reporter_user_id', $user->id);
         }
-        
+        $reports = $query->get();
+
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['ID', 'Item Name', 'Type', 'Status', 'Created At']);
+
+        foreach ($reports as $report) {
+            fputcsv($handle, [
+                $report->id,
+                $report->item_name,
+                $report->report_type,
+                $report->status,
+                $report->created_at,
+            ]);
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
         return response($csv)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="reports_export.csv"');

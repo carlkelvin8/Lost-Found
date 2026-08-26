@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('sessions')) {
-            Schema::create('sessions', function (Blueprint $table) {
-                $table->id();
-                $table->timestamps();
-            });
-        }
+        // This migration is intentionally left as a no-op.
+        // The sessions table is already created by the base migration
+        // 0001_01_01_000000_create_users_table.php with the correct schema.
     }
 
     /**
@@ -24,6 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
+        //
     }
 };

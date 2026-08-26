@@ -9,13 +9,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // MySQL requires FULLTEXT index for MATCH...AGAINST queries
-        // Use raw SQL to add FULLTEXT index on the columns used by runAutoMatch()
+        // FULLTEXT indexes are MySQL-specific; skip on SQLite
+        if (config('database.default') !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE item_reports ADD FULLTEXT ft_item_match (item_name, item_description, brand_model, color, circumstances)');
     }
 
     public function down(): void
     {
+        if (config('database.default') !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE item_reports DROP INDEX ft_item_match');
     }
 };

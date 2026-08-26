@@ -4,13 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 
-class StorageController extends Controller
+class StorageController extends WebBaseController
 {
     /**
-     * Serve files from storage/app/public
+     * Serve files from storage/app/public.
+     * Requires authenticated user to prevent public file enumeration.
      */
     public function serve($path)
     {
+        if (!$this->user()) {
+            abort(401);
+        }
+
         $fullPath = 'public/' . $path;
 
         if (!Storage::exists($fullPath)) {
@@ -18,7 +23,7 @@ class StorageController extends Controller
         }
 
         $file = Storage::path($fullPath);
-        
+
         if (!file_exists($file)) {
             abort(404);
         }

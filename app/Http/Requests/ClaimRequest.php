@@ -20,8 +20,14 @@ class ClaimRequest extends FormRequest
                 'exists:item_reports,id',
                 'min:1',
             ],
-            'description' => [
+            'proof_text' => [
                 'required',
+                'string',
+                'min:20',
+                'max:2000',
+            ],
+            'description' => [
+                'nullable',
                 'string',
                 'min:20',
                 'max:2000',
@@ -32,7 +38,7 @@ class ClaimRequest extends FormRequest
                 'max:1000',
             ],
             'contact_info' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s\-\.\,\@\+\(\)]+$/',
@@ -55,10 +61,11 @@ class ClaimRequest extends FormRequest
         return [
             'report_id.required' => 'Report ID is required.',
             'report_id.exists' => 'The selected report does not exist.',
-            'description.required' => 'Claim description is required.',
-            'description.min' => 'Description must be at least 20 characters to provide sufficient detail.',
+            'proof_text.required' => 'Proof description is required.',
+            'proof_text.min' => 'Proof description must be at least 20 characters to provide sufficient detail.',
+            'proof_text.max' => 'Proof description cannot exceed 2000 characters.',
+            'description.min' => 'Description must be at least 20 characters.',
             'description.max' => 'Description cannot exceed 2000 characters.',
-            'contact_info.required' => 'Contact information is required.',
             'contact_info.regex' => 'Contact information contains invalid characters.',
             'documents.max' => 'You can upload a maximum of 3 documents.',
             'documents.*.mimes' => 'Documents must be JPG, JPEG, PNG, PDF, or WEBP format.',
@@ -69,7 +76,8 @@ class ClaimRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'description' => trim($this->description ?? ''),
+            'proof_text' => trim($this->proof_text ?? ''),
+            'description' => trim($this->description ?? $this->proof_text ?? ''),
             'proof_description' => trim($this->proof_description ?? ''),
             'contact_info' => trim($this->contact_info ?? ''),
         ]);

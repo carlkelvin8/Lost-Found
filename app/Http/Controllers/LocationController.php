@@ -35,6 +35,8 @@ class LocationController extends WebBaseController
 
         $data = $request->validate([
             'name' => ['required','string','max:190', Rule::unique('locations','name')],
+            'building' => ['nullable','string','max:100'],
+            'floor' => ['nullable','string','max:20'],
             'details' => ['nullable','string','max:255'],
             'latitude' => ['nullable','numeric','between:-90,90'],
             'longitude' => ['nullable','numeric','between:-180,180'],
@@ -61,6 +63,8 @@ class LocationController extends WebBaseController
 
         $data = $request->validate([
             'name' => ['required','string','max:190', Rule::unique('locations','name')->ignore($location->id)],
+            'building' => ['nullable','string','max:100'],
+            'floor' => ['nullable','string','max:20'],
             'details' => ['nullable','string','max:255'],
             'latitude' => ['nullable','numeric','between:-90,90'],
             'longitude' => ['nullable','numeric','between:-180,180'],

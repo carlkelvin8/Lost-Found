@@ -58,7 +58,10 @@ class NotificationController extends WebBaseController
         if (!$this->user()) return response()->json(['count' => 0, 'latest' => 0]);
 
         $count = Notification::where('user_id', (int) $this->user()->id)->whereNull('read_at')->count();
-        $latest = Notification::where('user_id', (int) $this->user()->id)->whereNull('read_at')->count();
+        $latest = Notification::where('user_id', (int) $this->user()->id)
+            ->whereNull('read_at')
+            ->latest()
+            ->value('id') ?? 0;
 
         return response()->json([
             'count' => $count,

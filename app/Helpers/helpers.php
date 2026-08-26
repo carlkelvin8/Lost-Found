@@ -4,17 +4,18 @@ if (!function_exists('createStatusTimeline')) {
     function createStatusTimeline(string $currentStatus): string
     {
         $statuses = ['pending', 'matched', 'claimed', 'returned'];
-        $currentIndex = array_search($currentStatus, $statuses);
-        
+        $foundIndex = array_search($currentStatus, $statuses);
+        $currentIndex = $foundIndex !== false ? $foundIndex : 0;
+
         $icons = [
-            'pending' => 'bi-clock',
-            'matched' => 'bi-link',
-            'claimed' => 'bi-person-check',
+            'pending'  => 'bi-clock',
+            'matched'  => 'bi-link',
+            'claimed'  => 'bi-person-check',
             'returned' => 'bi-check-circle',
         ];
-        
+
         $html = '<div class="status-timeline">';
-        
+
         foreach ($statuses as $i => $status) {
             $className = 'timeline-step';
             if ($i < $currentIndex) {
@@ -22,9 +23,9 @@ if (!function_exists('createStatusTimeline')) {
             } elseif ($i === $currentIndex) {
                 $className .= ' active';
             }
-            
+
             $icon = $i < $currentIndex ? 'bi-check' : ($icons[$status] ?? 'bi-circle');
-            
+
             $html .= <<<HTML
             <div class="{$className}">
                 <div class="timeline-dot">
@@ -34,9 +35,9 @@ if (!function_exists('createStatusTimeline')) {
             </div>
             HTML;
         }
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 }

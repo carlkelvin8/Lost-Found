@@ -48,11 +48,18 @@ class AuthWebController extends WebBaseController
                 'last_login_at' => null,
             ]);
 
+            // Resolve department_id from department_name
+            $departmentId = null;
+            if (!empty($data['department_name'])) {
+                $dept = \App\Models\Department::where('name', $data['department_name'])->first();
+                $departmentId = $dept?->id;
+            }
+
             UserProfile::create([
                 'user_id' => $user->id,
                 'full_name' => $data['full_name'],
                 'school_id_number' => $data['school_id_number'] ?? null,
-                'department_id' => $data['department_name'] ?? null, // Stores department name (ICS, ILAS, INET)
+                'department_id' => $departmentId,
                 'contact_no' => $data['contact_no'] ?? null,
                 'user_type' => $data['user_type'],
                 'address' => $data['address'] ?? null,

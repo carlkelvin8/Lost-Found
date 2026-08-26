@@ -120,9 +120,9 @@
   background: white;
   border: 1px solid var(--border-default);
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all var(--transition-base);
+  width: 100%;
 }
 
 .admin-table-card:hover {
@@ -131,7 +131,9 @@
 
 /* Table Styles */
 .admin-table {
+  width: 100%;
   margin-bottom: 0;
+  border-collapse: collapse;
 }
 
 .admin-table thead th {
@@ -160,6 +162,12 @@
 
 .admin-table tbody tr:hover {
   background: rgba(0, 65, 199, 0.02);
+}
+
+.admin-table thead th:last-child,
+.admin-table tbody td:last-child {
+  white-space: nowrap;
+  text-align: right;
 }
 
 .admin-table .text-muted {

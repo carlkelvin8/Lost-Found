@@ -15,10 +15,10 @@ class OtpVerificationMail extends Mailable
     public string $otp;
     public string $userName;
 
-    public function __construct(string $otp, string $userName)
+    public function __construct(string $otp, ?string $userName = null)
     {
         $this->otp = $otp;
-        $this->userName = $userName;
+        $this->userName = $userName ?? 'User';
     }
 
     public function envelope(): Envelope

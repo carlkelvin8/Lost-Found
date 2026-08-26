@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->rememberToken();
-        });
+        // This migration is intentionally left as a no-op.
+        // The remember_token column is already added by the base migration
+        // 0001_01_01_000000_create_users_table.php.
+        if (!Schema::hasColumn('users', 'remember_token')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->rememberToken();
+            });
+        }
     }
 
     /**

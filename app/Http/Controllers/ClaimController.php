@@ -300,6 +300,14 @@ class ClaimController extends WebBaseController
             $newStatus = $report->matched_report_id ? 'matched' : 'pending';
             $report->update(['status' => $newStatus]);
 
+            $this->pushReportStatus(
+                $report->id,
+                'claimed',
+                $newStatus,
+                (int) $this->user()->id,
+                'Claim rejected'
+            );
+
             // Notify claimant that their claim was rejected
             $this->notify(
                 (int) $claim->claimant_user_id,
@@ -313,6 +321,11 @@ class ClaimController extends WebBaseController
                     'note' => $data['note'] ?? null,
                 ]
             );
+
+            $this->audit($request, 'claims.reject', 'claims', $claim->id, [
+                'report_id' => $report->id,
+                'note' => $data['note'] ?? null,
+            ]);
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Rejected');
@@ -344,6 +357,18 @@ class ClaimController extends WebBaseController
 
             $newStatus = $report->matched_report_id ? 'matched' : 'pending';
             $report->update(['status' => $newStatus]);
+
+            $this->pushReportStatus(
+                $report->id,
+                'claimed',
+                $newStatus,
+                (int) $this->user()->id,
+                'Claim cancelled by claimant'
+            );
+
+            $this->audit($request, 'claims.cancel', 'claims', $claim->id, [
+                'report_id' => $report->id,
+            ]);
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Cancelled');

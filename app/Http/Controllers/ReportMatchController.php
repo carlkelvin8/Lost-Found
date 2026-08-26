@@ -86,8 +86,37 @@ class ReportMatchController extends WebBaseController
             'note' => ['nullable','string','max:255'],
         ]);
 
-        $match->update(['status' => 'rejected']);
-        $this->audit($request, 'matches.reject', 'report_matches', $match->id, ['note' => $data['note'] ?? null]);
+        DB::transaction(function () use ($request, $match, $data) {
+            $match->update(['status' => 'rejected']);
+
+            // Re-evaluate report statuses if they were matched due to this match
+            $lost = ItemReport::find((int) $match->lost_report_id);
+            $found = ItemReport::find((int) $match->found_report_id);
+
+            if ($lost && $lost->status === 'matched') {
+                $hasOtherMatches = ReportMatch::where('lost_report_id', $lost->id)
+                    ->where('status', 'confirmed')
+                    ->exists();
+                if (!$hasOtherMatches) {
+                    $oldStatus = $lost->status;
+                    $lost->update(['status' => 'pending', 'matched_report_id' => null, 'matched_score' => null]);
+                    $this->pushReportStatus($lost->id, $oldStatus, 'pending', (int) $this->user()->id, 'Match rejected');
+                }
+            }
+
+            if ($found && $found->status === 'matched') {
+                $hasOtherMatches = ReportMatch::where('found_report_id', $found->id)
+                    ->where('status', 'confirmed')
+                    ->exists();
+                if (!$hasOtherMatches) {
+                    $oldStatus = $found->status;
+                    $found->update(['status' => 'pending', 'matched_report_id' => null, 'matched_score' => null]);
+                    $this->pushReportStatus($found->id, $oldStatus, 'pending', (int) $this->user()->id, 'Match rejected');
+                }
+            }
+
+            $this->audit($request, 'matches.reject', 'report_matches', $match->id, ['note' => $data['note'] ?? null]);
+        });
 
         return redirect()->route('matches.index', ['status' => 'suggested'])->with('success', 'Rejected');
     }

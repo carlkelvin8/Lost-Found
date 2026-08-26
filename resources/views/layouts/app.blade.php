@@ -28,10 +28,10 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-  <link href="{{ asset('css/white-black-theme.css') }}" rel="stylesheet" />
-  <link href="{{ asset('css/layout.css') }}" rel="stylesheet" />
-  <link href="{{ asset('css/animations.css') }}" rel="stylesheet" />
-  <link href="{{ asset('css/wow-features.css') }}" rel="stylesheet" />
+  <link href="{{ asset('css/white-black-theme.css') }}?v=2" rel="stylesheet" />
+  <link href="{{ asset('css/layout.css') }}?v=2" rel="stylesheet" />
+  <link href="{{ asset('css/animations.css') }}?v=2" rel="stylesheet" />
+  <link href="{{ asset('css/wow-features.css') }}?v=2" rel="stylesheet" />
 
   <!-- Critical inline styles for images -->
   <style>
@@ -77,7 +77,7 @@
 @include('components.confirmation-modal')
 
 <main id="main-content" class="content-wrap">
-  <div class="container py-4">
+  <div class="container-fluid py-4">
     @auth
     <div id="breadcrumbs" class="breadcrumbs"></div>
     @endauth
@@ -116,26 +116,6 @@
   document.querySelectorAll('[data-delay]').forEach(el => {
     el.style.setProperty('--n', el.dataset.delay);
   });
-
-  // Dark mode toggle
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-  }
-
-  const darkToggle = document.getElementById('darkModeToggle');
-  if (darkToggle) {
-    darkToggle.addEventListener('click', function() {
-      document.body.classList.toggle('dark-mode');
-      localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-      // Update icon
-      const icon = this.querySelector('i');
-      icon.className = document.body.classList.contains('dark-mode') ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-    });
-    // Set initial icon
-    const icon = darkToggle.querySelector('i');
-    if (savedTheme === 'dark') icon.className = 'bi bi-sun-fill';
-  }
 
   // Toast for flash messages
   @if(session('success'))

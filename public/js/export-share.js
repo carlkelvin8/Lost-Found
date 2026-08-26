@@ -163,7 +163,7 @@ shareStyles.textContent = `
     }
     @media print {
         .main-navbar, .main-sidebar, .sidebar-overlay, .skip-link, 
-        .dark-mode-toggle, .btn, form, .share-btn, #toast-container { 
+        .btn, form, .share-btn, #toast-container { 
             display: none !important; 
         }
         .content-wrap { padding: 0 !important; margin: 0 !important; }

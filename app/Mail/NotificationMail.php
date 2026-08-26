@@ -16,11 +16,11 @@ class NotificationMail extends Mailable
     public string $notifBody;
     public string $notifType;
 
-    public function __construct(string $title, string $body, string $type = 'system')
+    public function __construct(string $title, string $body, ?string $type = 'system')
     {
         $this->notifTitle = $title;
         $this->notifBody = $body;
-        $this->notifType = $type;
+        $this->notifType = $type ?? 'system';
     }
 
     public function envelope(): Envelope

@@ -136,6 +136,12 @@ body.has-navbar { padding-top: 70px; }
   padding: var(--space-2xl) var(--space-xl);
 }
 
+.container-fluid {
+  max-width: none;
+  width: 100%;
+  padding: var(--space-2xl) var(--space-xl);
+}
+
 /* ── TYPOGRAPHY ── */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -373,7 +379,7 @@ textarea.form-control {
 .table-responsive {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto;
   background: white;
 }
 
