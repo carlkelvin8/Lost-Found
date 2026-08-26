@@ -20,6 +20,7 @@ class ReportMatchController extends WebBaseController
         }
 
         $matches = ReportMatch::query()
+            ->with(['lostReport', 'foundReport'])
             ->where('status', $status)
             ->orderByDesc('score')
             ->paginate(20)
@@ -95,7 +96,7 @@ class ReportMatchController extends WebBaseController
 
             if ($lost && $lost->status === 'matched') {
                 $hasOtherMatches = ReportMatch::where('lost_report_id', $lost->id)
-                    ->where('status', 'confirmed')
+                    ->whereIn('status', ['confirmed', 'suggested'])
                     ->exists();
                 if (!$hasOtherMatches) {
                     $oldStatus = $lost->status;
@@ -106,7 +107,7 @@ class ReportMatchController extends WebBaseController
 
             if ($found && $found->status === 'matched') {
                 $hasOtherMatches = ReportMatch::where('found_report_id', $found->id)
-                    ->where('status', 'confirmed')
+                    ->whereIn('status', ['confirmed', 'suggested'])
                     ->exists();
                 if (!$hasOtherMatches) {
                     $oldStatus = $found->status;

@@ -28,7 +28,7 @@ class UserProfileController extends WebBaseController
         $data = $request->validate([
             'full_name' => ['required','string','min:2','max:190'],
             'school_id_number' => ['nullable','string','max:60'],
-            'department_id' => ['nullable','string','max:60'],
+            'department_id' => ['nullable','integer','exists:departments,id'],
             'contact_no' => ['nullable','string','max:40'],
             'address' => ['nullable','string','max:255'],
             'avatar' => ['nullable','file','mimes:jpg,jpeg,png,webp','max:4096'],
@@ -48,9 +48,14 @@ class UserProfileController extends WebBaseController
                 // Delete old avatar from public/avatars/
                 if ($u->profile && !empty($u->profile->avatar_url)) {
                     $old = $u->profile->avatar_url;
-                    $oldPath = public_path($old);
-                    if (File::exists($oldPath)) {
-                        File::delete($oldPath);
+                    $sanitized = str_replace('\\', '/', $old);
+                    if (str_starts_with($sanitized, 'avatars/') && !str_contains($sanitized, '..')) {
+                        $oldPath = public_path($sanitized);
+                        $resolved = realpath($oldPath);
+                        $base = realpath(public_path());
+                        if ($resolved && $base && str_starts_with($resolved, $base) && File::exists($resolved)) {
+                            File::delete($resolved);
+                        }
                     }
                 }
 

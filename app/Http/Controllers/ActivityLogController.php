@@ -16,7 +16,7 @@ class ActivityLogController extends WebBaseController
         $entityId = $request->query('entity_id', '');
         $userId = $request->query('user_id', '');
 
-        $query = ActivityLog::query()->orderByDesc('id');
+        $query = ActivityLog::query()->with('causer')->orderByDesc('id');
 
         if ($action !== '') $query->where('action', $action);
         if ($entityType !== '') $query->where('entity_type', $entityType);

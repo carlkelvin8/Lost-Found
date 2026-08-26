@@ -119,15 +119,10 @@ class AuthWebController extends WebBaseController
 
         $user = User::where('email', $data['email'])->first();
 
-        if (!$user) {
+        if ($user && (int) $user->is_active !== 1) {
             return back()->withErrors(['message' => 'Invalid credentials'])->withInput();
         }
 
-        if ((int) $user->is_active !== 1) {
-            return back()->withErrors(['message' => 'Account disabled'])->withInput();
-        }
-
-        // ✅ THIS WILL NOW WORK
         if (!Auth::attempt([
             'email' => $data['email'],
             'password' => $data['password']
@@ -136,13 +131,13 @@ class AuthWebController extends WebBaseController
         }
 
         $request->session()->regenerate();
+        $user = Auth::user();
         $user->update(['last_login_at' => now()]);
 
         $this->audit($request, 'auth.login', 'users', $user->id);
 
         // If email not verified, redirect to verification
         if (!$user->hasVerifiedEmail()) {
-            // Send OTP if needed
             $hasValidOtp = EmailOtp::where('user_id', $user->id)
                 ->where('used', false)
                 ->where('expires_at', '>', now())
@@ -284,7 +279,6 @@ class AuthWebController extends WebBaseController
                 'required',
                 'email:rfc,dns',
                 'max:190',
-                'exists:users,email',
             ],
         ]);
 

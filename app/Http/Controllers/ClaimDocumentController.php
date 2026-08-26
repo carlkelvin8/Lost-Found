@@ -6,6 +6,7 @@ use App\Models\Claim;
 use App\Models\ClaimDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ClaimDocumentController extends WebBaseController
 {
@@ -62,6 +63,11 @@ class ClaimDocumentController extends WebBaseController
         if (!$isStaff && !$isOwner) abort(403);
         if ($claim->status !== 'pending') {
             return redirect()->route('claims.show', $claim->id)->withErrors(['message' => 'Cannot delete documents after review']);
+        }
+
+        $storagePath = Str::after($doc->file_url, '/storage/');
+        if ($storagePath && Storage::disk('public')->exists($storagePath)) {
+            Storage::disk('public')->delete($storagePath);
         }
 
         $doc->delete();

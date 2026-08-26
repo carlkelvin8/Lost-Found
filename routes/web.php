@@ -197,6 +197,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json(['ok' => true]);
         }
 
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return response()->json(['error' => 'Invalid IDs'], 422);
+        }
+
         $query = \App\Models\ItemReport::whereIn('id', $ids);
         if (!$isStaff) {
             $query->where('reporter_user_id', $user->id);
@@ -214,6 +219,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         if (!$isStaff) {
             abort(403);
+        }
+
+        if (empty($ids)) {
+            return response()->json(['ok' => true]);
+        }
+
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return response()->json(['error' => 'Invalid IDs'], 422);
         }
 
         $allowedStatuses = ['pending', 'matched', 'claimed', 'returned', 'archived'];
@@ -247,14 +261,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::post('/reports/{reportId}/comments', function ($reportId) {
+        $validated = request()->validate([
+            'text' => ['required', 'string', 'max:5000'],
+            'type' => ['nullable', 'string', 'max:50'],
+        ]);
+
         $report = \App\Models\ItemReport::findOrFail($reportId);
         $log = \App\Models\ActivityLog::create([
             'event' => 'comment',
             'subject_type' => 'App\Models\ItemReport',
             'subject_id' => $reportId,
             'causer_id' => auth()->id(),
-            'description' => request()->input('text'),
-            'properties' => ['type' => request()->input('type', 'comment')]
+            'description' => $validated['text'],
+            'properties' => ['type' => $validated['type'] ?? 'comment']
         ]);
         return response()->json([
             'id' => $log->id,
@@ -296,9 +315,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/stats', function () {
         $user = auth()->user();
         return response()->json([
-            'reports_count' => \App\Models\ItemReport::where('user_id', $user->id)->count(),
-            'claims_count' => \App\Models\Claim::where('user_id', $user->id)->count(),
-            'pending_count' => \App\Models\ItemReport::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'reports_count' => \App\Models\ItemReport::where('reporter_user_id', $user->id)->count(),
+            'claims_count' => \App\Models\Claim::where('claimant_user_id', $user->id)->count(),
+            'pending_count' => \App\Models\ItemReport::where('reporter_user_id', $user->id)->where('status', 'pending')->count(),
             'total_users' => \App\Models\User::count(),
             'total_reports' => \App\Models\ItemReport::count(),
         ]);
@@ -309,6 +328,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $user = auth()->user();
         $isStaff = $user->hasAnyRole(['admin', 'osa']);
         $ids = request()->input('ids', []);
+
+        if (empty($ids)) {
+            return response()->json(['error' => 'No IDs provided'], 422);
+        }
+
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return response()->json(['error' => 'Invalid IDs'], 422);
+        }
 
         $query = \App\Models\ItemReport::whereIn('id', $ids);
         if (!$isStaff) {

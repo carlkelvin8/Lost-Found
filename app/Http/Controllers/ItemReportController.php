@@ -183,7 +183,7 @@ class ItemReportController extends WebBaseController
 
         // convenience for blade (so you don’t compute again)
         $canEdit = !$this->isLocked($report->status) && ($isStaff || $isOwner);
-        $report->can_edit = $canEdit; // dynamic property for views
+        $report->setAttribute('can_edit', $canEdit);
         $statusColor = match ((string) $report->status) {
             'pending'  => 'secondary',
             'matched'  => 'primary',
@@ -503,13 +503,15 @@ class ItemReportController extends WebBaseController
             $keywords = array_filter(explode(' ', $text), fn($w) => mb_strlen($w) > 2);
             if (empty($keywords)) return;
 
+            $escapedKeywords = array_map(fn($kw) => str_replace(['%', '_'], ['\\%', '\\_'], $kw), $keywords);
+
             $candidates = ItemReport::query()
                 ->select('item_reports.*')
                 ->where('report_type', $oppositeType)
                 ->whereIn('status', self::ACTIVE_STATUSES)
                 ->where('id', '<>', $report->id)
-                ->where(function ($q) use ($keywords) {
-                    foreach ($keywords as $kw) {
+                ->where(function ($q) use ($escapedKeywords) {
+                    foreach ($escapedKeywords as $kw) {
                         $q->orWhere('item_name', 'LIKE', "%{$kw}%")
                           ->orWhere('item_description', 'LIKE', "%{$kw}%")
                           ->orWhere('brand_model', 'LIKE', "%{$kw}%")
@@ -816,19 +818,27 @@ class ItemReportController extends WebBaseController
     {
         if (!$url) return;
 
+        $sanitized = str_replace('\\', '/', $url);
+        if (str_contains($sanitized, '..') || str_contains($sanitized, "\0")) {
+            return;
+        }
+
         // Handle new format: "report_photos/xxx.jpg"
-        $filePath = public_path($url);
-        if (file_exists($filePath)) {
-            @unlink($filePath);
+        $filePath = public_path($sanitized);
+        $resolved = realpath($filePath);
+        $base = realpath(public_path());
+        if ($resolved && $base && str_starts_with($resolved, $base) && file_exists($resolved)) {
+            @unlink($resolved);
             return;
         }
 
         // Handle old format: "storage/report_photos/xxx.jpg"
-        if (str_starts_with($url, 'storage/')) {
-            $relative = substr($url, strlen('storage/'));
+        if (str_starts_with($sanitized, 'storage/')) {
+            $relative = substr($sanitized, strlen('storage/'));
             $oldPath = public_path($relative);
-            if (file_exists($oldPath)) {
-                @unlink($oldPath);
+            $oldResolved = realpath($oldPath);
+            if ($oldResolved && $base && str_starts_with($oldResolved, $base) && file_exists($oldResolved)) {
+                @unlink($oldResolved);
             }
         }
     }

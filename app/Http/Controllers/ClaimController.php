@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Claim;
 use App\Models\ItemReport;
+use App\Models\ReportMatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -85,6 +86,8 @@ class ClaimController extends WebBaseController
         $data = $request->validate([
             'report_id' => ['required', 'integer', 'exists:item_reports,id'],
             'proof_text' => ['required', 'string', 'min:20'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'contact_info' => ['nullable', 'string', 'max:255'],
         ]);
 
         $report = ItemReport::findOrFail((int) $data['report_id']);
@@ -266,6 +269,10 @@ class ClaimController extends WebBaseController
                     'status' => 'approved',
                 ]
             );
+
+            $this->audit($request, 'claims.approve', 'claims', $claim->id, [
+                'report_id' => $report->id,
+            ]);
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Approved');
@@ -297,7 +304,11 @@ class ClaimController extends WebBaseController
                 'reviewed_at' => now(),
             ]);
 
-            $newStatus = $report->matched_report_id ? 'matched' : 'pending';
+            $hasActiveMatches = ReportMatch::where('lost_report_id', $report->id)
+                ->orWhere('found_report_id', $report->id)
+                ->whereIn('status', ['confirmed', 'suggested'])
+                ->exists();
+            $newStatus = $hasActiveMatches ? 'matched' : 'pending';
             $report->update(['status' => $newStatus]);
 
             $this->pushReportStatus(
@@ -355,7 +366,11 @@ class ClaimController extends WebBaseController
 
             $claim->update(['status' => 'cancelled']);
 
-            $newStatus = $report->matched_report_id ? 'matched' : 'pending';
+            $hasActiveMatches = ReportMatch::where('lost_report_id', $report->id)
+                ->orWhere('found_report_id', $report->id)
+                ->whereIn('status', ['confirmed', 'suggested'])
+                ->exists();
+            $newStatus = $hasActiveMatches ? 'matched' : 'pending';
             $report->update(['status' => $newStatus]);
 
             $this->pushReportStatus(

@@ -15,8 +15,9 @@ class CategoryController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $q = trim((string) $request->query('q', ''));
+        $escapedQ = str_replace(['%', '_'], ['\\%', '\\_'], $q);
         $categories = Category::query()
-            ->when($q !== '', fn($qq) => $qq->where('name','like',"%{$q}%"))
+            ->when($q !== '', fn($qq) => $qq->where('name','like',"%{$escapedQ}%"))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
@@ -69,6 +70,8 @@ class CategoryController extends WebBaseController
 
         $category = Category::findOrFail($id);
         $impacted = ItemReport::where('category_id', $id)->count();
+
+        ItemReport::where('category_id', $id)->update(['category_id' => null]);
 
         $category->delete();
         $this->audit($request, 'categories.delete', 'categories', $id, ['impacted_reports' => $impacted]);

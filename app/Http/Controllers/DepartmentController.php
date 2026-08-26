@@ -14,8 +14,9 @@ class DepartmentController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $q = trim((string) $request->query('q', ''));
+        $escapedQ = str_replace(['%', '_'], ['\\%', '\\_'], $q);
         $departments = Department::query()
-            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$escapedQ}%"))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
@@ -72,6 +73,8 @@ class DepartmentController extends WebBaseController
 
         $department = Department::findOrFail($id);
         $impacted = UserProfile::where('department_id', $id)->count();
+
+        UserProfile::where('department_id', $id)->update(['department_id' => null]);
 
         $department->delete();
         $this->audit($request, 'departments.delete', 'departments', $id, ['impacted_profiles' => $impacted]);

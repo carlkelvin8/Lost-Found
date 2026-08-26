@@ -14,8 +14,9 @@ class LocationController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $q = trim((string) $request->query('q', ''));
+        $escapedQ = str_replace(['%', '_'], ['\\%', '\\_'], $q);
         $locations = Location::query()
-            ->when($q !== '', fn($qq) => $qq->where('name','like',"%{$q}%"))
+            ->when($q !== '', fn($qq) => $qq->where('name','like',"%{$escapedQ}%"))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
@@ -82,6 +83,8 @@ class LocationController extends WebBaseController
 
         $location = Location::findOrFail($id);
         $impacted = ItemReport::where('location_id', $id)->count();
+
+        ItemReport::where('location_id', $id)->update(['location_id' => null]);
 
         $location->delete();
         $this->audit($request, 'locations.delete', 'locations', $id, ['impacted_reports' => $impacted]);

@@ -21,10 +21,12 @@ class UserController extends WebBaseController
         $role = trim((string) $request->query('role', ''));
         $active = $request->query('active', '');
 
+        $escapedQ = str_replace(['%', '_'], ['\\%', '\\_'], $q);
+
         $users = User::query()
-            ->when($q !== '', function ($qq) use ($q) {
-                $qq->where('email', 'like', "%{$q}%")
-                    ->orWhereHas('profile', fn($p) => $p->where('full_name', 'like', "%{$q}%"));
+            ->when($q !== '', function ($qq) use ($escapedQ) {
+                $qq->where('email', 'like', "%{$escapedQ}%")
+                    ->orWhereHas('profile', fn($p) => $p->where('full_name', 'like', "%{$escapedQ}%"));
             })
             ->when($active !== '', fn($qq) => $qq->where('is_active', (int) $active))
             ->when($role !== '', fn($qq) => $qq->whereHas('roles', fn($r) => $r->where('name', $role)))
@@ -110,6 +112,11 @@ class UserController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $user = User::with(['profile','roles'])->findOrFail($id);
+
+        if (!$this->hasAnyRole(['admin']) && $user->hasRole('admin')) {
+            abort(403);
+        }
+
         $roles = Role::orderBy('name')->get();
 
         return view('users.edit', compact('user','roles'));
@@ -120,6 +127,10 @@ class UserController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $user = User::with(['profile','roles'])->findOrFail($id);
+
+        if (!$this->hasAnyRole(['admin']) && $user->hasRole('admin')) {
+            abort(403);
+        }
 
         $data = $request->validate([
             'email' => ['required','email','max:190', Rule::unique('users','email')->ignore($user->id)],
