@@ -396,8 +396,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('reports.show', $reportId)->with('success', 'AI Analysis queued for processing');
     })->name('test-ai');
 
-    // Rate limit on claims and photo uploads
-    Route::middleware('throttle:10,1')->group(function () {
-        // Claims store is already in the group above
-    });
 });
+

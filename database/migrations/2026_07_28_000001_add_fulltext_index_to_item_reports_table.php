@@ -14,7 +14,10 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE item_reports ADD FULLTEXT ft_item_match (item_name, item_description, brand_model, color, circumstances)');
+        $indexExists = DB::select("SHOW INDEX FROM item_reports WHERE Key_name = 'ft_item_match'");
+        if (empty($indexExists)) {
+            DB::statement('ALTER TABLE item_reports ADD FULLTEXT ft_item_match (item_name, item_description, brand_model, color, circumstances)');
+        }
     }
 
     public function down(): void

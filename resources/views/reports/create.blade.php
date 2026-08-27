@@ -262,13 +262,11 @@
   const takePhotoBtn = document.getElementById('takePhotoBtn');
 
   // Take Photo button opens the camera modal
-  takePhotoBtn.addEventListener('click', function() {
+  takePhotoBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
     initCamera({
       maxPhotos: 5,
-      targetInput: '#photoInput',
-      onDone: function() {
-        renderPreview();
-      }
+      targetInput: '#photoInput'
     });
   });
 

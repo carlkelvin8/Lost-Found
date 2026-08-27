@@ -136,13 +136,6 @@ class ItemReportController extends WebBaseController
                 foreach ($data['photos'] as $file) {
                     $this->storeReportPhoto($report->id, $file);
                 }
-                
-                // Trigger AI Analysis (async via queue)
-                try {
-                    ProcessImageAnalysis::dispatch((int) $report->id);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
-                }
             }
 
             $this->audit($request, 'reports.create', 'item_reports', $report->id, [
@@ -153,6 +146,15 @@ class ItemReportController extends WebBaseController
             // AUTO matching may update status to 'matched'
             $this->runAutoMatch($request, $report->fresh());
         });
+
+        // Trigger AI Analysis after transaction commits
+        if (!empty($data['photos'] ?? [])) {
+            try {
+                ProcessImageAnalysis::dispatch((int) $reportId);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
+            }
+        }
 
         return redirect()->route('reports.show', $reportId)->with('success', 'Created');
     }

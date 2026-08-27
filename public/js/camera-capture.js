@@ -22,8 +22,22 @@ class CameraCapture {
     async open() {
         if (this.isOpen) return;
 
+        const isSecureContext = location.protocol === 'https:' 
+            || location.hostname === 'localhost' 
+            || location.hostname === '127.0.0.1'
+            || location.hostname === '::1'
+            || location.hostname === '[::1]';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (!isSecureContext) {
+                this.showError('Camera requires HTTPS. Please access the site via https://');
+            } else {
+                this.showError('Camera API is not supported in this browser.');
+            }
+            return;
+        }
+
         try {
-            // Request camera permission
             this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: this.options.facingMode,
@@ -36,19 +50,18 @@ class CameraCapture {
             this.createModal();
             this.isOpen = true;
 
-            // Start video stream
             const video = this.modal.querySelector('#cameraVideo');
             video.srcObject = this.stream;
             video.play();
 
         } catch (error) {
             console.error('Camera access error:', error);
-            if (error.name === 'NotAllowedError') {
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                 this.showError('Camera permission denied. Please allow camera access in your browser settings.');
-            } else if (error.name === 'NotFoundError') {
+            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
                 this.showError('No camera found on this device.');
-            } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                this.showError('Camera requires HTTPS. Please access the site via https://');
+            } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                this.showError('Camera is in use by another application.');
             } else {
                 this.showError('Unable to access camera: ' + error.message);
             }
@@ -74,7 +87,7 @@ class CameraCapture {
                 
                 <div class="camera-body">
                     <div class="camera-preview" id="cameraPreviewContainer">
-                        <video id="cameraVideo" autoplay playsinline></video>
+                        <video id="cameraVideo" autoplay playsinline muted></video>
                         <canvas id="cameraCanvas" style="display: none;"></canvas>
                         
                         <div class="camera-overlay">
@@ -247,12 +260,10 @@ class CameraCapture {
     async switchCamera() {
         this.options.facingMode = this.options.facingMode === 'user' ? 'environment' : 'user';
         
-        // Stop current stream
         if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop());
         }
         
-        // Restart with new facing mode
         try {
             this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -268,7 +279,11 @@ class CameraCapture {
             video.play();
         } catch (error) {
             console.error('Camera switch error:', error);
-            this.showError('Unable to switch camera');
+            if (error.name === 'NotAllowedError') {
+                this.showError('Camera permission denied. Please allow camera access in your browser settings.');
+            } else {
+                this.showError('Unable to switch camera');
+            }
         }
     }
 

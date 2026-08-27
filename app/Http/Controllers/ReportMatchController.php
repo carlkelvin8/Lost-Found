@@ -142,7 +142,7 @@ class ReportMatchController extends WebBaseController
 
         $row = ReportMatch::where('lost_report_id', $lost->id)->where('found_report_id', $found->id)->first();
         if ($row) {
-            $row->update(['score' => $data['score'], 'method' => $data['method'], 'status' => $row->status]);
+            $row->update(['score' => $data['score'], 'method' => $data['method']]);
         } else {
             $row = ReportMatch::create([
                 'lost_report_id' => $lost->id,
