@@ -20,7 +20,7 @@ class BatchManager {
         });
 
         if (!this.isSelectionMode) {
-            document.querySelectorAll('.report-row').forEach(row => {
+            document.querySelectorAll('.report-card').forEach(row => {
                 row.classList.remove('selected');
             });
         }
@@ -29,10 +29,10 @@ class BatchManager {
     toggleItem(id, checkbox) {
         if (this.selected.has(id)) {
             this.selected.delete(id);
-            checkbox.closest('.report-row')?.classList.remove('selected');
+            checkbox.closest('.report-card')?.classList.remove('selected');
         } else {
             this.selected.add(id);
-            checkbox.closest('.report-row')?.classList.add('selected');
+            checkbox.closest('.report-card')?.classList.add('selected');
         }
         this.updateUI();
     }
@@ -42,7 +42,7 @@ class BatchManager {
             const id = parseInt(cb.dataset.id, 10);
             this.selected.add(id);
             cb.checked = true;
-            cb.closest('.report-row')?.classList.add('selected');
+            cb.closest('.report-card')?.classList.add('selected');
         });
         this.updateUI();
     }
@@ -51,7 +51,7 @@ class BatchManager {
         this.selected.clear();
         document.querySelectorAll('.batch-checkbox').forEach(cb => {
             cb.checked = false;
-            cb.closest('.report-row')?.classList.remove('selected');
+            cb.closest('.report-card')?.classList.remove('selected');
         });
         this.updateUI();
     }

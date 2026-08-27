@@ -84,11 +84,19 @@
     </select>
   </div>
 
+  @if($isStaff)
   <div class="col-md-4">
-    <label class="form-label">Owner User ID</label>
-    <input class="form-control" name="owner_user_id" type="number"
-           value="{{ old('owner_user_id',$report->owner_user_id) }}">
+    <label class="form-label">Owner</label>
+    <select class="form-select" name="owner_user_id">
+      <option value="">—</option>
+      @foreach($users as $u)
+        <option value="{{ $u->id }}" @selected(old('owner_user_id',$report->owner_user_id)==$u->id)>
+          {{ $u->profile?->full_name ?? $u->email }}
+        </option>
+      @endforeach
+    </select>
   </div>
+  @endif
 
   <div class="col-md-6">
     <label class="form-label">Item Name</label>

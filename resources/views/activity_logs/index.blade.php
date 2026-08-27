@@ -71,7 +71,7 @@
           <tr>
             <td>{{ $l->id }}</td>
             <td>{{ $l->created_at }}</td>
-            <td>{{ $l->user_id ?? '—' }}</td>
+            <td>{{ $l->causer?->email ?? $l->user_id ?? '—' }}</td>
             <td><span class="admin-badge admin-badge-secondary">{{ $l->action }}</span></td>
             <td>{{ $l->entity_type ?? '—' }} #{{ $l->entity_id ?? '—' }}</td>
             <td>{{ $l->ip_address ?? '—' }}</td>

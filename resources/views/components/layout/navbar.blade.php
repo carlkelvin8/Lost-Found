@@ -47,14 +47,14 @@
           <div class="user-avatar">
             @if($user->profile && $user->profile->avatar_url)
               @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-              <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+              <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile?->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
               <span class="user-avatar-fallback" style="display:none">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
             @else
               <span class="user-avatar-fallback">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
             @endif
           </div>
           <div class="user-info">
-            <span class="user-name">{{ $user->profile->full_name ?? 'User' }}</span>
+            <span class="user-name">{{ $user->profile?->full_name ?? 'User' }}</span>
             <span class="user-role">{{ $isStaff ? 'Staff' : 'Student' }}</span>
           </div>
           <i class="bi bi-chevron-down user-chevron"></i>
@@ -73,7 +73,7 @@
               @endif
             </div>
             <div class="dropdown-user-info">
-              <div class="dropdown-user-name">{{ $user->profile->full_name ?? 'User' }}</div>
+              <div class="dropdown-user-name">{{ $user->profile?->full_name ?? 'User' }}</div>
               <div class="dropdown-user-email">{{ $user->email }}</div>
             </div>
           </div>

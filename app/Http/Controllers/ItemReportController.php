@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ItemReportRequest;
 use App\Jobs\ProcessImageAnalysis;
 use App\Models\Category;
+use App\Models\Claim;
 use App\Models\ItemReport;
 use App\Models\Location;
 use App\Models\ReportMatch;
 use App\Models\ReportPhoto;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -176,7 +178,7 @@ class ItemReportController extends WebBaseController
             ->limit(self::MATCH_MAX_PER_SHOW)
             ->get();
 
-        $claims = DB::table('claims')
+        $claims = Claim::with('claimant')
             ->where('report_id', $id)
             ->orderByDesc('id')
             ->get();
@@ -219,8 +221,9 @@ class ItemReportController extends WebBaseController
         $locations  = Cache::remember('locations_list', 3600, fn() =>
             Location::orderBy('name')->get()
         );
+        $users = User::with('profile')->orderBy('email')->get();
 
-        return view('reports.edit', compact('report', 'categories', 'locations', 'isStaff', 'isOwner'));
+        return view('reports.edit', compact('report', 'categories', 'locations', 'isStaff', 'isOwner', 'users'));
     }
 
     public function update(ItemReportRequest $request, int $id)

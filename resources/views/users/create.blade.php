@@ -76,8 +76,13 @@
       </div>
 
       <div class="col-12 col-md-4">
-        <label class="form-label">Department ID</label>
-        <input class="form-control" type="number" name="department_id" value="{{ old('department_id') }}" />
+        <label class="form-label">Department</label>
+        <select class="form-select" name="department_id">
+          <option value="">Select Department</option>
+          @foreach($departments as $d)
+            <option value="{{ $d->id }}" @selected(old('department_id') == $d->id)>{{ $d->name }}</option>
+          @endforeach
+        </select>
       </div>
 
       <div class="col-12 col-md-4">

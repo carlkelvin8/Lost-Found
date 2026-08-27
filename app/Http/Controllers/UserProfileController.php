@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,9 @@ class UserProfileController extends WebBaseController
 
         $u = $this->user();
         $profile = $u->profile()->first();
+        $departments = Department::orderBy('name')->get();
 
-        return view('profile.edit', compact('u','profile'));
+        return view('profile.edit', compact('u','profile','departments'));
     }
 
     public function update(Request $request)

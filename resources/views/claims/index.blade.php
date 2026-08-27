@@ -4,9 +4,6 @@
 
 @section('content')
 @php
-  $roleNames = auth()->check() ? auth()->user()->roles()->pluck('name')->toArray() : [];
-  $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
-
   $total = $claims->total();
   $pendingCount = $claims->filter(fn($c) => $c->status === 'pending')->count();
   $approvedCount = $claims->filter(fn($c) => $c->status === 'approved')->count();
@@ -114,7 +111,7 @@
             </div>
             <div class="cl-card-meta">
               @if($c->claimant)
-                <span><i class="bi bi-person"></i> {{ $c->claimant->profile->full_name ?? $c->claimant->email ?? 'Unknown' }}</span>
+                <span><i class="bi bi-person"></i> {{ $c->claimant->profile?->full_name ?? $c->claimant->email ?? 'Unknown' }}</span>
               @endif
               <span><i class="bi bi-calendar3"></i> {{ $c->created_at->format('M d, Y') }}</span>
               @if($c->reviewed_at)

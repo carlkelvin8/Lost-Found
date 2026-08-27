@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Report #{{ $report->id }} · NAAP Lost & Found')
+@section('title')
+Report #{{ $report->id }} · NAAP Lost & Found
+@endsection
 
 @push('styles')
 <link href="{{ asset('css/form.css') }}" rel="stylesheet" />

@@ -8,7 +8,7 @@ class Location extends Model
 {
     protected $table = 'locations';
 
-    protected $fillable = ['name', 'details', 'latitude', 'longitude'];
+    protected $fillable = ['name', 'building', 'floor', 'details', 'latitude', 'longitude'];
 
     public function reports()
     {

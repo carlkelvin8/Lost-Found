@@ -747,11 +747,14 @@
 
             <div class="profile-field">
               <label class="profile-label">Department</label>
-              <div class="profile-input-wrap">
-                <i class="bi bi-building profile-input-icon"></i>
-                <input class="profile-input profile-input-has-icon" name="department_id"
-                       value="{{ old('department_id', $profile?->department_id) }}"
-                       placeholder="Enter department ID">
+              <div class="profile-select-wrap">
+                <select class="profile-select" name="department_id">
+                  <option value="">Select Department</option>
+                  @foreach($departments as $d)
+                    <option value="{{ $d->id }}" @selected(old('department_id', $profile?->department_id) == $d->id)>{{ $d->name }}</option>
+                  @endforeach
+                </select>
+                <i class="bi bi-chevron-down profile-select-arrow"></i>
               </div>
             </div>
           </div>

@@ -7,11 +7,6 @@
 @endpush
 
 @section('content')
-@php
-  $roleNames = auth()->check() ? auth()->user()->roles()->pluck('name')->toArray() : [];
-  $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
-@endphp
-
 {{-- HEADER --}}
 <div class="reports-header">
   <div class="reports-header-content">

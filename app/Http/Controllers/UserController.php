@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\ItemReport;
 use App\Models\Role;
 use App\Models\User;
@@ -44,7 +45,8 @@ class UserController extends WebBaseController
     {
         $this->requireAnyRole(['admin']);
         $roles = Role::orderBy('name')->get();
-        return view('users.create', compact('roles'));
+        $departments = Department::orderBy('name')->get();
+        return view('users.create', compact('roles','departments'));
     }
 
     public function store(Request $request)
@@ -113,13 +115,14 @@ class UserController extends WebBaseController
 
         $user = User::with(['profile','roles'])->findOrFail($id);
 
-        if (!$this->hasAnyRole(['admin']) && $user->hasRole('admin')) {
+        if (!$this->hasAnyRole(['admin']) && $user->hasAnyRole(['admin'])) {
             abort(403);
         }
 
         $roles = Role::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
 
-        return view('users.edit', compact('user','roles'));
+        return view('users.edit', compact('user','roles','departments'));
     }
 
     public function update(Request $request, int $id)
@@ -128,7 +131,7 @@ class UserController extends WebBaseController
 
         $user = User::with(['profile','roles'])->findOrFail($id);
 
-        if (!$this->hasAnyRole(['admin']) && $user->hasRole('admin')) {
+        if (!$this->hasAnyRole(['admin']) && $user->hasAnyRole(['admin'])) {
             abort(403);
         }
 

@@ -4,8 +4,6 @@
 
 @section('content')
 @php
-  $roleNames = auth()->check() ? auth()->user()->roles()->pluck('name')->toArray() : [];
-  $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
   $isPending = ($claim->status === 'pending');
 
   $statusConfig = match($claim->status) {
@@ -195,7 +193,7 @@
             @endif
           </div>
           <div class="cs-claimant-info">
-            <span class="cs-claimant-name">{{ $claim->claimant->profile->full_name ?? 'Unknown' }}</span>
+            <span class="cs-claimant-name">{{ $claim->claimant->profile?->full_name ?? 'Unknown' }}</span>
             <span class="cs-claimant-email">{{ $claim->claimant->email }}</span>
           </div>
         </div>

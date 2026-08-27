@@ -76,17 +76,25 @@ class ReportPhotoController extends WebBaseController
     {
         if (!$url) return;
 
-        $filePath = public_path($url);
-        if (file_exists($filePath)) {
-            @unlink($filePath);
+        $sanitized = str_replace('\\', '/', $url);
+        if (str_contains($sanitized, '..') || str_contains($sanitized, "\0")) {
             return;
         }
 
-        if (str_starts_with($url, 'storage/')) {
-            $relative = substr($url, strlen('storage/'));
+        $filePath = public_path($sanitized);
+        $resolved = realpath($filePath);
+        $base = realpath(public_path());
+        if ($resolved && $base && str_starts_with($resolved, $base) && file_exists($resolved)) {
+            @unlink($resolved);
+            return;
+        }
+
+        if (str_starts_with($sanitized, 'storage/')) {
+            $relative = substr($sanitized, strlen('storage/'));
             $oldPath = public_path($relative);
-            if (file_exists($oldPath)) {
-                @unlink($oldPath);
+            $oldResolved = realpath($oldPath);
+            if ($oldResolved && $base && str_starts_with($oldResolved, $base) && file_exists($oldResolved)) {
+                @unlink($oldResolved);
             }
         }
     }

@@ -2,7 +2,7 @@
   $user = auth()->user();
   $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
   $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
-  $currentRoute = request()->route()->getName();
+  $currentRoute = request()->route()?->getName() ?? '';
   $initial = strtoupper(substr($user->email ?? 'U', 0, 1));
 @endphp
 

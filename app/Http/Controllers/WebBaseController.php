@@ -36,6 +36,7 @@ class WebBaseController extends Controller
     {
         ActivityLog::create([
             'user_id' => optional($this->user())->id,
+            'causer_id' => optional($this->user())->id,
             'action' => $action,
             'entity_type' => $entityType,
             'entity_id' => $entityId,
