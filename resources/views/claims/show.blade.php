@@ -78,6 +78,10 @@
         @endif
       </div>
       <div class="cs-card-body">
+        <p style="font-size:.78rem;color:#64748b;margin:0 0 .75rem;line-height:1.5">
+          Supporting proof for this claim — receipts, screenshots or photos of the item.
+          Files can be added or removed only while the claim is still <strong>pending</strong>; once reviewed, the list is frozen.
+        </p>
         @if(count($documents))
           <div class="cs-doc-list">
             @foreach($documents as $d)

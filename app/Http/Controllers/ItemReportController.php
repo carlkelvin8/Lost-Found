@@ -11,6 +11,7 @@ use App\Models\Location;
 use App\Models\ReportMatch;
 use App\Models\ReportPhoto;
 use App\Models\User;
+use App\Services\ClaimEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class ItemReportController extends WebBaseController
     private const MATCH_STATUS_THRESHOLD = 45.0;   // set report.status='matched'
     private const MATCH_MAX_PER_SHOW = 50;
 
-    private const LOCKED_STATUSES = ['returned', 'archived']; // cannot edit reports in these states
+    private const LOCKED_STATUSES = ClaimEligibilityService::LOCKED_STATUSES; // cannot edit reports in these states
     private const ACTIVE_STATUSES = ['pending', 'matched', 'claimed']; // used for matching candidates
 
     /* =========================
@@ -44,6 +45,8 @@ class ItemReportController extends WebBaseController
         $categoryId = (string) $request->query('category_id', '');
         $locationId = (string) $request->query('location_id', '');
         $q          = trim((string) $request->query('q', ''));
+        $dateFrom   = trim((string) $request->query('date_from', ''));
+        $dateTo     = trim((string) $request->query('date_to', ''));
 
         $query = ItemReport::with(['photos', 'category', 'location']);
 
@@ -54,6 +57,25 @@ class ItemReportController extends WebBaseController
 
         if (!$isStaff) {
             $query->where('reporter_user_id', (int) $this->user()->id);
+        }
+
+        // Date range filter — filter by incident_date (if set) else created_at
+        // Fixed: previously ignored date_from/date_to so July reports still showed when filtering Aug-Sep
+        if ($dateFrom !== '' && strtotime($dateFrom) !== false) {
+            $query->where(function ($qq) use ($dateFrom) {
+                $qq->whereDate('incident_date', '>=', $dateFrom)
+                   ->orWhere(function ($q2) use ($dateFrom) {
+                       $q2->whereNull('incident_date')->whereDate('created_at', '>=', $dateFrom);
+                   });
+            });
+        }
+        if ($dateTo !== '' && strtotime($dateTo) !== false) {
+            $query->where(function ($qq) use ($dateTo) {
+                $qq->whereDate('incident_date', '<=', $dateTo)
+                   ->orWhere(function ($q2) use ($dateTo) {
+                       $q2->whereNull('incident_date')->whereDate('created_at', '<=', $dateTo);
+                   });
+            });
         }
 
         if ($q !== '') {
@@ -77,7 +99,7 @@ class ItemReportController extends WebBaseController
         );
 
         return view('reports.index', compact(
-            'reports', 'type', 'status', 'categoryId', 'locationId', 'q', 'categories', 'locations', 'isStaff'
+            'reports', 'type', 'status', 'categoryId', 'locationId', 'q', 'categories', 'locations', 'isStaff', 'dateFrom', 'dateTo'
         ));
     }
 
@@ -170,15 +192,34 @@ class ItemReportController extends WebBaseController
 
         $isStaff = $this->hasAnyRole(['admin', 'osa']);
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
+        $eligibilityService = app(ClaimEligibilityService::class);
 
-        if (!$isStaff && !$isOwner) abort(403);
+        // The Lost reporter must be able to inspect the FOUND report matched to
+        // their own Lost report in order to claim it. Matching grants read access
+        // only - $isOwner (edit rights) is unchanged.
+        $canView = $isStaff
+            || $isOwner
+            || $eligibilityService->canViewFoundReport($report, $this->user());
 
-        $matches = ReportMatch::query()
-            ->where('lost_report_id', $id)
-            ->orWhere('found_report_id', $id)
-            ->orderByDesc('score')
-            ->limit(self::MATCH_MAX_PER_SHOW)
-            ->get();
+        if (!$canView) abort(403);
+
+        $claimEligibility = $eligibilityService->evaluate($report, $this->user());
+
+        // Match internals (counterpart report, score, match method) are staff-only.
+        // A student gets no Matches card at all - they get a plain "Submit Claim"
+        // action instead when one of their lost reports is matched to a claimable
+        // found report, so the claim workflow survives without leaking the matching.
+        $matches = $isStaff
+            ? ReportMatch::query()
+                ->where(function ($query) use ($id) {
+                    $query->where('lost_report_id', $id)->orWhere('found_report_id', $id);
+                })
+                ->orderByDesc('score')
+                ->limit(self::MATCH_MAX_PER_SHOW)
+                ->get()
+            : collect();
+
+        $claimableFoundIds = $eligibilityService->claimableFoundReportIds($report, $this->user(), $isStaff);
 
         $claims = Claim::with('claimant')
             ->where('report_id', $id)
@@ -186,8 +227,15 @@ class ItemReportController extends WebBaseController
             ->get();
 
         // convenience for blade (so you don’t compute again)
-        $canEdit = !$this->isLocked($report->status) && ($isStaff || $isOwner);
+        $isLocked = $report->isLocked();
+        $canEdit = !$isLocked && ($isStaff || $isOwner);
         $report->setAttribute('can_edit', $canEdit);
+        $report->setAttribute('is_locked', $isLocked);
+        $lockerName = null;
+        if ($report->locked_by_user_id) {
+            $locker = \App\Models\User::with('profile')->find((int) $report->locked_by_user_id);
+            $lockerName = $locker?->profile?->full_name ?: $locker?->email;
+        }
         $statusColor = match ((string) $report->status) {
             'pending'  => 'secondary',
             'matched'  => 'primary',
@@ -197,7 +245,7 @@ class ItemReportController extends WebBaseController
             default    => 'secondary',
         };
 
-        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner', 'statusColor'));
+        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner', 'statusColor', 'claimEligibility', 'claimableFoundIds', 'isLocked', 'lockerName'));
     }
 
     /* =========================
@@ -213,8 +261,8 @@ class ItemReportController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         $categories = Cache::remember('categories_list', 3600, fn() =>
@@ -238,8 +286,8 @@ class ItemReportController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         $data = $request->validated();
@@ -316,8 +364,8 @@ class ItemReportController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         $data = $request->validate([
@@ -350,8 +398,8 @@ class ItemReportController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         DB::transaction(function () use ($request, $photo, $report) {
@@ -384,8 +432,8 @@ class ItemReportController extends WebBaseController
 
         if (!$this->hasAnyRole(['admin','osa'])) abort(403);
 
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         DB::transaction(function () use ($request, $report) {
@@ -411,6 +459,12 @@ class ItemReportController extends WebBaseController
 
         $report = ItemReport::findOrFail($id);
 
+        // A manually locked report is frozen — nothing about it changes,
+        // including its status.
+        if ($report->locked_at !== null) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
+        }
+
         // allow archive only for returned or claimed (common workflow)
         if (!in_array($report->status, ['returned', 'claimed'], true)) {
             return redirect()->route('reports.show', $id)->withErrors(['message' => 'Only returned/claimed reports can be archived']);
@@ -430,6 +484,50 @@ class ItemReportController extends WebBaseController
         });
 
         return redirect()->route('reports.show', $id)->with('success', 'Archived');
+    }
+
+    /* =========================
+     * LOCK / UNLOCK (staff only)
+     * =========================
+     * A locked report cannot be edited by anyone — details, photos and status
+     * are all frozen until staff unlock it again.
+     */
+    public function setLocked(Request $request, int $id)
+    {
+        if (!$this->user()) return redirect()->route('login');
+
+        $this->requireAnyRole(['admin', 'osa']);
+
+        $report = ItemReport::findOrFail($id);
+
+        $data = $request->validate([
+            'locked' => ['required', 'boolean'],
+        ]);
+
+        $locked = (bool) $data['locked'];
+
+        $report->update([
+            'locked_at' => $locked ? now() : null,
+            'locked_by_user_id' => $locked ? (int) $this->user()->id : null,
+        ]);
+
+        $this->audit($request, $locked ? 'reports.lock' : 'reports.unlock', 'item_reports', $report->id);
+
+        if (!$locked) {
+            $this->notify(
+                (int) $report->reporter_user_id,
+                'report_status',
+                'Report unlocked',
+                "Report #{$report->id} can be edited again."
+            );
+        }
+
+        return redirect()->route('reports.show', $id)->with(
+            'success',
+            $locked
+                ? 'Report locked — it can no longer be edited.'
+                : 'Report unlocked — editing is allowed again.'
+        );
     }
 
     /**
@@ -454,8 +552,8 @@ class ItemReportController extends WebBaseController
             'note'   => ['nullable', 'string', 'max:255'],
         ]);
 
-        if ($this->isLocked($report->status)) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         // Staff should NOT manually set random statuses here

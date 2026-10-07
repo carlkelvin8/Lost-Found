@@ -2,6 +2,22 @@
   $user = auth()->user();
   $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
   $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
+
+  // Profile type is what the account "is" (Student, Faculty, Staff, Guest);
+  // the system role only decides what it may do.
+  $userType = (string) ($user?->profile?->user_type ?? '');
+  if ($userType === 'visitor') $userType = 'guest';
+
+  $roleLabel = match (true) {
+      in_array('admin', $roleNames, true) => 'Admin',
+      in_array('osa', $roleNames, true) => 'OSA',
+      default => match ($userType) {
+          'faculty' => 'Faculty',
+          'staff'   => 'Staff',
+          'guest'   => 'Guest',
+          default   => 'Student',
+      },
+  };
 @endphp
 
 <nav class="main-navbar">
@@ -47,7 +63,7 @@
           <div class="user-avatar">
             @if($user->profile && $user->profile->avatar_url)
               @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-              <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile?->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+              <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile?->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.user-avatar-fallback');if(fb)fb.style.display='flex';">
               <span class="user-avatar-fallback" style="display:none">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
             @else
               <span class="user-avatar-fallback">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
@@ -55,7 +71,7 @@
           </div>
           <div class="user-info">
             <span class="user-name">{{ $user->profile?->full_name ?? 'User' }}</span>
-            <span class="user-role">{{ $isStaff ? 'Staff' : 'Student' }}</span>
+            <span class="user-role">{{ $roleLabel }}</span>
           </div>
           <i class="bi bi-chevron-down user-chevron"></i>
         </button>
@@ -66,7 +82,7 @@
             <div class="dropdown-avatar">
               @if($user->profile && $user->profile->avatar_url)
                 @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-                <img src="{{ asset($avatarSrc) }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <img src="{{ asset($avatarSrc) }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.dropdown-avatar-fallback');if(fb)fb.style.display='flex';">
                 <span class="dropdown-avatar-fallback" style="display:none">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
               @else
                 <span class="dropdown-avatar-fallback">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
@@ -134,12 +150,36 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', function() {
+    // Restore collapsed state on desktop
+    const sidebar = document.getElementById('mainSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    try {
+      if (window.innerWidth >= 992 && localStorage.getItem('sidebar_collapsed') === 'true' && sidebar) {
+        sidebar.classList.add('collapsed');
+        document.body.classList.add('sidebar-collapsed');
+      }
+    } catch(e) {}
+
+    sidebarToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
       const sidebar = document.getElementById('mainSidebar');
       const overlay = document.getElementById('sidebarOverlay');
-      if (sidebar) {
+      if (!sidebar) return;
+      if (window.innerWidth >= 992) {
+        // Desktop: collapse via margin + transform
+        const willCollapse = !sidebar.classList.contains('collapsed');
+        sidebar.classList.toggle('collapsed', willCollapse);
+        document.body.classList.toggle('sidebar-collapsed', willCollapse);
+        // also keep 'show' off on desktop
+        sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        try { localStorage.setItem('sidebar_collapsed', willCollapse ? 'true' : 'false'); } catch(e) {}
+      } else {
+        // Mobile: slide-over with overlay
         sidebar.classList.toggle('show');
         if (overlay) overlay.classList.toggle('show');
+        // prevent background scroll when open
+        document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
       }
     });
   }

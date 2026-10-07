@@ -414,6 +414,20 @@
             display: block;
         }
 
+        .field-hint {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin-top: 0.35rem;
+        }
+
+        .field-row[hidden] { display: none; }
+
+        .field-optional {
+            color: var(--red);
+            font-weight: 700;
+            margin-left: 0.15rem;
+        }
+
         /* Select arrow */
         .select-wrap { position: relative; }
         .select-wrap .select-arrow {
@@ -784,35 +798,39 @@
                     <select id="user_type" name="user_type" class="field-select @error('user_type') is-error @enderror" required>
                         <option value="" disabled selected>Select user type</option>
                         <option value="student" {{ old('user_type')=='student' ? 'selected' : '' }}>Student</option>
-                        <option value="faculty" {{ old('user_type')=='faculty' ? 'selected' : '' }}>Faculty / Staff</option>
-                        <option value="visitor" {{ old('user_type')=='visitor' ? 'selected' : '' }}>Visitor</option>
+                        <option value="faculty" {{ old('user_type')=='faculty' ? 'selected' : '' }}>Faculty</option>
+                        <option value="staff" {{ old('user_type')=='staff' ? 'selected' : '' }}>Staff</option>
+                        <option value="guest" {{ in_array(old('user_type'), ['guest','visitor']) ? 'selected' : '' }}>Guest</option>
                     </select>
                     <i class="bi bi-chevron-down select-arrow"></i>
                 </div>
+                <p class="field-hint">School ID and Department are only needed for Students.</p>
                 @error('user_type')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
-            <div class="field-row">
+            <div class="field-row" id="studentFields" hidden>
                 <div class="field">
-                    <label class="field-label" for="school_id_number">School ID</label>
+                    <label class="field-label" for="school_id_number">School ID <span class="field-optional" data-student-only>*</span></label>
                     <div class="field-input-wrap">
                         <i class="bi bi-credit-card field-icon"></i>
-                        <input id="school_id_number" type="text" name="school_id_number" class="field-input" value="{{ old('school_id_number') }}" placeholder="2024-12345">
+                        <input id="school_id_number" type="text" name="school_id_number" class="field-input @error('school_id_number') is-error @enderror" value="{{ old('school_id_number') }}" placeholder="2024-12345">
                     </div>
+                    @error('school_id_number')<span class="field-error">{{ $message }}</span>@enderror
                 </div>
 
                 <div class="field">
-                    <label class="field-label" for="department_name">Department</label>
+                    <label class="field-label" for="department_name">Department <span class="field-optional" data-student-only>*</span></label>
                     <div class="field-input-wrap select-wrap">
                         <i class="bi bi-building field-icon"></i>
-                        <select id="department_name" name="department_name" class="field-select">
-                            <option value="" disabled selected>Select department</option>
+                        <select id="department_name" name="department_name" class="field-select @error('department_name') is-error @enderror">
+                            <option value="" selected>Select department</option>
                             <option value="ICS"  {{ old('department_name')=='ICS'  ? 'selected' : '' }}>ICS</option>
                             <option value="ILAS" {{ old('department_name')=='ILAS' ? 'selected' : '' }}>ILAS</option>
                             <option value="INET" {{ old('department_name')=='INET' ? 'selected' : '' }}>INET</option>
                         </select>
                         <i class="bi bi-chevron-down select-arrow"></i>
                     </div>
+                    @error('department_name')<span class="field-error">{{ $message }}</span>@enderror
                 </div>
             </div>
 
@@ -857,6 +875,31 @@
 </div>
 
 <script>
+// Student-only fields: School ID + Department are shown (and required)
+// only for Students. Faculty, Staff and Guest never fill them in.
+const userTypeSelect = document.getElementById('user_type');
+const studentFields  = document.getElementById('studentFields');
+const schoolIdInput  = document.getElementById('school_id_number');
+const departmentSel  = document.getElementById('department_name');
+
+function applyUserTypeFields() {
+    const isStudent = userTypeSelect.value === 'student';
+    studentFields.hidden = !isStudent;
+    schoolIdInput.required = isStudent;
+    departmentSel.required = isStudent;
+}
+
+if (userTypeSelect && studentFields) {
+    userTypeSelect.addEventListener('change', function () {
+        if (this.value !== 'student') {
+            schoolIdInput.value = '';
+            departmentSel.value = '';
+        }
+        applyUserTypeFields();
+    });
+    applyUserTypeFields();
+}
+
 // Password toggle
 document.querySelectorAll('.pwd-toggle').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -19,8 +19,8 @@ class ReportPhotoController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if (in_array($report->status, ['returned','archived'], true)) {
-            return redirect()->route('reports.show', $reportId)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $reportId)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         $data = $request->validate([
@@ -55,8 +55,8 @@ class ReportPhotoController extends WebBaseController
         $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
 
         if (!$isStaff && !$isOwner) abort(403);
-        if (in_array($report->status, ['returned','archived'], true)) {
-            return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'Report is locked']);
+        if ($report->isLocked()) {
+            return redirect()->route('reports.show', $report->id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         if ($photo->photo_url) {

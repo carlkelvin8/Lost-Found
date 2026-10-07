@@ -303,7 +303,7 @@
                     <i class="bi bi-chevron-down"></i>
                 </button>
                 <div class="faq-answer">
-                    <p>All NAAP community members — students, faculty, staff, and visitors — can create an account and report lost or found items.</p>
+                    <p>All NAAP community members — students, faculty, staff, and guests — can create an account and report lost or found items.</p>
                 </div>
             </div>
 

@@ -14,7 +14,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-semibold mb-3" style="color: #0041C7;">1. Acceptance of Terms</h5>
-                    <p>By accessing and using the NAAP Lost and Found System (the System), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the System. These terms apply to all users, including students, staff, and visitors of the National Aviation Academy of the Philippines (NAAP).</p>
+                    <p>By accessing and using the NAAP Lost and Found System (the System), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the System. These terms apply to all users, including students, faculty, staff, and guests of the National Aviation Academy of the Philippines (NAAP).</p>
                 </div>
             </div>
 

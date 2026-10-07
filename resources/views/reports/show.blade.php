@@ -25,16 +25,33 @@ Report #{{ $report->id }} · NAAP Lost & Found
   <div class="d-flex gap-2 align-items-center">
     <button onclick="bookmarks.toggle({{ $report->id }}, 'Report #{{ $report->id }}')" 
         class="bookmark-btn {{ in_array($report->id, session('bookmarks', [])) ? 'bookmarked' : '' }}" 
-        data-report-id="{{ $report->id }}" aria-label="Bookmark this report">
+        data-report-id="{{ $report->id }}" title="Bookmark — save this report so you can find it again from Reports → Bookmarks" aria-label="Bookmark this report">
       <i class="bi bi-bookmark"></i>
     </button>
-    <button onclick="printReport()" class="btn btn-outline-secondary btn-sm" title="Print">
-      <i class="bi bi-printer"></i>
-    </button>
-    <button onclick="shareReport({{ $report->id }}, 'Report #{{ $report->id }}')" class="btn btn-outline-secondary btn-sm" title="Share">
+    <button onclick="shareReport({{ $report->id }}, 'Report #{{ $report->id }}')" class="btn btn-outline-secondary btn-sm" title="Share — copy this report's link or open the share menu">
       <i class="bi bi-share"></i>
     </button>
-    @if($isStaff || $isOwner)
+    @if($isStaff)
+      <a class="btn btn-outline-danger btn-sm" href="{{ route('reports.exportSinglePdf', $report->id) }}">
+        <i class="bi bi-file-earmark-pdf"></i> PDF
+      </a>
+    @endif
+    @if($isStaff)
+      <form method="POST" action="{{ route('reports.lock', $report->id) }}" class="d-inline">
+        @csrf
+        <input type="hidden" name="locked" value="{{ $report->locked_at ? '0' : '1' }}">
+        <button type="submit" class="btn btn-sm {{ $report->locked_at ? 'btn-warning' : 'btn-outline-secondary' }}"
+                title="{{ $report->locked_at ? 'Unlock — allow this report to be edited again' : 'Lock — freeze this report so nobody can edit it' }}">
+          <i class="bi {{ $report->locked_at ? 'bi-unlock' : 'bi-lock' }}"></i>
+          {{ $report->locked_at ? 'Unlock' : 'Lock' }}
+        </button>
+      </form>
+    @endif
+    @if($isLocked)
+      <span class="btn btn-sm btn-secondary" style="cursor:default" title="{{ $report->locked_at ? 'Locked by ' . ($lockerName ?? 'staff') . ' on ' . \Carbon\Carbon::parse($report->locked_at)->format('M j, Y \a\t g:i A') : 'This report is locked — details, photos and status cannot be changed' }}">
+        <i class="bi bi-lock-fill"></i> Locked
+      </span>
+    @elseif($report->can_edit)
       <a class="btn btn-outline-primary" href="{{ route('reports.edit',$report->id) }}">
         <i class="bi bi-pencil"></i> Edit
       </a>
@@ -118,17 +135,6 @@ Report #{{ $report->id }} · NAAP Lost & Found
     @else
       <div class="text-muted">No photos uploaded</div>
     @endif
-  </div>
-
-  {{-- QR CODE --}}
-  <div class="detail-card mt-3">
-    <div class="detail-card-title"><i class="bi bi-qr-code"></i> Report QR Code</div>
-    <div style="text-align:center;padding:1rem">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(route('reports.show', $report->id)) }}&bgcolor=FFFFFF&color=0041C7&margin=10" 
-           alt="QR Code for Report #{{ $report->id }}" 
-           style="border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
-      <div style="margin-top:0.75rem;font-size:0.8125rem;color:#94a3b8">Scan to view this report</div>
-    </div>
   </div>
 
   {{-- AI ANALYSIS (STAFF ONLY) --}}
@@ -215,7 +221,9 @@ Report #{{ $report->id }} · NAAP Lost & Found
   </div>
 
   {{-- CLAIM --}}
-  @if($report->report_type === 'found')
+  {{-- Only the LOST reporter matched to this FOUND report may claim it.
+       The finder sees their own management actions instead. --}}
+  @if($report->report_type === 'found' && $claimEligibility->allowed)
     <div class="detail-card mt-3">
       <div class="detail-card-title"><i class="bi bi-person-check"></i> Claim Item</div>
       <a class="btn btn-primary w-100" href="{{ route('claims.create',$report->id) }}">
@@ -224,7 +232,20 @@ Report #{{ $report->id }} · NAAP Lost & Found
     </div>
   @endif
 
-  {{-- MATCHES --}}
+  {{-- CLAIM ACTION (students) --}}
+  @if(!$isStaff && count($claimableFoundIds))
+    <div class="detail-card mt-3">
+      <div class="detail-card-title"><i class="bi bi-person-check"></i> Claim</div>
+      @foreach($claimableFoundIds as $claimableFoundId)
+        <a class="btn btn-primary w-100 mb-2" href="{{ route('claims.create',$claimableFoundId) }}">
+          <i class="bi bi-person-check"></i> Submit Claim
+        </a>
+      @endforeach
+    </div>
+  @endif
+
+  {{-- MATCHES (staff only) --}}
+  @if($isStaff)
   <div class="detail-card mt-3">
     <div class="detail-card-title"><i class="bi bi-link-45deg"></i> Matches</div>
 
@@ -244,6 +265,7 @@ Report #{{ $report->id }} · NAAP Lost & Found
       <div class="text-muted">No matches yet</div>
     @endforelse
   </div>
+  @endif
 
   {{-- CLAIMS LIST --}}
   @if($claims->count() && ($isStaff || $isOwner))

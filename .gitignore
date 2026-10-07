@@ -17,6 +17,7 @@
 /public/hot
 /public/storage
 /public/report_photos
+/public/avatars
 /storage/*.key
 /storage/pail
 /vendor

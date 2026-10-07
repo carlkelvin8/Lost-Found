@@ -41,17 +41,22 @@ class RegisterRequest extends FormRequest
                 'max:190',
                 'regex:/^[a-zA-Z\s\-\.\']+$/',
             ],
+            // Four self-service account types: Student, Faculty, Staff, Guest
             'user_type' => [
                 'required',
                 'string',
-                'in:student,faculty,visitor',
+                'in:student,faculty,staff,guest',
             ],
+            // Only students must carry a department / school ID — Faculty,
+            // Staff and Guest never have to supply them.
             'department_name' => [
+                'required_if:user_type,student',
                 'nullable',
                 'string',
                 'in:ICS,ILAS,INET',
             ],
             'school_id_number' => [
+                'required_if:user_type,student',
                 'nullable',
                 'string',
                 'max:60',
@@ -84,16 +89,26 @@ class RegisterRequest extends FormRequest
             'full_name.required' => 'Full name is required.',
             'full_name.min' => 'Full name must be at least 2 characters.',
             'full_name.regex' => 'Full name can only contain letters, spaces, hyphens, dots, and apostrophes.',
+            'school_id_number.required_if' => 'School ID is required when registering as a Student.',
             'school_id_number.regex' => 'School ID must contain only letters, numbers, and hyphens.',
+            'department_name.required_if' => 'Department is required when registering as a Student.',
             'contact_no.regex' => 'Please provide a valid phone number format.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
+        $userType = strtolower(trim((string) ($this->user_type ?? '')));
+
+        // Legacy "visitor" accounts were renamed to "guest"
+        if ($userType === 'visitor') {
+            $userType = 'guest';
+        }
+
         $this->merge([
             'email' => strtolower(trim($this->email ?? '')),
             'full_name' => trim($this->full_name ?? ''),
+            'user_type' => $userType,
             'school_id_number' => strtoupper(trim($this->school_id_number ?? '')),
             'contact_no' => preg_replace('/[^0-9\+\-\(\)\s]/', '', $this->contact_no ?? ''),
         ]);

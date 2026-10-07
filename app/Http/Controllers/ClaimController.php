@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Claim;
 use App\Models\ItemReport;
 use App\Models\ReportMatch;
+use App\Services\ClaimEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -59,16 +60,12 @@ class ClaimController extends WebBaseController
 
         $report = ItemReport::findOrFail($reportId);
 
-        if ($report->report_type !== 'found') {
-            return redirect()
-                ->route('reports.show', $reportId)
-                ->withErrors(['message' => 'Only found reports can be claimed']);
-        }
+        $eligibility = $this->eligibility()->evaluate($report, $this->user());
 
-        if (in_array($report->status, ['returned', 'archived'], true)) {
+        if ($eligibility->isIneligible()) {
             return redirect()
                 ->route('reports.show', $reportId)
-                ->withErrors(['message' => 'Report is not claimable']);
+                ->withErrors(['message' => $eligibility->message]);
         }
 
         return view('claims.create', compact('report'));
@@ -92,32 +89,40 @@ class ClaimController extends WebBaseController
 
         $report = ItemReport::findOrFail((int) $data['report_id']);
 
-        if ($report->report_type !== 'found') {
-            return back()->withErrors(['message' => 'Only found reports can be claimed'])->withInput();
+        // A locked report is frozen — no new claims may be filed against it.
+        if ($report->isLocked()) {
+            return back()->withErrors(['message' => 'This report is locked and cannot receive new claims.'])->withInput();
         }
 
-        if (in_array($report->status, ['returned', 'archived'], true)) {
-            return back()->withErrors(['message' => 'Report is not claimable'])->withInput();
+        // Centralized authorization: only the LOST reporter matched to this FOUND
+        // report may claim it. This rejects the finder claiming their own report,
+        // unrelated accounts, duplicates and non-claimable statuses.
+        $eligibility = $this->eligibility()->evaluate($report, $this->user());
+
+        if ($eligibility->isIneligible()) {
+            return back()->withErrors(['message' => $eligibility->message])->withInput();
         }
 
         $claimantId = (int) $this->user()->id;
 
-        // Prevent duplicate active claims
-        $exists = Claim::where('report_id', $report->id)
-            ->where('claimant_user_id', $claimantId)
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors(['message' => 'Duplicate claim'])->withInput();
-        }
+        $lostReportId = $eligibility->lostReportId();
 
         $claimId = null;
 
         try {
-            DB::transaction(function () use ($request, $report, $data, $claimantId, &$claimId) {
+            DB::transaction(function () use ($request, $report, $data, $claimantId, $lostReportId, &$claimId) {
+                // Re-assert eligibility while holding a lock on the report row so a
+                // concurrent duplicate submission cannot slip through the pre-check.
+                $lockedReport = ItemReport::where('id', $report->id)->lockForUpdate()->firstOrFail();
+
+                $recheck = $this->eligibility()->evaluate($lockedReport, $this->user());
+
+                if ($recheck->isIneligible()) {
+                    throw new ClaimRejectedException($recheck->message);
+                }
+
                 $claim = Claim::create([
-                    'report_id' => $report->id,
+                    'report_id' => $lockedReport->id,
                     'claimant_user_id' => $claimantId,
                     'proof_text' => $data['proof_text'],
                     'status' => 'pending',
@@ -127,12 +132,12 @@ class ClaimController extends WebBaseController
 
                 $claimId = $claim->id;
 
-                $oldStatus = $report->status;
-                $report->update(['status' => 'claimed']);
+                $oldStatus = $lockedReport->status;
+                $lockedReport->update(['status' => 'claimed']);
 
                 // SAFE side-effects
                 $this->pushReportStatus(
-                    $report->id,
+                    $lockedReport->id,
                     $oldStatus,
                     'claimed',
                     $claimantId,
@@ -140,12 +145,12 @@ class ClaimController extends WebBaseController
                 );
 
                 $this->notify(
-                    (int) $report->reporter_user_id,
+                    (int) $lockedReport->reporter_user_id,
                     'claim',
                     'Claim submitted',
                     'A user submitted a claim for your found report.',
                     [
-                        'report_id' => $report->id,
+                        'report_id' => $lockedReport->id,
                         'claim_id' => $claim->id,
                     ]
                 );
@@ -155,9 +160,14 @@ class ClaimController extends WebBaseController
                     'claims.create',
                     'claims',
                     $claim->id,
-                    ['report_id' => $report->id]
+                    [
+                        'report_id' => $lockedReport->id,
+                        'lost_report_id' => $lostReportId,
+                    ]
                 );
             });
+        } catch (ClaimRejectedException $e) {
+            return back()->withErrors(['message' => $e->getMessage()])->withInput();
         } catch (\Throwable $e) {
             Log::error('CLAIM CREATE FAILED', [
                 'error' => $e->getMessage(),
@@ -387,5 +397,76 @@ class ClaimController extends WebBaseController
         });
 
         return redirect()->route('claims.show', $id)->with('success', 'Cancelled');
+    }
+
+    /* =====================================================
+     | SUCCESSFUL CLAIMANTS - Admin page
+     | Table: claims | Model: Claim | Relationships: claimant, report.category, report.location, reviewer
+     | Successful status: approved (existing workflow: approve() sets status=approved, report=returned)
+     ===================================================== */
+    public function successful(Request $request)
+    {
+        $this->requireAnyRole(['admin', 'osa']);
+        $isStaff = true; // staff-only page
+
+        $q = trim((string) $request->query('q', ''));
+        $categoryId = $request->query('category_id', '');
+        $approvedBy = $request->query('approved_by', '');
+        $dateFrom = $request->query('date_from', '');
+        $dateTo = $request->query('date_to', '');
+
+        $query = Claim::query()
+            ->with(['claimant.profile', 'report.category', 'report.location', 'reviewer.profile'])
+            ->where('status', 'approved')
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id');
+
+        // Search claimant name / email / item name / claim reference
+        if ($q !== '') {
+            $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $q);
+            $query->where(function ($qq) use ($escaped, $q) {
+                $qq->where('id', $q) // claim reference exact match if numeric
+                    ->orWhereHas('claimant', function ($cq) use ($escaped) {
+                        $cq->where('email', 'like', "%{$escaped}%")
+                           ->orWhereHas('profile', fn($pq) => $pq->where('full_name', 'like', "%{$escaped}%"));
+                    })
+                    ->orWhereHas('report', fn($rq) => $rq->where('item_name', 'like', "%{$escaped}%"));
+            });
+        }
+
+        // Category filter via report.category_id
+        if ($categoryId !== '' && is_numeric($categoryId)) {
+            $query->whereHas('report', fn($rq) => $rq->where('category_id', (int) $categoryId));
+        }
+
+        // Approved by filter
+        if ($approvedBy !== '' && is_numeric($approvedBy)) {
+            $query->where('reviewed_by_user_id', (int) $approvedBy);
+        }
+
+        // Date range filter on reviewed_at (completed date) or created_at
+        if ($dateFrom !== '' && strtotime($dateFrom) !== false) {
+            $query->whereDate('reviewed_at', '>=', $dateFrom);
+        }
+        if ($dateTo !== '' && strtotime($dateTo) !== false) {
+            $query->whereDate('reviewed_at', '<=', $dateTo);
+        }
+
+        $successful = $query->paginate(20)->withQueryString();
+
+        // Data for filters
+        $categories = \App\Models\Category::orderBy('name')->get();
+        $approvers = \App\Models\User::whereIn('id', Claim::where('status','approved')->whereNotNull('reviewed_by_user_id')->distinct()->pluck('reviewed_by_user_id'))
+            ->with('profile')->get();
+
+        return view('claims.successful', compact('successful', 'q', 'categoryId', 'approvedBy', 'dateFrom', 'dateTo', 'categories', 'approvers', 'isStaff'));
+    }
+
+    /* =====================================================
+     | CLAIM ELIGIBILITY
+     ===================================================== */
+    protected function eligibility(): ClaimEligibilityService
+    {
+        return app(ClaimEligibilityService::class);
     }
 }

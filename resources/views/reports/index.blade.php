@@ -28,6 +28,9 @@
     <button onclick="advancedSearch.showSearchModal()" class="btn btn-outline-secondary btn-sm" title="Advanced Search (Ctrl+Shift+F)">
       <i class="bi bi-search"></i>
     </button>
+    <button type="button" onclick="showBookmarksPanel()" class="btn btn-outline-secondary btn-sm" title="Bookmarks — reports you saved for later">
+      <i class="bi bi-bookmark"></i> Bookmarks
+    </button>
     <a class="btn btn-primary" href="{{ route('reports.create') }}">
       <i class="bi bi-plus-lg"></i> New Report
     </a>
@@ -126,18 +129,18 @@
 {{-- FILTERS --}}
 <form class="reports-filters" method="GET">
   <div class="filter-grid">
-    <div class="filter-field">
-      <label class="filter-label">Type</label>
-      <select class="form-select" name="type">
+    <div class="filter-field filter-field--select">
+      <label class="filter-label" for="filter-type">Type</label>
+      <select class="form-select" id="filter-type" name="type">
         <option value="">All Types</option>
         <option value="lost" @selected(($type ?? '')==='lost')>Lost</option>
         <option value="found" @selected(($type ?? '')==='found')>Found</option>
       </select>
     </div>
 
-    <div class="filter-field">
-      <label class="filter-label">Status</label>
-      <select class="form-select" name="status">
+    <div class="filter-field filter-field--select">
+      <label class="filter-label" for="filter-status">Status</label>
+      <select class="form-select" id="filter-status" name="status">
         <option value="">All Statuses</option>
         @foreach(['pending','matched','claimed','returned','archived'] as $s)
           <option value="{{ $s }}" @selected(($status ?? '')===$s)>{{ ucfirst($s) }}</option>
@@ -145,9 +148,9 @@
       </select>
     </div>
 
-    <div class="filter-field">
-      <label class="filter-label">Category</label>
-      <select class="form-select" name="category_id">
+    <div class="filter-field filter-field--select">
+      <label class="filter-label" for="filter-category">Category</label>
+      <select class="form-select" id="filter-category" name="category_id">
         <option value="">All Categories</option>
         @foreach($categories as $c)
           <option value="{{ $c->id }}" @selected((string)$categoryId===(string)$c->id)>{{ $c->name }}</option>
@@ -155,9 +158,9 @@
       </select>
     </div>
 
-    <div class="filter-field">
-      <label class="filter-label">Location</label>
-      <select class="form-select" name="location_id">
+    <div class="filter-field filter-field--select">
+      <label class="filter-label" for="filter-location">Location</label>
+      <select class="form-select" id="filter-location" name="location_id">
         <option value="">All Locations</option>
         @foreach($locations as $l)
           <option value="{{ $l->id }}" @selected((string)$locationId===(string)$l->id)>{{ $l->name }}</option>
@@ -165,14 +168,23 @@
       </select>
     </div>
 
+    <div class="filter-field">
+      <label class="filter-label" for="filter-from">From Date</label>
+      <input class="form-control" id="filter-from" type="date" name="date_from" value="{{ $dateFrom ?? request('date_from') }}">
+    </div>
+    <div class="filter-field">
+      <label class="filter-label" for="filter-to">To Date</label>
+      <input class="form-control" id="filter-to" type="date" name="date_to" value="{{ $dateTo ?? request('date_to') }}">
+    </div>
+
     <div class="filter-field filter-search">
-      <label class="filter-label">Search</label>
-      <input class="form-control" name="q" value="{{ $q ?? '' }}" placeholder="Search by item name, description...">
+      <label class="filter-label" for="filter-q">Search</label>
+      <input class="form-control" id="filter-q" name="q" value="{{ $q ?? '' }}" placeholder="Search by item name, description...">
     </div>
   </div>
 
   <div class="filter-actions">
-    @if(request()->hasAny(['type', 'status', 'category_id', 'location_id', 'q']))
+    @if(request()->hasAny(['type', 'status', 'category_id', 'location_id', 'q', 'date_from', 'date_to']))
       <a href="{{ route('reports.index') }}" class="btn btn-secondary">
         <i class="bi bi-x-lg"></i> Clear
       </a>
@@ -180,6 +192,14 @@
     <button type="submit" class="btn btn-primary">
       <i class="bi bi-search"></i> Apply Filters
     </button>
+    @if($isStaff)
+      <a href="{{ route('reports.exportPdf', request()->query()) }}" class="btn btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf"></i> Export PDF
+      </a>
+      <a href="{{ route('reports.exportExcel', request()->query()) }}" class="btn btn-outline-success">
+        <i class="bi bi-file-earmark-excel"></i> Export Excel
+      </a>
+    @endif
   </div>
 </form>
 
@@ -257,7 +277,12 @@
 
         {{-- Body --}}
         <div class="report-card-body">
-          <h3 class="report-card-title">{{ $r->item_name ?? 'Untitled Item' }}</h3>
+          <h3 class="report-card-title">
+            {{ $r->item_name ?? 'Untitled Item' }}
+            @if($r->isLocked())
+              <i class="bi bi-lock-fill" style="color:#64748b;font-size:.85rem" title="Locked — this report cannot be edited"></i>
+            @endif
+          </h3>
           
           <p class="report-card-description">
             {{ $r->item_description ?? 'No description provided' }}
@@ -316,10 +341,38 @@
               <i class="bi bi-eye-fill"></i>
               <span>View</span>
             </a>
-            <a href="{{ route('reports.edit', $r->id) }}" class="report-action-btn">
-              <i class="bi bi-pencil-fill"></i>
-              <span>Edit</span>
-            </a>
+            @if($isStaff)
+              @if($r->isLocked())
+                <form method="POST" action="{{ route('reports.lock', $r->id) }}" class="report-card-lockform">
+                  @csrf
+                  <input type="hidden" name="locked" value="0">
+                  <button type="submit" class="report-action-btn" title="Unlock — allow editing again">
+                    <i class="bi bi-unlock-fill"></i>
+                    <span>Unlock</span>
+                  </button>
+                </form>
+              @else
+                <form method="POST" action="{{ route('reports.lock', $r->id) }}" class="report-card-lockform">
+                  @csrf
+                  <input type="hidden" name="locked" value="1">
+                  <button type="submit" class="report-action-btn" title="Lock — freeze this report so nobody can edit it">
+                    <i class="bi bi-lock-fill"></i>
+                    <span>Lock</span>
+                  </button>
+                </form>
+              @endif
+            @endif
+            @if($r->isLocked() && !$isStaff)
+              <span class="report-action-btn" style="opacity:.6;cursor:not-allowed" title="This report is locked and cannot be edited">
+                <i class="bi bi-lock-fill"></i>
+                <span>Locked</span>
+              </span>
+            @elseif(!$r->isLocked())
+              <a href="{{ route('reports.edit', $r->id) }}" class="report-action-btn">
+                <i class="bi bi-pencil-fill"></i>
+                <span>Edit</span>
+              </a>
+            @endif
           </div>
         </div>
       </div>

@@ -80,8 +80,9 @@
           <th>ID</th>
           <th>Email</th>
           <th>Name</th>
-          <th>Roles</th>
+          <th>Role</th>
           <th>Status</th>
+          <th>Date Created</th>
           <th class="text-end">Actions</th>
         </tr>
       </thead>
@@ -121,24 +122,38 @@
                 <span class="admin-badge admin-badge-danger">Disabled</span>
               @endif
             </td>
+            <td><span class="text-muted" style="font-size:0.8125rem">{{ $u->created_at?->format('Y-m-d H:i') ?? '—' }}</span></td>
             <td>
               <div class="admin-btn-group">
-                <a class="admin-action-btn" href="{{ route('users.show', $u->id) }}"><i class="bi bi-eye"></i></a>
-                <a class="admin-action-btn" href="{{ route('users.edit', $u->id) }}"><i class="bi bi-pencil"></i></a>
+                <a class="admin-action-btn" href="{{ route('users.show', $u->id) }}" title="View"><i class="bi bi-eye"></i></a>
+                <a class="admin-action-btn" href="{{ route('users.edit', $u->id) }}" title="Edit / Change Role"><i class="bi bi-pencil"></i></a>
+                @if((int)auth()->id() !== (int)$u->id)
+                <form class="d-inline" method="POST" action="{{ route('users.toggleActive', $u->id) }}">
+                  @csrf
+                  <button class="admin-action-btn {{ (int)$u->is_active===1 ? 'admin-action-btn-warning' : 'admin-action-btn-success' }}" type="submit"
+                    title="{{ (int)$u->is_active===1 ? 'Deactivate' : 'Activate' }}"
+                    data-confirm="Are you sure you want to {{ (int)$u->is_active===1 ? 'deactivate' : 'activate' }} this account?"
+                    data-confirm-text="{{ (int)$u->is_active===1 ? 'Deactivate' : 'Activate' }}">
+                    <i class="bi {{ (int)$u->is_active===1 ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
+                  </button>
+                </form>
                 <form class="d-inline" method="POST" action="{{ route('users.destroy', $u->id) }}">
                   @csrf
                   <button class="admin-action-btn admin-action-btn-danger" type="submit"
                     data-confirm="Are you sure you want to delete this user? This action cannot be undone."
                     data-confirm-text="Delete User"
-                    data-confirm-danger="true">
+                    data-confirm-danger="true" title="Delete">
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>
+                @else
+                  <span class="admin-badge admin-badge-secondary" style="font-size:0.6875rem">You</span>
+                @endif
               </div>
             </td>
           </tr>
         @empty
-          <tr><td colspan="7" class="admin-empty-state">No users</td></tr>
+          <tr><td colspan="8" class="admin-empty-state">No users</td></tr>
         @endforelse
       </tbody>
     </table>

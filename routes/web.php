@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthWebController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ClaimDocumentController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ItemReportController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReportExportController;
 use App\Http\Controllers\ReportMatchController;
 use App\Http\Controllers\ReportPhotoController;
 use App\Http\Controllers\ReportStatusHistoryController;
@@ -84,6 +86,22 @@ Route::post('/reset-password', [AuthWebController::class, 'resetPassword'])
     ->middleware('throttle:5,1')
     ->name('password.update');
 
+// Dev helper: view last reset email link when MAIL_MAILER=log (local only)
+Route::get('/dev/last-email', function () {
+    if (!app()->environment('local')) abort(404);
+    $log = @file_get_contents(storage_path('logs/laravel.log'));
+    if (!$log) return response('No log file', 404);
+    preg_match_all('#http://[^"\s<\']+/reset-password/[^"\s<\']+#', $log, $m);
+    $links = array_reverse($m[0] ?? []);
+    $links = array_unique(array_map(fn($u)=> html_entity_decode($u), $links));
+    $links = array_slice($links, 0, 5);
+    if (empty($links)) return response('<h3>No reset links found in log</h3><p>Try POST /forgot-password first. Check storage/logs/laravel.log</p>', 200, ['Content-Type'=>'text/html']);
+    $html = '<h2>Last 5 Reset Links (MAIL_MAILER=log)</h2><ul>';
+    foreach ($links as $l) $html .= '<li><a href="'.e($l).'" target="_blank">'.e($l).'</a></li>';
+    $html .= '</ul><p><a href="'.route('password.request').'">Back to forgot password</a></p>';
+    return response($html, 200, ['Content-Type'=>'text/html']);
+})->name('dev.last-email');
+
 Route::post('/logout', [AuthWebController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -122,14 +140,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
     Route::post('/categories/{id}/delete', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-    // Users (admin/osa)
+    // Users (admin/osa) - Account Management
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
+
+    // Staff Tools - admin account creation (requires e-mail verification)
+    Route::get('/users/create-admin', [UserController::class, 'createAdmin'])->name('users.createAdmin');
+    Route::post('/users/create-admin', [UserController::class, 'storeAdmin'])->name('users.storeAdmin');
+
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
     Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::post('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}/delete', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggleActive');
+
+    // Reports - PDF/Excel Export (must be before {id} to avoid capture)
+    Route::get('/reports/export/pdf', [ReportExportController::class, 'exportPdf'])->name('reports.exportPdf');
+    Route::get('/reports/export/excel', [ReportExportController::class, 'exportExcel'])->name('reports.exportExcel');
+    Route::get('/reports/{id}/export/pdf', [ReportExportController::class, 'exportSinglePdf'])->name('reports.exportSinglePdf');
 
     // Reports
     Route::get('/reports', [ItemReportController::class, 'index'])->name('reports.index');
@@ -141,6 +170,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/reports/{id}/status', [ItemReportController::class, 'setStatus'])->name('reports.status');
     Route::post('/reports/{id}/mark-returned', [ItemReportController::class, 'markReturned'])->name('reports.markReturned');
     Route::post('/reports/{id}/archive', [ItemReportController::class, 'archive'])->name('reports.archive');
+    Route::post('/reports/{id}/lock', [ItemReportController::class, 'setLocked'])->name('reports.lock');
 
     // Report photos
     Route::post('/reports/{reportId}/photos', [ReportPhotoController::class, 'store'])->name('reports.photos.store');
@@ -153,6 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/matches/manual', [ReportMatchController::class, 'createManual'])->name('matches.manual');
 
     // Claims
+    Route::get('/claims/successful', [ClaimController::class, 'successful'])->name('claims.successful');
     Route::get('/claims', [ClaimController::class, 'index'])->name('claims.index');
     Route::get('/claims/create/{reportId}', [ClaimController::class, 'create'])->name('claims.create');
     Route::post('/claims', [ClaimController::class, 'store'])->name('claims.store');
@@ -381,6 +412,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Store push subscription (would need push_subscriptions table)
         return response()->json(['ok' => true]);
     });
+
+    // Calendar
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/counts', [CalendarController::class, 'counts'])->name('calendar.counts');
+    Route::get('/calendar/day', [CalendarController::class, 'day'])->name('calendar.day');
 
     // Logs & History
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity_logs.index');

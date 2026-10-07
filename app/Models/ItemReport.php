@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\ClaimEligibilityService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemReport extends Model
 {
+    use HasFactory;
+
     protected $table = 'item_reports';
 
     protected $fillable = [
@@ -23,6 +27,8 @@ class ItemReport extends Model
         'circumstances',
         'contact_override',
         'status',
+        'locked_at',
+        'locked_by_user_id',
         'matched_report_id',
         'matched_score',
         'ai_analysis',
@@ -30,7 +36,22 @@ class ItemReport extends Model
 
     protected $casts = [
         'ai_analysis' => 'array',
+        'locked_at' => 'datetime',
     ];
+
+    /**
+     * A report is locked when a staff member locked it manually, or when its
+     * status is terminal (returned / archived). Locked reports cannot be
+     * edited by anyone — including staff — until they are unlocked.
+     */
+    public function isLocked(): bool
+    {
+        if ($this->locked_at !== null) {
+            return true;
+        }
+
+        return in_array((string) $this->status, ClaimEligibilityService::LOCKED_STATUSES, true);
+    }
 
     public function reporter()
     {

@@ -30,7 +30,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="{{ asset('css/white-black-theme.css') }}?v=2" rel="stylesheet" />
-  <link href="{{ asset('css/layout.css') }}?v=2" rel="stylesheet" />
+  <link href="{{ asset('css/layout.css') }}?v=8" rel="stylesheet" />
   <link href="{{ asset('css/animations.css') }}?v=2" rel="stylesheet" />
   <link href="{{ asset('css/wow-features.css') }}?v=2" rel="stylesheet" />
 
@@ -39,15 +39,15 @@
     img { max-width: 100%; height: auto; }
     .navbar-logo { width: 36px; height: 36px; overflow: hidden; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; }
     .navbar-logo img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; border-radius: 50%; mix-blend-mode: multiply; }
-    .user-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .user-avatar img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; }
-    .user-avatar-fallback { width: 100%; height: 100%; display: flex !important; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; font-size: var(--text-sm); }
-    .dropdown-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .dropdown-avatar img { width: 36px !important; height: 36px !important; object-fit: cover; display: block; }
-    .dropdown-avatar-fallback { width: 100%; height: 100%; display: flex !important; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; font-size: var(--text-sm); }
-    .dash-avatar { width: 56px; height: 56px; overflow: hidden; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .dash-avatar img { width: 56px !important; height: 56px !important; max-width: 56px !important; object-fit: cover; display: block; }
-    .dash-avatar-initial { width: 100%; height: 100%; display: flex !important; align-items: center; justify-content: center; }
+    .user-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); }
+    .user-avatar img { width: 36px !important; height: 36px !important; max-width: 36px !important; object-fit: cover; display: block; border-radius: 50%; }
+    .user-avatar-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; font-size: var(--text-sm); }
+    .dropdown-avatar { width: 36px; height: 36px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); }
+    .dropdown-avatar img { width: 36px !important; height: 36px !important; object-fit: cover; display: block; border-radius: 50%; }
+    .dropdown-avatar-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; font-size: var(--text-sm); }
+    .dash-avatar { width: 56px; height: 56px; overflow: hidden; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; }
+    .dash-avatar img { width: 56px !important; height: 56px !important; max-width: 56px !important; object-fit: cover; display: block; border-radius: 16px; }
+    .dash-avatar-initial { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0041C7 0%, #0D85D8 100%); color: white; font-weight: 700; }
     body.has-navbar { padding-top: 70px; }
   </style>
 

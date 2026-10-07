@@ -261,12 +261,22 @@
   const photoInput = document.getElementById('photoInput');
   const takePhotoBtn = document.getElementById('takePhotoBtn');
 
-  // Take Photo button opens the camera modal
+  // Take Photo button opens the camera modal - max level handling
   takePhotoBtn.addEventListener('click', function(e) {
     e.stopPropagation();
+    // Check existing count
+    const existingCount = photoInput.files ? photoInput.files.length : 0;
+    if (existingCount >= 5) {
+      alert('Maximum 5 photos already selected. Remove one first.');
+      return;
+    }
     initCamera({
       maxPhotos: 5,
-      targetInput: '#photoInput'
+      targetInput: '#photoInput',
+      onDone: function(photos) {
+        // renderPreview will be triggered via change event, but ensure it runs
+        setTimeout(renderPreview, 100);
+      }
     });
   });
 

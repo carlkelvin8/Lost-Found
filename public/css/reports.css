@@ -134,7 +134,9 @@
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* Type / Status / Category / Location each get a full column so their
+     borders read as big, easy-to-hit controls */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -147,14 +149,14 @@
 
 .filter-label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 .filter-search {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 .filter-actions {
@@ -167,25 +169,39 @@
 
 .reports-filters .form-select,
 .reports-filters .form-control {
-  height: 40px;
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  font-size: 0.875rem;
+  height: 46px;
+  border: 2px solid var(--border-strong);
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
   transition: all var(--transition-fast);
   background: white;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.85rem;
   width: 100%;
+  color: var(--text-primary);
 }
 
 .reports-filters .form-select:hover,
 .reports-filters .form-control:hover {
-  border-color: var(--border-strong);
+  border-color: #0041C7;
 }
 
 .reports-filters .form-select:focus,
 .reports-filters .form-control:focus {
   border-color: #0041C7;
-  box-shadow: 0 0 0 3px rgba(0, 65, 199, 0.08);
+  box-shadow: 0 0 0 4px rgba(0, 65, 199, 0.12);
+}
+
+/* The four primary filters are emphasised over the date/search fields */
+.reports-filters .filter-field--select .form-select {
+  border-width: 2px;
+  border-color: var(--border-strong);
+  background-color: #fbfcfe;
+}
+
+.reports-filters .filter-field--select .form-select:hover,
+.reports-filters .filter-field--select .form-select:focus {
+  background-color: white;
 }
 
 /* Reports Grid */
@@ -536,6 +552,17 @@
   font-size: 0.9375rem;
 }
 
+/* Lock / Unlock forms inside card actions use the same button look */
+.report-card-lockform {
+  display: contents;
+}
+.report-card-lockform .report-action-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  margin: 0;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -674,6 +701,10 @@
 
   .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .filter-search {
+    grid-column: 1 / -1;
   }
 
   .filter-actions {

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterRequest;
-use App\Mail\OtpVerificationMail;
 use App\Models\EmailOtp;
 use App\Models\Role;
 use App\Models\User;
@@ -12,11 +11,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 
 class AuthWebController extends WebBaseController
 {
+    /**
+     * Self-registration maps a profile type to exactly one system role.
+     * None of these are privileged — Student, Faculty, Staff and Guest all
+     * get the same interior; privileged roles (admin, osa) are only ever
+     * granted by an admin from Staff Tools → Users.
+     */
+    private const USER_TYPE_ROLES = [
+        'admin'   => 'admin',
+        'student' => 'student',
+        'faculty' => 'faculty',
+        'staff'   => 'staff',
+        'guest'   => 'guest',
+    ];
+
     /* =========================
      * SHOW FORMS
      * ========================= */
@@ -37,7 +49,14 @@ class AuthWebController extends WebBaseController
     {
         $data = $request->validated();
 
-        $user = DB::transaction(function () use ($request, $data) {
+        // Resolve the role BEFORE opening the transaction. Creating the role
+        // row inside the transaction meant any roles-table hiccup rolled the
+        // whole registration back, so the account never existed and the user
+        // could not log in (this is what broke Guest registration).
+        $roleName = self::USER_TYPE_ROLES[$data['user_type']] ?? 'student';
+        $role = $this->resolveRole($roleName);
+
+        $user = DB::transaction(function () use ($data) {
 
             // ✅ CORRECT: save to `password`
             $user = User::create([
@@ -48,7 +67,7 @@ class AuthWebController extends WebBaseController
                 'last_login_at' => null,
             ]);
 
-            // Resolve department_id from department_name
+            // Resolve department_id from department_name (students only)
             $departmentId = null;
             if (!empty($data['department_name'])) {
                 $dept = \App\Models\Department::where('name', $data['department_name'])->first();
@@ -65,28 +84,26 @@ class AuthWebController extends WebBaseController
                 'address' => $data['address'] ?? null,
             ]);
 
-            // ASSIGN ROLE BASED ON SELECTION
-            $roleMap = [
-                'admin' => 'admin',
-                'faculty' => 'osa', // Treat faculty as staff (osa)
-                'student' => 'student',
-                'visitor' => 'visitor',
-            ];
-            
-            $roleName = $roleMap[$data['user_type']] ?? 'student';
-            $role = Role::firstOrCreate(['name' => $roleName]);
-            
-            $user->roles()->syncWithoutDetaching([$role->id]);
-
-            $this->audit($request, 'auth.register', 'users', $user->id, [
-                'role' => $roleName,
-                'user_type' => $data['user_type']
-            ]);
-
             return $user;
         });
 
-        // Send OTP email verification
+        // Attach the role outside the transaction: the account must survive
+        // even if role bookkeeping fails (it is logged instead of thrown).
+        if ($role) {
+            $user->roles()->syncWithoutDetaching([$role->id]);
+        } else {
+            \Illuminate\Support\Facades\Log::error('role_assignment_failed', [
+                'user_id' => $user->id,
+                'role'    => $roleName,
+            ]);
+        }
+
+        $this->audit($request, 'auth.register', 'users', $user->id, [
+            'role' => $roleName,
+            'user_type' => $data['user_type']
+        ]);
+
+        // Send OTP email verification (never fatal — login resends it)
         $this->sendOtp($user);
 
         // Auto-login the user
@@ -95,6 +112,26 @@ class AuthWebController extends WebBaseController
         return redirect()
             ->route('verification.notice')
             ->with('success', 'Account created! Please verify your email with the OTP code sent to your inbox.');
+    }
+
+    /**
+     * Find (or lazily create) a role without letting a failure bubble up
+     * into the caller — registration/login must never hard-fail on this.
+     */
+    private function resolveRole(string $roleName): ?Role
+    {
+        try {
+            return Role::firstOrCreate(
+                ['name' => $roleName],
+                ['description' => ucfirst($roleName) . ' User']
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('role_resolve_failed: ' . $e->getMessage(), [
+                'role' => $roleName,
+            ]);
+
+            return null;
+        }
     }
 
     /* =========================
@@ -244,24 +281,7 @@ class AuthWebController extends WebBaseController
      */
     private function sendOtp(User $user): void
     {
-        // Invalidate any existing OTPs
-        EmailOtp::where('user_id', $user->id)
-            ->where('used', false)
-            ->update(['used' => true]);
-
-        // Generate 6-digit OTP
-        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        // Store OTP (expires in 10 minutes)
-        EmailOtp::create([
-            'user_id' => $user->id,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(10),
-        ]);
-
-        // Send email
-        $userName = $user->profile?->full_name ?? 'User';
-        Mail::to($user->email)->send(new OtpVerificationMail($otp, $userName));
+        app(\App\Services\EmailOtpService::class)->send($user);
     }
 
     /* =========================
@@ -282,15 +302,47 @@ class AuthWebController extends WebBaseController
             ],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $mailer = config('mail.default');
+        $isLocalLog = $mailer === 'log' && app()->environment('local');
 
-        if ($user) {
-            $user->sendPasswordResetNotification(
-                app('auth.password.broker')->createToken($user)
-            );
+        try {
+            // Use Laravel's password broker - handles token generation, throttling, expiry, and notification
+            // This reuses existing auth.php passwords.users config and password_reset_tokens table
+            $status = Password::sendResetLink($request->only('email'));
+
+            // Log broker status for debugging without exposing enumeration to user
+            if ($status === Password::RESET_LINK_SENT) {
+                \Illuminate\Support\Facades\Log::info('Password reset link sent', ['email' => $request->input('email'), 'mailer' => $mailer]);
+            } elseif ($status === Password::RESET_THROTTLED) {
+                \Illuminate\Support\Facades\Log::info('Password reset throttled', ['email' => $request->input('email')]);
+            } else {
+                \Illuminate\Support\Facades\Log::info('Password reset attempt', ['email' => $request->input('email'), 'status' => $status, 'mailer' => $mailer]);
+            }
+
+            // Senior dev: detect misconfigured mailer in production
+            if ($mailer === 'log' && app()->environment('production')) {
+                \Illuminate\Support\Facades\Log::warning('MAIL_MAILER=log in production — email will not reach inbox. Set MAIL_MAILER=smtp with Hostinger/Gmail credentials.');
+            }
+            if ($mailer === 'smtp' && empty(config('mail.mailers.smtp.host'))) {
+                \Illuminate\Support\Facades\Log::error('SMTP host not configured');
+            }
+        } catch (\Throwable $e) {
+            // Do not expose SMTP / mail errors to user, but log root cause for storage/logs/laravel.log
+            \Illuminate\Support\Facades\Log::error('Password reset mail failed', [
+                'email' => $request->input('email'),
+                'mailer' => $mailer,
+                'error' => $e->getMessage(),
+            ]);
+            // In local with log mailer, mail failures should not block token creation — token already stored
         }
 
-        return back()->with('success', 'If that email exists, we sent a password reset link.');
+        // Always return generic success to prevent email enumeration (security)
+        // For local dev with log mailer, add helper hint so tester can find link without inbox
+        $message = 'If that email exists, we sent a password reset link.';
+        if ($isLocalLog) {
+            $message .= ' (Local DEV: MAIL_MAILER=log — check storage/logs/laravel.log or http://127.0.0.1:8000/dev/last-email for link)';
+        }
+        return back()->with('success', $message);
     }
 
     public function showResetPassword(Request $request, $token)

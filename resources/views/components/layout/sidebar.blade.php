@@ -29,7 +29,7 @@
         @endif
       </a>
 
-      <a href="{{ route('claims.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'claims.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'claims.') ? 'page' : 'false' }}">
+      <a href="{{ route('claims.index') }}" class="sidebar-item {{ $currentRoute === 'claims.index' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'claims.index' ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
           <i class="bi bi-person-check-fill" aria-hidden="true"></i>
         </div>
@@ -43,12 +43,26 @@
         </div>
         <span class="sidebar-item-text">Notifications</span>
       </a>
+
+      <a href="{{ route('calendar.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'calendar.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'calendar.') ? 'page' : 'false' }}">
+        <div class="sidebar-item-icon">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+        </div>
+        <span class="sidebar-item-text">Calendar</span>
+      </a>
     </div>
 
     @if($isStaff)
     <!-- Staff Tools -->
     <div class="sidebar-section">
       <div class="sidebar-section-title">Staff Tools</div>
+
+      <a href="{{ route('claims.successful') }}" class="sidebar-item {{ $currentRoute === 'claims.successful' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'claims.successful' ? 'page' : 'false' }}">
+        <div class="sidebar-item-icon" style="background:rgba(16,185,129,.12);color:#059669">
+          <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+        </div>
+        <span class="sidebar-item-text">Successful Claimants</span>
+      </a>
 
       <a href="{{ route('matches.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'matches.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'matches.') ? 'page' : 'false' }}">
         <div class="sidebar-item-icon">
@@ -64,6 +78,15 @@
         <span class="sidebar-item-text">Users</span>
         <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </a>
+
+      @if(in_array('admin', $roleNames, true))
+      <a href="{{ route('users.createAdmin') }}" class="sidebar-item {{ $currentRoute === 'users.createAdmin' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'users.createAdmin' ? 'page' : 'false' }}" title="Create an admin account (e-mail verification required)">
+        <div class="sidebar-item-icon" style="background:rgba(0,65,199,.1);color:#0041C7">
+          <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
+        </div>
+        <span class="sidebar-item-text">Create Admin</span>
+      </a>
+      @endif
     </div>
 
     <!-- Management (Collapsible) -->
@@ -174,6 +197,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (overlay) {
     overlay.addEventListener('click', function() {
       if (sidebar) sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
     });
   }
 
@@ -181,9 +206,20 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebar.querySelectorAll('.sidebar-item, .sidebar-item-cta, .sidebar-footer-link, .sidebar-quick-item').forEach(link => {
       link.addEventListener('click', function() {
         sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
       });
     });
   }
+
+  // Handle resize: clear mobile state when going to desktop
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 992) {
+      if (overlay) overlay.classList.remove('show');
+      document.body.style.overflow = '';
+      sidebar.classList.remove('show');
+    }
+  });
 
   // Management collapsible section
   if (managementToggle && managementItems) {

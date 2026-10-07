@@ -86,10 +86,23 @@
   <div class="col-12 col-lg-6">
     <div class="detail-card">
       <div class="detail-card-title"><i class="bi bi-person-badge"></i> Profile Fields</div>
-      <div class="detail-label mt-2">User type</div>
-      <div class="detail-value">{{ $user->profile?->user_type ?? '—' }}</div>
-      <div class="detail-label mt-2">Department ID</div>
-      <div class="detail-value">{{ $user->profile?->department_id ?? '—' }}</div>
+      <div class="detail-label mt-2">Account type</div>
+      <div class="detail-value">
+        @php
+          $typeLabel = match ((string) $user->profile?->user_type) {
+            'admin'   => 'Admin',
+            'faculty' => 'Faculty',
+            'staff'   => 'Staff',
+            'guest', 'visitor' => 'Guest',
+            default   => 'Student',
+          };
+        @endphp
+        {{ $typeLabel }}
+      </div>
+      <div class="detail-label mt-2">System role</div>
+      <div class="detail-value">{{ $user->roles->isEmpty() ? '—' : $user->roles->pluck('name')->map(fn($r) => ucfirst($r))->implode(', ') }}</div>
+      <div class="detail-label mt-2">Department</div>
+      <div class="detail-value">{{ $user->profile?->department?->name ?? '—' }}</div>
       <div class="detail-label mt-2">School ID</div>
       <div class="detail-value">{{ $user->profile?->school_id_number ?? '—' }}</div>
       <div class="detail-label mt-2">Contact</div>

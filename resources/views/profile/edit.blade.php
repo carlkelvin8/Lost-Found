@@ -630,7 +630,16 @@
 @php
   $roleNames = $u->roles()->pluck('name')->toArray();
   $isAdmin = in_array('admin', $roleNames) || in_array('osa', $roleNames);
-  $displayRole = $isAdmin ? 'Admin' : ($profile?->user_type ?? 'Student');
+  $userType = (string) ($profile?->user_type ?? '');
+  if ($userType === 'visitor') $userType = 'guest';
+  $displayRole = $isAdmin
+      ? 'Admin'
+      : match ($userType) {
+          'faculty' => 'Faculty',
+          'staff'   => 'Staff',
+          'guest'   => 'Guest',
+          default   => 'Student',
+      };
   $initial = strtoupper(substr($u->email, 0, 1));
 @endphp
 
