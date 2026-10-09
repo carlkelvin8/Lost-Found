@@ -83,11 +83,7 @@ class ReportMatchController extends WebBaseController
 
         $match = ReportMatch::findOrFail($id);
 
-        $data = $request->validate([
-            'note' => ['nullable','string','max:255'],
-        ]);
-
-        DB::transaction(function () use ($request, $match, $data) {
+        DB::transaction(function () use ($request, $match) {
             $match->update(['status' => 'rejected']);
 
             // Re-evaluate report statuses if they were matched due to this match
@@ -116,7 +112,7 @@ class ReportMatchController extends WebBaseController
                 }
             }
 
-            $this->audit($request, 'matches.reject', 'report_matches', $match->id, ['note' => $data['note'] ?? null]);
+            $this->audit($request, 'matches.reject', 'report_matches', $match->id);
         });
 
         return redirect()->route('matches.index', ['status' => 'suggested'])->with('success', 'Rejected');

@@ -28,9 +28,9 @@
 @php
   $roleNames = $user->roles->pluck('name')->toArray();
   if (in_array('admin', $roleNames, true)) {
-    $type = 'admin';
+    $type = 'admin_osa';
   } elseif (in_array('osa', $roleNames, true)) {
-    $type = 'osa';
+    $type = 'admin_osa';
   } else {
     $type = (string) ($user->profile?->user_type ?? 'student');
     if ($type === 'visitor' || $type === '') $type = 'guest';
@@ -118,8 +118,7 @@
         <label class="type-option"><input type="radio" name="user_type" value="faculty" @checked($ut==='faculty')> <span class="type-option-title"><i class="bi bi-person-workspace"></i> Faculty</span><div class="type-option-desc">Teaching staff</div></label>
         <label class="type-option"><input type="radio" name="user_type" value="staff" @checked($ut==='staff')> <span class="type-option-title"><i class="bi bi-briefcase"></i> Staff</span><div class="type-option-desc">Office staff</div></label>
         <label class="type-option"><input type="radio" name="user_type" value="guest" @checked($ut==='guest')> <span class="type-option-title"><i class="bi bi-person"></i> Guest</span><div class="type-option-desc">Non-NAAP visitor</div></label>
-        <label class="type-option"><input type="radio" name="user_type" value="osa" @checked($ut==='osa')> <span class="type-option-title"><i class="bi bi-person-gear"></i> OSA</span><div class="type-option-desc">Staff + Staff Tools</div></label>
-        <label class="type-option"><input type="radio" name="user_type" value="admin" @checked($ut==='admin')> <span class="type-option-title"><i class="bi bi-shield-lock"></i> Admin</span><div class="type-option-desc">Full system access</div></label>
+        <label class="type-option"><input type="radio" name="user_type" value="admin_osa" @checked($ut==='admin_osa')> <span class="type-option-title"><i class="bi bi-shield-lock"></i> Admin/OSA</span><div class="type-option-desc">Full system and Staff Tools access</div></label>
       </div>
       <div id="accessPreview" class="form-text" style="margin-top:.6rem"></div>
     </div>
@@ -138,8 +137,7 @@ const accessHints = {
   faculty: 'Faculty — standard access. Same functions as Student, Staff and Guest (reports, claims, bookmarks). No Staff Tools.',
   staff: 'Staff — standard access. Same functions as Student, Faculty and Guest (reports, claims, bookmarks). No Staff Tools.',
   guest: 'Guest — standard access. Same functions as Student, Faculty and Staff (reports, claims, bookmarks). No Staff Tools.',
-  osa: 'OSA — all standard functions plus Staff Tools: Users, Reports, exports and locking reports.',
-  admin: 'Admin — everything: full access, creating users and locking reports.',
+  admin_osa: 'Admin/OSA — full system and Staff Tools access.',
 };
 function updateAccessPreview(){
   const v = document.querySelector('input[name="user_type"]:checked');

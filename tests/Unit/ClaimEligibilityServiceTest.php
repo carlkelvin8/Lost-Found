@@ -98,6 +98,7 @@ class ClaimEligibilityServiceTest extends TestCase
     public static function lockedStatusProvider(): array
     {
         return [
+            'claimed' => ['claimed'],
             'returned' => ['returned'],
             'archived' => ['archived'],
         ];
@@ -116,7 +117,6 @@ class ClaimEligibilityServiceTest extends TestCase
         return [
             'pending' => ['pending'],
             'matched' => ['matched'],
-            'claimed' => ['claimed'],
         ];
     }
 
@@ -191,7 +191,7 @@ class ClaimEligibilityServiceTest extends TestCase
         ];
     }
 
-    public function test_another_users_claim_does_not_block_the_claimant(): void
+    public function test_another_users_active_claim_blocks_a_second_claim(): void
     {
         Claim::factory()->create([
             'report_id' => $this->foundReport->id,
@@ -199,7 +199,7 @@ class ClaimEligibilityServiceTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $this->assertTrue($this->service->canClaim($this->foundReport, $this->lostReporter));
+        $this->assertSame('duplicate_claim', $this->service->evaluate($this->foundReport, $this->lostReporter)->reason);
     }
 
     public function test_view_permission_is_limited_to_the_matched_pair(): void

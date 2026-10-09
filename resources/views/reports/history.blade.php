@@ -26,7 +26,6 @@
           <th>Date</th>
           <th>Status Change</th>
           <th>Changed By</th>
-          <th>Note</th>
         </tr>
       </thead>
       <tbody>
@@ -50,13 +49,10 @@
             {{ $h->changed_by_user_id ?? 'System' }}
           </td>
 
-          <td>
-            {{ $h->note ?? '—' }}
-          </td>
         </tr>
       @empty
         <tr>
-          <td colspan="4" class="admin-empty-state">No status history found</td>
+          <td colspan="3" class="admin-empty-state">No status history found</td>
         </tr>
       @endforelse
     </tbody>

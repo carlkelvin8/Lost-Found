@@ -5,7 +5,6 @@ use App\Http\Controllers\AuthWebController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClaimController;
-use App\Http\Controllers\ClaimDocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ItemReportController;
@@ -192,9 +191,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/claims/{id}/reject', [ClaimController::class, 'reject'])->name('claims.reject');
     Route::post('/claims/{id}/cancel', [ClaimController::class, 'cancel'])->name('claims.cancel');
 
-    // Claim documents
-    Route::post('/claims/{claimId}/documents', [ClaimDocumentController::class, 'store'])->name('claim_docs.store');
-    Route::post('/claim-documents/{id}/delete', [ClaimDocumentController::class, 'destroy'])->name('claim_docs.destroy');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -267,60 +263,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         \App\Models\ItemReport::whereIn('id', $ids)->update(['status' => $status]);
-        return response()->json(['ok' => true]);
-    });
-
-    // Report comments (using activity_logs table)
-    Route::get('/reports/{reportId}/comments', function ($reportId) {
-        $comments = \App\Models\ActivityLog::where('subject_type', 'App\Models\ItemReport')
-            ->where('subject_id', $reportId)
-            ->where('event', 'comment')
-            ->with('causer')
-            ->latest()
-            ->get()
-            ->map(function ($log) {
-                return [
-                    'id' => $log->id,
-                    'text' => $log->description,
-                    'type' => $log->properties['type'] ?? 'comment',
-                    'user_id' => $log->causer_id,
-                    'user' => ['name' => $log->causer->name ?? 'Unknown'],
-                    'created_at' => $log->created_at
-                ];
-            });
-        return response()->json($comments);
-    });
-
-    Route::post('/reports/{reportId}/comments', function ($reportId) {
-        $validated = request()->validate([
-            'text' => ['required', 'string', 'max:5000'],
-            'type' => ['nullable', 'string', 'max:50'],
-        ]);
-
-        $report = \App\Models\ItemReport::findOrFail($reportId);
-        $log = \App\Models\ActivityLog::create([
-            'event' => 'comment',
-            'subject_type' => 'App\Models\ItemReport',
-            'subject_id' => $reportId,
-            'causer_id' => auth()->id(),
-            'description' => $validated['text'],
-            'properties' => ['type' => $validated['type'] ?? 'comment']
-        ]);
-        return response()->json([
-            'id' => $log->id,
-            'text' => $log->description,
-            'type' => $log->properties['type'],
-            'user_id' => $log->causer_id,
-            'user' => ['name' => auth()->user()->name],
-            'created_at' => $log->created_at
-        ]);
-    });
-
-    Route::delete('/reports/{reportId}/comments/{commentId}', function ($reportId, $commentId) {
-        \App\Models\ActivityLog::where('id', $commentId)
-            ->where('causer_id', auth()->id())
-            ->where('event', 'comment')
-            ->delete();
         return response()->json(['ok' => true]);
     });
 
@@ -433,4 +375,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('test-ai');
 
 });
-

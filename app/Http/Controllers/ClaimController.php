@@ -89,11 +89,6 @@ class ClaimController extends WebBaseController
 
         $report = ItemReport::findOrFail((int) $data['report_id']);
 
-        // A locked report is frozen — no new claims may be filed against it.
-        if ($report->isLocked()) {
-            return back()->withErrors(['message' => 'This report is locked and cannot receive new claims.'])->withInput();
-        }
-
         // Centralized authorization: only the LOST reporter matched to this FOUND
         // report may claim it. This rejects the finder claiming their own report,
         // unrelated accounts, duplicates and non-claimable statuses.
@@ -198,11 +193,6 @@ class ClaimController extends WebBaseController
             abort(403);
         }
 
-        $documents = DB::table('claim_documents')
-            ->where('claim_id', $claim->id)
-            ->orderByDesc('id')
-            ->get();
-
         $report = ItemReport::findOrFail((int) $claim->report_id);
 
         // Get match score if available
@@ -225,7 +215,6 @@ class ClaimController extends WebBaseController
 
         return view('claims.show', compact(
             'claim',
-            'documents',
             'report',
             'isStaff',
             'isOwner',
@@ -301,11 +290,7 @@ class ClaimController extends WebBaseController
             return back()->withErrors(['message' => 'Claim is not pending']);
         }
 
-        $data = $request->validate([
-            'note' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        DB::transaction(function () use ($request, $claim, $data) {
+        DB::transaction(function () use ($request, $claim) {
             $report = ItemReport::findOrFail($claim->report_id);
 
             $claim->update([
@@ -334,18 +319,16 @@ class ClaimController extends WebBaseController
                 (int) $claim->claimant_user_id,
                 'claim',
                 'Claim rejected',
-                'Your claim for report #' . $report->id . ' has been rejected.' . (!empty($data['note']) ? ' Reason: ' . $data['note'] : ''),
+                'Your claim for report #' . $report->id . ' has been rejected.',
                 [
                     'report_id' => $report->id,
                     'claim_id' => $claim->id,
                     'status' => 'rejected',
-                    'note' => $data['note'] ?? null,
                 ]
             );
 
             $this->audit($request, 'claims.reject', 'claims', $claim->id, [
                 'report_id' => $report->id,
-                'note' => $data['note'] ?? null,
             ]);
         });
 

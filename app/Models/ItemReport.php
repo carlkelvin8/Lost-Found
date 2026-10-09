@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\ClaimEligibilityService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -40,9 +39,9 @@ class ItemReport extends Model
     ];
 
     /**
-     * A report is locked when a staff member locked it manually, or when its
-     * status is terminal (returned / archived). Locked reports cannot be
-     * edited by anyone — including staff — until they are unlocked.
+     * A report is locked after submission, when staff locks it manually, or
+     * when its status is matched or terminal. Matched and terminal reports stay
+     * locked even if their manual lock is cleared.
      */
     public function isLocked(): bool
     {
@@ -50,7 +49,7 @@ class ItemReport extends Model
             return true;
         }
 
-        return in_array((string) $this->status, ClaimEligibilityService::LOCKED_STATUSES, true);
+        return in_array((string) $this->status, ['matched', 'claimed', 'returned', 'archived'], true);
     }
 
     public function reporter()

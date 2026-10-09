@@ -62,35 +62,20 @@ class UserAccountTypeTest extends TestCase
         $this->assertFalse($user->hasAnyRole(['admin', 'osa']));
     }
 
-    public function test_admin_creating_an_osa_account_sets_staff_profile_and_osa_role(): void
+    public function test_admin_creating_an_admin_osa_account_sets_both_privileged_roles(): void
     {
         $this->actingAs($this->adminUser())
             ->post(route('users.store'), $this->payload([
-                'email'     => 'osa.staff@naap.edu.ph',
-                'user_type' => 'osa',
+                'email'     => 'admin.osa@naap.edu.ph',
+                'user_type' => 'admin_osa',
             ]))
             ->assertRedirect(route('users.index'));
 
-        $user = User::where('email', 'osa.staff@naap.edu.ph')->first();
-
-        $this->assertNotNull($user);
-        $this->assertTrue($user->hasAnyRole(['osa']));
-        $this->assertSame('staff', $user->profile->user_type);
-    }
-
-    public function test_admin_creating_an_admin_account_sets_admin_role_and_profile(): void
-    {
-        $this->actingAs($this->adminUser())
-            ->post(route('users.store'), $this->payload([
-                'email'     => 'new.admin@naap.edu.ph',
-                'user_type' => 'admin',
-            ]))
-            ->assertRedirect(route('users.index'));
-
-        $user = User::where('email', 'new.admin@naap.edu.ph')->first();
+        $user = User::where('email', 'admin.osa@naap.edu.ph')->first();
 
         $this->assertNotNull($user);
         $this->assertTrue($user->hasAnyRole(['admin']));
+        $this->assertTrue($user->hasAnyRole(['osa']));
         $this->assertSame('admin', $user->profile->user_type);
     }
 
@@ -114,7 +99,7 @@ class UserAccountTypeTest extends TestCase
         $this->assertSame('guest', $target->profile->user_type);
     }
 
-    public function test_osa_cannot_promote_an_account_to_admin(): void
+    public function test_osa_cannot_assign_admin_osa_access(): void
     {
         $target = $this->userWithStudentProfile('target2@naap.edu.ph');
 
@@ -122,7 +107,7 @@ class UserAccountTypeTest extends TestCase
             ->post(route('users.update', $target->id), [
                 'email'     => $target->email,
                 'full_name' => 'Target User',
-                'user_type' => 'admin',
+                'user_type' => 'admin_osa',
             ])
             ->assertForbidden();
     }

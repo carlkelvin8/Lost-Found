@@ -96,7 +96,6 @@
 <script src="{{ asset('js/bookmarks-compare.js') }}"></script>
 <script src="{{ asset('js/account-security.js') }}"></script>
 <script src="{{ asset('js/pwa.js') }}"></script>
-<script src="{{ asset('js/comments.js') }}"></script>
 <script src="{{ asset('js/advanced-search.js') }}"></script>
 <script src="{{ asset('js/templates.js') }}"></script>
 <script src="{{ asset('js/batch-leaderboard.js') }}"></script>

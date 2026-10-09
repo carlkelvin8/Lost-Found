@@ -85,12 +85,8 @@ class DashboardController extends WebBaseController
                 ->get()
             : collect();
 
-        return view('dashboard', compact(
-            'user',
-            'stats',
-            'isStaff',
-            'recentReports',
-            'recentActivity'
-        ));
+        $isStaff = false;
+
+        return view('dashboard', compact('user', 'stats', 'isStaff', 'recentReports', 'recentActivity'));
     }
 }

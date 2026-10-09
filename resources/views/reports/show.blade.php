@@ -36,7 +36,7 @@ Report #{{ $report->id }} · NAAP Lost & Found
         <i class="bi bi-file-earmark-pdf"></i> PDF
       </a>
     @endif
-    @if($isStaff)
+    @if($isStaff && !in_array($report->status, ['matched', 'claimed', 'returned', 'archived'], true))
       <form method="POST" action="{{ route('reports.lock', $report->id) }}" class="d-inline">
         @csrf
         <input type="hidden" name="locked" value="{{ $report->locked_at ? '0' : '1' }}">
@@ -48,7 +48,7 @@ Report #{{ $report->id }} · NAAP Lost & Found
       </form>
     @endif
     @if($isLocked)
-      <span class="btn btn-sm btn-secondary" style="cursor:default" title="{{ $report->locked_at ? 'Locked by ' . ($lockerName ?? 'staff') . ' on ' . \Carbon\Carbon::parse($report->locked_at)->format('M j, Y \a\t g:i A') : 'This report is locked — details, photos and status cannot be changed' }}">
+      <span class="btn btn-sm btn-secondary" style="cursor:default" title="{{ $report->locked_at && $report->locked_by_user_id ? 'Locked by ' . ($lockerName ?? 'staff') . ' on ' . \Carbon\Carbon::parse($report->locked_at)->format('M j, Y \a\t g:i A') : 'This report is locked — details, photos and status cannot be changed' }}">
         <i class="bi bi-lock-fill"></i> Locked
       </span>
     @elseif($report->can_edit)
@@ -171,15 +171,6 @@ Report #{{ $report->id }} · NAAP Lost & Found
     </div>
   @endif
 
-  {{-- COMMENTS / NOTES --}}
-  <div class="detail-card mt-3">
-    <div id="comments-container">
-      <div style="text-align:center;padding:2rem;color:#94a3b8">
-        <div class="spinner" style="margin:0 auto"></div>
-        <div style="margin-top:0.5rem;font-size:0.875rem">Loading comments...</div>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -302,11 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize comments
-    window.currentUserId = {{ auth()->id() ?? 0 }};
-    window.commentManager = new CommentManager({{ $report->id }});
-    commentManager.loadComments();
-
     // Initialize bookmarks
     if (window.bookmarks) {
         bookmarks.updateUI();

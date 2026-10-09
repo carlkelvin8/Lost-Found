@@ -43,16 +43,6 @@ class ClaimRequest extends FormRequest
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s\-\.\,\@\+\(\)]+$/',
             ],
-            'documents' => [
-                'nullable',
-                'array',
-                'max:3',
-            ],
-            'documents.*' => [
-                'file',
-                'mimes:jpg,jpeg,png,pdf,webp',
-                'max:5120',
-            ],
         ];
     }
 
@@ -67,9 +57,6 @@ class ClaimRequest extends FormRequest
             'description.min' => 'Description must be at least 20 characters.',
             'description.max' => 'Description cannot exceed 2000 characters.',
             'contact_info.regex' => 'Contact information contains invalid characters.',
-            'documents.max' => 'You can upload a maximum of 3 documents.',
-            'documents.*.mimes' => 'Documents must be JPG, JPEG, PNG, PDF, or WEBP format.',
-            'documents.*.max' => 'Each document must not exceed 5MB.',
         ];
     }
 

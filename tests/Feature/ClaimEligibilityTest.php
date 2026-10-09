@@ -88,14 +88,14 @@ class ClaimEligibilityTest extends TestCase
         $response->assertDontSee('Submit Claim');
     }
 
-    public function test_found_reporter_still_sees_their_own_report_management_actions(): void
+    public function test_found_reporter_cannot_edit_a_matched_report(): void
     {
         $response = $this->actingAs($this->foundReporter)
             ->get(route('reports.show', $this->foundReport->id));
 
-        // Ownership-driven UI must be preserved for the finder.
         $response->assertOk();
-        $response->assertSee(route('reports.edit', $this->foundReport->id), false);
+        $response->assertSee('Locked');
+        $response->assertDontSee(route('reports.edit', $this->foundReport->id), false);
         $response->assertDontSee('Submit Claim');
     }
 

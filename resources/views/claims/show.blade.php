@@ -62,56 +62,6 @@
       </div>
     </div>
 
-    <!-- Documents -->
-    <div class="cs-card">
-      <div class="cs-card-header">
-        <h3 class="cs-card-title"><i class="bi bi-paperclip"></i> Documents</h3>
-        @if($isPending)
-          <form method="POST" action="{{ route('claim_docs.store', $claim->id) }}" enctype="multipart/form-data" class="cs-doc-form">
-            @csrf
-            <input type="file" name="file" required class="cs-file-input" id="docFileInput">
-            <label for="docFileInput" class="cs-file-label">
-              <i class="bi bi-plus-lg"></i> Add
-            </label>
-            <button type="submit" class="cs-file-submit"><i class="bi bi-upload"></i></button>
-          </form>
-        @endif
-      </div>
-      <div class="cs-card-body">
-        <p style="font-size:.78rem;color:#64748b;margin:0 0 .75rem;line-height:1.5">
-          Supporting proof for this claim — receipts, screenshots or photos of the item.
-          Files can be added or removed only while the claim is still <strong>pending</strong>; once reviewed, the list is frozen.
-        </p>
-        @if(count($documents))
-          <div class="cs-doc-list">
-            @foreach($documents as $d)
-              <div class="cs-doc-item">
-                <div class="cs-doc-icon">
-                  <i class="bi bi-file-earmark"></i>
-                </div>
-                <div class="cs-doc-info">
-                  <span class="cs-doc-name">{{ $d->file_type ?? 'Document' }}</span>
-                  <a href="{{ $d->file_url }}" target="_blank" class="cs-doc-link">
-                    <i class="bi bi-box-arrow-up-right"></i> Open
-                  </a>
-                </div>
-                @if($isPending)
-                  <form method="POST" action="{{ route('claim_docs.destroy', $d->id) }}" onsubmit="return confirm('Delete this document?');" class="cs-doc-delete">
-                    @csrf
-                    <button type="submit" class="cs-doc-delete-btn"><i class="bi bi-trash3"></i></button>
-                  </form>
-                @endif
-              </div>
-            @endforeach
-          </div>
-        @else
-          <div class="cs-doc-empty">
-            <i class="bi bi-inbox"></i>
-            <span>No documents uploaded</span>
-          </div>
-        @endif
-      </div>
-    </div>
   </div>
 
   <!-- Right Column -->
@@ -132,7 +82,6 @@
 
           <form method="POST" action="{{ route('claims.reject', $claim->id) }}" onsubmit="return confirm('Reject claim?');" class="cs-action-form">
             @csrf
-            <input type="text" name="note" placeholder="Reason (optional)" class="cs-input">
             <button type="submit" class="cs-btn cs-btn-danger">
               <i class="bi bi-x-circle"></i> Reject Claim
             </button>

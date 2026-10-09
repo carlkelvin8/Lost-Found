@@ -115,7 +115,6 @@
                   </form>
                   <form class="d-inline" method="POST" action="{{ route('matches.reject', $m->id) }}" onsubmit="return confirm('Reject this match?');">
                     @csrf
-                    <input type="hidden" name="note" value="" />
                     <button class="admin-action-btn admin-action-btn-danger" type="submit"><i class="bi bi-x-lg"></i></button>
                   </form>
                 </div>

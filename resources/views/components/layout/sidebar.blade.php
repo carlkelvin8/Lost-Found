@@ -76,7 +76,6 @@
           <i class="bi bi-people-fill" aria-hidden="true"></i>
         </div>
         <span class="sidebar-item-text">Users</span>
-        <i class="bi bi-chevron-down sidebar-item-arrow"></i>
       </a>
 
       @if(in_array('admin', $roleNames, true))

@@ -19,8 +19,8 @@ use App\Models\User;
  */
 class ClaimEligibilityService
 {
-    /** Report statuses that no longer accept claims (also used to lock report edits). */
-    public const LOCKED_STATUSES = ['returned', 'archived'];
+    /** Report statuses that no longer accept claims. */
+    public const LOCKED_STATUSES = ['claimed', 'returned', 'archived'];
 
     /** report_matches.status values that still represent a live lost<->found pairing. */
     public const ACTIVE_MATCH_STATUSES = ['suggested', 'confirmed'];
@@ -59,7 +59,7 @@ class ClaimEligibilityService
             );
         }
 
-        if ($this->hasActiveClaim($report, $user)) {
+        if ($this->hasActiveClaim($report)) {
             return ClaimEligibility::ineligible('duplicate_claim', 'Duplicate claim');
         }
 
@@ -158,11 +158,10 @@ class ClaimEligibilityService
             ->all();
     }
 
-    private function hasActiveClaim(ItemReport $report, User $user): bool
+    private function hasActiveClaim(ItemReport $report): bool
     {
         return Claim::query()
             ->where('report_id', $report->id)
-            ->where('claimant_user_id', $user->id)
             ->whereIn('status', self::ACTIVE_CLAIM_STATUSES)
             ->exists();
     }

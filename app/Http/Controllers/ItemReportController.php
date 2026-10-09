@@ -148,6 +148,8 @@ class ItemReportController extends WebBaseController
                 'circumstances'     => $data['circumstances'] ?? null,
                 'contact_override'  => $data['contact_override'] ?? null,
                 'status'            => 'pending',
+                'locked_at'         => now(),
+                'locked_by_user_id' => null,
                 'matched_report_id' => null,
                 'matched_score'     => null,
             ]);
@@ -547,9 +549,8 @@ class ItemReportController extends WebBaseController
         if (!$isStaff && !$isOwner) abort(403);
 
         // Only allow owner -> archived (optional safety)
-        $data = $request->validate([
+        $request->validate([
             'status' => ['required', Rule::in(['archived'])],
-            'note'   => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($report->isLocked()) {
@@ -563,10 +564,10 @@ class ItemReportController extends WebBaseController
 
         $old = $report->status;
 
-        DB::transaction(function () use ($request, $report, $data, $old) {
+        DB::transaction(function () use ($request, $report, $old) {
             $report->update(['status' => 'archived']);
 
-            $this->pushReportStatus($report->id, $old, 'archived', (int) $this->user()->id, $data['note'] ?? 'User archived');
+            $this->pushReportStatus($report->id, $old, 'archived', (int) $this->user()->id, 'User archived');
             $this->audit($request, 'reports.archived.user', 'item_reports', $report->id, ['from' => $old]);
         });
 

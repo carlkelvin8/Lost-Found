@@ -39,8 +39,4 @@ class Claim extends Model
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
     }
 
-    public function documents()
-    {
-        return $this->hasMany(ClaimDocument::class);
-    }
 }

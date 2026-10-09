@@ -25,8 +25,7 @@ class UserController extends WebBaseController
         'faculty' => ['user_type' => 'faculty', 'roles' => ['faculty']],
         'staff'   => ['user_type' => 'staff',   'roles' => ['staff']],
         'guest'   => ['user_type' => 'guest',   'roles' => ['guest']],
-        'osa'     => ['user_type' => 'staff',   'roles' => ['osa']],
-        'admin'   => ['user_type' => 'admin',   'roles' => ['admin']],
+        'admin_osa' => ['user_type' => 'admin', 'roles' => ['admin', 'osa']],
     ];
 
     public function index(Request $request)
@@ -232,7 +231,7 @@ class UserController extends WebBaseController
         $requestedRoles = $account['roles'];
 
         // Only an admin may give or take away privileged access (OSA / Admin)
-        if (in_array($accountType, ['admin', 'osa'], true) && !$actorIsAdmin) {
+        if ($accountType === 'admin_osa' && !$actorIsAdmin) {
             abort(403, 'Only admin can assign admin/OSA access');
         }
 
