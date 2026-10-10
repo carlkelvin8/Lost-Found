@@ -30,7 +30,6 @@
 @endif
 
 @php
-  $roleFilter = $role ?? '';
   $activeFilter = $active ?? '';
 @endphp
 
@@ -48,16 +47,7 @@
       <label class="form-label">Search (email or name)</label>
       <input class="form-control" name="q" value="{{ $q ?? '' }}" />
     </div>
-    <div class="col-12 col-md-3">
-      <label class="form-label">Role</label>
-      <select class="form-select" name="role">
-        <option value="">Any</option>
-        @foreach($roles as $r)
-          <option value="{{ $r->name }}" @selected($roleFilter===$r->name)>{{ $r->name }}</option>
-        @endforeach
-      </select>
-    </div>
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-4">
       <label class="form-label">Active</label>
       <select class="form-select" name="active">
         <option value="">Any</option>
@@ -65,7 +55,7 @@
         <option value="0" @selected((string)$activeFilter==='0')>Disabled</option>
       </select>
     </div>
-    <div class="col-12 col-md-2 text-md-end">
+    <div class="col-12 col-md-4 text-md-end">
       <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
     </div>
   </div>
@@ -80,7 +70,7 @@
           <th>ID</th>
           <th>Email</th>
           <th>Name</th>
-          <th>Role</th>
+          <th>Account Type</th>
           <th>Status</th>
           <th>Date Created</th>
           <th class="text-end">Actions</th>
@@ -106,14 +96,13 @@
             <td>{{ $u->email }}</td>
             <td>{{ $u->profile?->full_name ?? '—' }}</td>
             <td>
-              @php $names = $u->roles->pluck('name')->values(); @endphp
-              @if($names->count())
-                @foreach($names as $n)
-                  <span class="admin-badge admin-badge-secondary">{{ $n }}</span>
-                @endforeach
-              @else
-                <span class="text-muted">—</span>
-              @endif
+              @php
+                $names = $u->roles->pluck('name');
+                $accountType = $names->contains('admin') || $names->contains('osa')
+                  ? 'Admin/OSA'
+                  : ucfirst((string) ($u->profile?->user_type ?? $names->first() ?? ''));
+              @endphp
+              <span class="admin-badge admin-badge-secondary">{{ $accountType ?: '—' }}</span>
             </td>
             <td>
               @if((int)$u->is_active===1)

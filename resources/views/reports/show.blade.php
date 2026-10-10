@@ -36,17 +36,6 @@ Report #{{ $report->id }} · NAAP Lost & Found
         <i class="bi bi-file-earmark-pdf"></i> PDF
       </a>
     @endif
-    @if($isStaff && !in_array($report->status, ['matched', 'claimed', 'returned', 'archived'], true))
-      <form method="POST" action="{{ route('reports.lock', $report->id) }}" class="d-inline">
-        @csrf
-        <input type="hidden" name="locked" value="{{ $report->locked_at ? '0' : '1' }}">
-        <button type="submit" class="btn btn-sm {{ $report->locked_at ? 'btn-warning' : 'btn-outline-secondary' }}"
-                title="{{ $report->locked_at ? 'Unlock — allow this report to be edited again' : 'Lock — freeze this report so nobody can edit it' }}">
-          <i class="bi {{ $report->locked_at ? 'bi-unlock' : 'bi-lock' }}"></i>
-          {{ $report->locked_at ? 'Unlock' : 'Lock' }}
-        </button>
-      </form>
-    @endif
     @if($isLocked)
       <span class="btn btn-sm btn-secondary" style="cursor:default" title="{{ $report->locked_at && $report->locked_by_user_id ? 'Locked by ' . ($lockerName ?? 'staff') . ' on ' . \Carbon\Carbon::parse($report->locked_at)->format('M j, Y \a\t g:i A') : 'This report is locked — details, photos and status cannot be changed' }}">
         <i class="bi bi-lock-fill"></i> Locked

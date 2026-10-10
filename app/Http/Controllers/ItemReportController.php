@@ -508,6 +508,14 @@ class ItemReportController extends WebBaseController
 
         $locked = (bool) $data['locked'];
 
+        // A submitted report stays locked for its security and audit trail.
+        // Staff may lock legacy/unlocked reports, but cannot reopen one.
+        if (!$locked && $report->locked_at !== null) {
+            return redirect()->route('reports.show', $id)->withErrors([
+                'message' => 'Submitted reports cannot be unlocked for editing.',
+            ]);
+        }
+
         $report->update([
             'locked_at' => $locked ? now() : null,
             'locked_by_user_id' => $locked ? (int) $this->user()->id : null,

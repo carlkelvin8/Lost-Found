@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemReport;
-use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
@@ -33,7 +32,6 @@ class UserController extends WebBaseController
         $this->requireAnyRole(['admin','osa']);
 
         $q = trim((string) $request->query('q', ''));
-        $role = trim((string) $request->query('role', ''));
         $active = $request->query('active', '');
 
         $escapedQ = str_replace(['%', '_'], ['\\%', '\\_'], $q);
@@ -44,15 +42,12 @@ class UserController extends WebBaseController
                     ->orWhereHas('profile', fn($p) => $p->where('full_name', 'like', "%{$escapedQ}%"));
             })
             ->when($active !== '', fn($qq) => $qq->where('is_active', (int) $active))
-            ->when($role !== '', fn($qq) => $qq->whereHas('roles', fn($r) => $r->where('name', $role)))
             ->with(['profile','roles'])
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
-        $roles = Role::orderBy('name')->get();
-
-        return view('users.index', compact('users','q','role','active','roles'));
+        return view('users.index', compact('users','q','active'));
     }
 
     public function create(Request $request)
