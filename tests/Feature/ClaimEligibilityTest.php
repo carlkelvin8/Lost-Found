@@ -228,6 +228,22 @@ class ClaimEligibilityTest extends TestCase
         $this->assertSame(1, Claim::count());
     }
 
+    public function test_a_rejected_claim_also_blocks_a_further_claim(): void
+    {
+        Claim::factory()->create([
+            'report_id' => $this->foundReport->id,
+            'claimant_user_id' => $this->lostReporter->id,
+            'status' => 'rejected',
+        ]);
+
+        $this->actingAs($this->lostReporter)
+            ->from(route('reports.show', $this->foundReport->id))
+            ->post(route('claims.store'), $this->validProof() + ['report_id' => $this->foundReport->id])
+            ->assertSessionHasErrors('message');
+
+        $this->assertSame(1, Claim::count());
+    }
+
     /* =====================================================
      | SCENARIO 6 - backend rejects the finder (direct call)
      ===================================================== */

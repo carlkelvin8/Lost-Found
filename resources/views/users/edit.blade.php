@@ -26,7 +26,7 @@
 @endif
 
 @php
-  $roleNames = $user->roles->pluck('name')->toArray();
+  $roleNames = array_map('strtolower', $user->roles->pluck('name')->toArray());
   if (in_array('admin', $roleNames, true)) {
     $type = 'admin_osa';
   } elseif (in_array('osa', $roleNames, true)) {

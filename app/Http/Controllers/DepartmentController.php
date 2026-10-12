@@ -72,9 +72,10 @@ class DepartmentController extends WebBaseController
         $this->requireAnyRole(['admin']);
 
         $department = Department::findOrFail($id);
-        $impacted = UserProfile::where('department_id', $id)->count();
+        $idString = (string) $id;
+        $impacted = UserProfile::where('department_id', $idString)->count();
 
-        UserProfile::where('department_id', $id)->update(['department_id' => null]);
+        UserProfile::where('department_id', $idString)->update(['department_id' => null]);
 
         $department->delete();
         $this->audit($request, 'departments.delete', 'departments', $id, ['impacted_profiles' => $impacted]);

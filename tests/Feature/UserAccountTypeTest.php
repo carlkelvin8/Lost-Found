@@ -62,7 +62,7 @@ class UserAccountTypeTest extends TestCase
         $this->assertFalse($user->hasAnyRole(['admin', 'osa']));
     }
 
-    public function test_admin_creating_an_admin_osa_account_sets_both_privileged_roles(): void
+    public function test_admin_creating_an_admin_osa_account_sets_the_admin_role(): void
     {
         $this->actingAs($this->adminUser())
             ->post(route('users.store'), $this->payload([
@@ -75,7 +75,7 @@ class UserAccountTypeTest extends TestCase
 
         $this->assertNotNull($user);
         $this->assertTrue($user->hasAnyRole(['admin']));
-        $this->assertTrue($user->hasAnyRole(['osa']));
+        $this->assertFalse($user->hasAnyRole(['osa']));
         $this->assertSame('admin', $user->profile->user_type);
     }
 

@@ -168,6 +168,7 @@ class ClaimEligibilityServiceTest extends TestCase
         return [
             'pending' => ['pending'],
             'approved' => ['approved'],
+            'rejected' => ['rejected'],
         ];
     }
 
@@ -186,7 +187,6 @@ class ClaimEligibilityServiceTest extends TestCase
     public static function inactiveClaimStatusProvider(): array
     {
         return [
-            'rejected' => ['rejected'],
             'cancelled' => ['cancelled'],
         ];
     }

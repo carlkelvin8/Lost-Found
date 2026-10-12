@@ -17,18 +17,15 @@ class RoleController extends WebBaseController
         // admin ONLY
         $this->requireAnyRole(['admin']);
 
-        $q = trim((string) $request->query('q', ''));
+        // The system exposes exactly five roles, in a fixed order.
+        $order = ['admin', 'student', 'faculty', 'staff', 'guest'];
 
-        $roles = Role::query()
-            ->when($q !== '', function ($qq) use ($q) {
-                $qq->where('name', 'like', "%{$q}%")
-                   ->orWhere('description', 'like', "%{$q}%");
-            })
-            ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
+        $roles = Role::whereIn('name', $order)
+            ->get()
+            ->sortBy(fn ($role) => array_search(strtolower($role->name), $order, true))
+            ->values();
 
-        return view('roles.index', compact('roles', 'q'));
+        return view('roles.index', compact('roles'));
     }
 
     /* =========================

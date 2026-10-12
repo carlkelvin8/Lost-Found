@@ -39,7 +39,9 @@ class AuthWebController extends WebBaseController
 
     public function showRegister()
     {
-        return view('auth.register');
+        $departments = \App\Models\Department::orderBy('name')->get();
+
+        return view('auth.register', compact('departments'));
     }
 
     /* =========================

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ItemReport;
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class LocationController extends WebBaseController
@@ -44,6 +45,7 @@ class LocationController extends WebBaseController
         ]);
 
         $row = Location::create($data);
+        Cache::forget('locations_list');
         $this->audit($request, 'locations.create', 'locations', $row->id, $data);
 
         return redirect()->route('locations.index')->with('success', 'Created');
@@ -72,6 +74,7 @@ class LocationController extends WebBaseController
         ]);
 
         $location->update($data);
+        Cache::forget('locations_list');
         $this->audit($request, 'locations.update', 'locations', $location->id, $data);
 
         return redirect()->route('locations.index')->with('success', 'Updated');
@@ -87,6 +90,7 @@ class LocationController extends WebBaseController
         ItemReport::where('location_id', $id)->update(['location_id' => null]);
 
         $location->delete();
+        Cache::forget('locations_list');
         $this->audit($request, 'locations.delete', 'locations', $id, ['impacted_reports' => $impacted]);
 
         return redirect()->route('locations.index')->with('success', 'Deleted');

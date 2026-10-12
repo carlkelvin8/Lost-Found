@@ -824,9 +824,9 @@
                         <i class="bi bi-building field-icon"></i>
                         <select id="department_name" name="department_name" class="field-select @error('department_name') is-error @enderror">
                             <option value="" selected>Select department</option>
-                            <option value="ICS"  {{ old('department_name')=='ICS'  ? 'selected' : '' }}>ICS</option>
-                            <option value="ILAS" {{ old('department_name')=='ILAS' ? 'selected' : '' }}>ILAS</option>
-                            <option value="INET" {{ old('department_name')=='INET' ? 'selected' : '' }}>INET</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->name }}" @selected(old('department_name')===$dept->name)>{{ $dept->name }}</option>
+                            @endforeach
                         </select>
                         <i class="bi bi-chevron-down select-arrow"></i>
                     </div>

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\ItemReport;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\EmailOtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,14 +20,15 @@ class UserController extends WebBaseController
     /**
      * One account type decides BOTH the profile type (user_type) and the
      * permission role(s). The four self-serve types get the same limited
-     * access; OSA and Admin are the only privileged accounts.
+     * access; OSA and Admin are the only privileged accounts (the OSA role
+     * is folded into Admin — system roles are only the canonical five).
      */
     private const ACCOUNT_TYPES = [
         'student' => ['user_type' => 'student', 'roles' => ['student']],
         'faculty' => ['user_type' => 'faculty', 'roles' => ['faculty']],
         'staff'   => ['user_type' => 'staff',   'roles' => ['staff']],
         'guest'   => ['user_type' => 'guest',   'roles' => ['guest']],
-        'admin_osa' => ['user_type' => 'admin', 'roles' => ['admin', 'osa']],
+        'admin_osa' => ['user_type' => 'admin', 'roles' => ['admin']],
     ];
 
     public function index(Request $request)
@@ -53,7 +57,10 @@ class UserController extends WebBaseController
     public function create(Request $request)
     {
         $this->requireAnyRole(['admin']);
-        return view('users.create');
+
+        $departments = Department::orderBy('name')->get();
+
+        return view('users.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -67,6 +74,7 @@ class UserController extends WebBaseController
 
             'full_name' => ['required','string','max:190'],
             'user_type' => ['required', Rule::in(array_keys(self::ACCOUNT_TYPES))],
+            'department_id' => ['nullable','integer','exists:departments,id'],
             'school_id_number' => ['nullable','string','max:60'],
             'contact_no' => ['nullable','string','max:40'],
         ]);
@@ -91,7 +99,7 @@ class UserController extends WebBaseController
                 'full_name' => $data['full_name'],
                 'school_id_number' => $data['school_id_number'] ?? null,
                 'user_type' => $data['user_type'],
-                'department_id' => null,
+                'department_id' => (!in_array($data['user_type'], ['student'], true)) ? null : ($data['department_id'] ?? null),
                 'contact_no' => $data['contact_no'] ?? null,
             ]);
 
@@ -105,19 +113,14 @@ class UserController extends WebBaseController
     }
 
     /* =========================
-     * ADMIN ACCOUNT (Staff Tools)
+     * CREATE ADMIN (ADMIN ONLY, NO ACCOUNT-TYPE CHOICE)
      * ========================= */
     public function createAdmin(Request $request)
     {
         $this->requireAnyRole(['admin']);
-
         return view('users.create-admin');
     }
 
-    /**
-     * Creates an admin account that still has to verify its e-mail address,
-     * so a leaked/typed-wrong address can never be used to sign in.
-     */
     public function storeAdmin(Request $request)
     {
         $this->requireAnyRole(['admin']);
@@ -125,23 +128,20 @@ class UserController extends WebBaseController
         $data = $request->validate([
             'email' => ['required','email','max:190', Rule::unique('users','email')],
             'password' => ['required','string','min:8','max:255','confirmed'],
+            'is_active' => ['nullable','boolean'],
 
             'full_name' => ['required','string','max:190'],
             'contact_no' => ['nullable','string','max:40'],
         ]);
 
-        // Resolve the role first so the transaction only does account work.
-        $adminRole = Role::firstOrCreate(
-            ['name' => 'admin'],
-            ['description' => 'System Administrator']
-        );
+        $user = null;
 
-        $user = DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($request, $data, &$user) {
             $user = User::create([
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
-                'is_active' => 1,
-                // Deliberately unverified: the OTP e-mail is the verification step
+                'is_active' => array_key_exists('is_active', $data) ? (int) (bool) $data['is_active'] : 1,
+                // The account CANNOT log in until the email is verified via OTP.
                 'email_verified_at' => null,
                 'last_login_at' => null,
             ]);
@@ -149,27 +149,30 @@ class UserController extends WebBaseController
             UserProfile::create([
                 'user_id' => $user->id,
                 'full_name' => $data['full_name'],
+                'school_id_number' => null,
                 'user_type' => 'admin',
                 'department_id' => null,
                 'contact_no' => $data['contact_no'] ?? null,
             ]);
 
-            return $user;
+            $roleIds = Role::whereIn('name', ['admin'])->pluck('id')->all();
+            $user->roles()->sync($roleIds);
+
+            $this->audit($request, 'users.createAdmin', 'users', $user->id, [
+                'email' => $user->email,
+                'roles' => ['admin'],
+                'verification_required' => true,
+            ]);
         });
 
-        $user->roles()->syncWithoutDetaching([$adminRole->id]);
+        // Send the OTP verification email — a mailer outage must not block creation.
+        if ($user) {
+            app(EmailOtpService::class)->send($user);
+        }
 
-        $this->audit($request, 'users.create_admin', 'users', $user->id, [
-            'email' => $user->email,
-            'requires_email_verification' => true,
-        ]);
-
-        app(\App\Services\EmailOtpService::class)->send($user);
-
-        return redirect()->route('users.index')->with(
-            'success',
-            "Admin account created. A verification code was sent to {$user->email} — they must verify before their first login."
-        );
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Admin account created — the user must verify their email with the OTP code before they can log in.');
     }
 
     public function show(Request $request, int $id)

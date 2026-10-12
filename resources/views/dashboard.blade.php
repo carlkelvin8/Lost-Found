@@ -53,28 +53,6 @@
       <span class="dash-stat-value" data-count="{{ $stats['my_claims'] }}">{{ $stats['my_claims'] }}</span>
     </div>
   </div>
-
-  @if($isStaff)
-    <div class="dash-stat">
-      <div class="dash-stat-icon dash-stat-amber">
-        <i class="bi bi-hourglass-split"></i>
-      </div>
-      <div class="dash-stat-info">
-        <span class="dash-stat-label">Pending</span>
-        <span class="dash-stat-value" data-count="{{ $stats['pending_reports'] }}">{{ $stats['pending_reports'] }}</span>
-      </div>
-    </div>
-
-    <div class="dash-stat">
-      <div class="dash-stat-icon dash-stat-indigo">
-        <i class="bi bi-diagram-2"></i>
-      </div>
-      <div class="dash-stat-info">
-        <span class="dash-stat-label">Matches</span>
-        <span class="dash-stat-value" data-count="{{ $stats['suggested_matches'] }}">{{ $stats['suggested_matches'] }}</span>
-      </div>
-    </div>
-  @endif
 </div>
 
 <!-- Quick Actions -->
@@ -171,92 +149,49 @@
     </div>
   </div>
 
-  @if($isStaff)
-    <!-- Recent Activity -->
-    <div class="dash-card">
-      <div class="dash-card-header">
-        <h3 class="dash-card-title">
-          <i class="bi bi-activity"></i> Recent Activity
-        </h3>
-        <a href="{{ route('reports.index') }}" class="dash-card-link">View all <i class="bi bi-arrow-right"></i></a>
-      </div>
-      <div class="dash-card-body">
-        @if($recentActivity->isEmpty())
-          <div class="dash-empty">
-            <div class="dash-empty-icon">
-              <i class="bi bi-activity"></i>
-            </div>
-            <p class="dash-empty-title">No recent activity</p>
-            <p class="dash-empty-desc">Activity will appear here</p>
-          </div>
-        @else
-          <div class="dash-list">
-            @foreach($recentActivity as $activity)
-              <a href="{{ route('reports.show', $activity->id) }}" class="dash-list-item">
-                <div class="dash-list-dot {{ $activity->report_type === 'lost' ? 'dash-dot-amber' : 'dash-dot-green' }}"></div>
-                <div class="dash-list-content">
-                  <div class="dash-list-header">
-                    <span class="dash-list-title">{{ Str::limit($activity->item_name, 30) }}</span>
-                    <span class="dash-badge {{ $activity->report_type === 'lost' ? 'dash-badge-amber' : 'dash-badge-green' }}">
-                      {{ ucfirst($activity->report_type) }}
-                    </span>
-                  </div>
-                  <div class="dash-list-meta">
-                    <span><i class="bi bi-person"></i> {{ $activity->reporter?->email ?? 'Unknown' }}</span>
-                  </div>
-                </div>
-                <span class="dash-list-time">{{ $activity->created_at->diffForHumans() }}</span>
-              </a>
-            @endforeach
-          </div>
-        @endif
-      </div>
+  <!-- Getting Started Guide -->
+  <div class="dash-card">
+    <div class="dash-card-header">
+      <h3 class="dash-card-title">
+        <i class="bi bi-lightbulb"></i> Getting Started
+      </h3>
     </div>
-  @else
-    <!-- Getting Started Guide -->
-    <div class="dash-card">
-      <div class="dash-card-header">
-        <h3 class="dash-card-title">
-          <i class="bi bi-lightbulb"></i> Getting Started
-        </h3>
-      </div>
-      <div class="dash-card-body">
-        <div class="dash-guide">
-          <div class="dash-guide-step">
-            <div class="dash-guide-num">1</div>
-            <div class="dash-guide-info">
-              <span class="dash-guide-title">Report Lost or Found Items</span>
-              <span class="dash-guide-desc">Submit a report when you lose or find an item</span>
-            </div>
+    <div class="dash-card-body">
+      <div class="dash-guide">
+        <div class="dash-guide-step">
+          <div class="dash-guide-num">1</div>
+          <div class="dash-guide-info">
+            <span class="dash-guide-title">Report Lost or Found Items</span>
+            <span class="dash-guide-desc">Submit a report when you lose or find an item</span>
           </div>
-          <div class="dash-guide-step">
-            <div class="dash-guide-num">2</div>
-            <div class="dash-guide-info">
-              <span class="dash-guide-title">AI-Powered Matching</span>
-              <span class="dash-guide-desc">System automatically matches lost & found items</span>
-            </div>
+        </div>
+        <div class="dash-guide-step">
+          <div class="dash-guide-num">2</div>
+          <div class="dash-guide-info">
+            <span class="dash-guide-title">AI-Powered Matching</span>
+            <span class="dash-guide-desc">System automatically matches lost & found items</span>
           </div>
-          <div class="dash-guide-step">
-            <div class="dash-guide-num">3</div>
-            <div class="dash-guide-info">
-              <span class="dash-guide-title">Claim Your Items</span>
-              <span class="dash-guide-desc">Get notified when matches are found</span>
-            </div>
+        </div>
+        <div class="dash-guide-step">
+          <div class="dash-guide-num">3</div>
+          <div class="dash-guide-info">
+            <span class="dash-guide-title">Claim Your Items</span>
+            <span class="dash-guide-desc">Get notified when matches are found</span>
           </div>
-          <div class="dash-guide-step">
-            <div class="dash-guide-num">4</div>
-            <div class="dash-guide-info">
-              <span class="dash-guide-title">Track Progress</span>
-              <span class="dash-guide-desc">Monitor status of your reports in real-time</span>
-            </div>
+        </div>
+        <div class="dash-guide-step">
+          <div class="dash-guide-num">4</div>
+          <div class="dash-guide-info">
+            <span class="dash-guide-title">Track Progress</span>
+            <span class="dash-guide-desc">Monitor status of your reports in real-time</span>
           </div>
         </div>
       </div>
     </div>
-  @endif
+  </div>
 </div>
 
-@if($isStaff)
+@if($showAnalytics)
 @php
   $total = (int) ($stats['total_reports'] ?? 0);
   $rs = $stats['report_status'] ?? [];
@@ -284,10 +219,10 @@
   $barMax = 240;
 @endphp
 
-<!-- Analytics Section -->
+<!-- Analytics Section (Admin only) -->
 <div class="dash-section">
   <h2 class="dash-section-title"><i class="bi bi-graph-up"></i> Analytics Overview</h2>
-  
+
   <div class="dash-analytics">
     <!-- Summary Cards -->
     <div class="dash-analytics-summary">
@@ -353,12 +288,10 @@
           @php
             $labels = ['pending','matched','claimed','returned','archived'];
             $colors = ['pending' => '#f59e0b', 'matched' => '#3b82f6', 'claimed' => '#8b5cf6', 'returned' => '#10b981', 'archived' => '#94a3b8'];
-            $y = 0;
           @endphp
           @foreach($labels as $s)
             @php
               $count = (int) ($rs[$s] ?? 0);
-              $wpx = (int) round($barMax * $count / $maxStatus);
               $pctVal = $pct($count, $maxStatus);
             @endphp
             <div class="dash-bar-row">

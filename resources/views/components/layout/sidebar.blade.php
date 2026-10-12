@@ -1,6 +1,6 @@
 @php
   $user = auth()->user();
-  $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
+  $roleNames = array_map('strtolower', $user?->roles?->pluck('name')->toArray() ?? []);
   $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
   $currentRoute = request()->route()?->getName() ?? '';
   $initial = strtoupper(substr($user->email ?? 'U', 0, 1));
@@ -79,7 +79,7 @@
       </a>
 
       @if(in_array('admin', $roleNames, true))
-      <a href="{{ route('users.createAdmin') }}" class="sidebar-item {{ $currentRoute === 'users.createAdmin' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'users.createAdmin' ? 'page' : 'false' }}" title="Create an admin account (e-mail verification required)">
+      <a href="{{ route('users.createAdmin') }}" class="sidebar-item {{ $currentRoute === 'users.createAdmin' ? 'active' : '' }}" aria-current="{{ $currentRoute === 'users.createAdmin' ? 'page' : 'false' }}" title="Create a new Admin/OSA account — the user must verify their email before they can log in">
         <div class="sidebar-item-icon" style="background:rgba(0,65,199,.1);color:#0041C7">
           <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
         </div>
@@ -120,7 +120,6 @@
           <span class="sidebar-item-text">Locations</span>
         </a>
 
-        @if(in_array('admin', $roleNames, true))
         <a href="{{ route('roles.index') }}" class="sidebar-item {{ str_starts_with($currentRoute, 'roles.') ? 'active' : '' }}" aria-current="{{ str_starts_with($currentRoute, 'roles.') ? 'page' : 'false' }}">
           <div class="sidebar-item-icon">
             <i class="bi bi-shield-fill" aria-hidden="true"></i>
@@ -134,7 +133,6 @@
           </div>
           <span class="sidebar-item-text">Activity Logs</span>
         </a>
-        @endif
       </div>
     </div>
     @endif

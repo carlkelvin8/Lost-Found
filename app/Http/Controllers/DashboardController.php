@@ -20,8 +20,6 @@ class DashboardController extends WebBaseController
             return redirect()->route('login');
         }
 
-        $isStaff = $this->hasAnyRole(['admin', 'osa']);
-
         $stats = [
             'my_reports' => Cache::remember("user_{$user->id}_reports_count", 300, fn() =>
                 ItemReport::where('reporter_user_id', $user->id)->count()
@@ -29,47 +27,30 @@ class DashboardController extends WebBaseController
             'my_claims' => Cache::remember("user_{$user->id}_claims_count", 300, fn() =>
                 Claim::where('claimant_user_id', $user->id)->count()
             ),
-            'pending_reports' => $isStaff
-                ? Cache::remember('staff_pending_reports', 120, fn() =>
-                    ItemReport::where('status', 'pending')->count()
-                )
-                : 0,
-            'suggested_matches' => $isStaff
-                ? Cache::remember('staff_suggested_matches', 120, fn() =>
-                    ReportMatch::where('status', 'suggested')->count()
-                )
-                : 0,
         ];
 
-        if ($isStaff) {
-            $reportStatus = Cache::remember('staff_report_status', 300, fn() =>
-                ItemReport::select('status', DB::raw('count(*) as c'))
-                    ->groupBy('status')
-                    ->pluck('c', 'status')
-                    ->all()
-            );
+        // Analytics Overview is shown to Admin-role accounts only. OSA and all
+        // other user types keep the exact same dashboard layout as everyone else.
+        $showAnalytics = $this->hasAnyRole(['admin']);
 
-            $reportType = Cache::remember('staff_report_type', 300, fn() =>
-                ItemReport::select('report_type', DB::raw('count(*) as c'))
-                    ->groupBy('report_type')
-                    ->pluck('c', 'report_type')
-                    ->all()
+        if ($showAnalytics) {
+            $stats['pending_reports'] = Cache::remember('admin_pending_reports', 120, fn() =>
+                ItemReport::where('status', 'pending')->count()
             );
-
-            $matchStatus = Cache::remember('staff_match_status', 300, fn() =>
-                ReportMatch::select('status', DB::raw('count(*) as c'))
-                    ->groupBy('status')
-                    ->pluck('c', 'status')
-                    ->all()
+            $stats['suggested_matches'] = Cache::remember('admin_suggested_matches', 120, fn() =>
+                ReportMatch::where('status', 'suggested')->count()
             );
-
-            $stats = array_merge($stats, [
-                'total_users' => Cache::remember('staff_total_users', 600, fn() => User::count()),
-                'total_reports' => Cache::remember('staff_total_reports', 300, fn() => ItemReport::count()),
-                'report_status' => $reportStatus,
-                'report_type' => $reportType,
-                'match_status' => $matchStatus,
-            ]);
+            $stats['total_users'] = Cache::remember('admin_total_users', 600, fn() => User::count());
+            $stats['total_reports'] = Cache::remember('admin_total_reports', 300, fn() => ItemReport::count());
+            $stats['report_status'] = Cache::remember('admin_report_status', 300, fn() =>
+                ItemReport::select('status', DB::raw('count(*) as c'))->groupBy('status')->pluck('c', 'status')->all()
+            );
+            $stats['report_type'] = Cache::remember('admin_report_type', 300, fn() =>
+                ItemReport::select('report_type', DB::raw('count(*) as c'))->groupBy('report_type')->pluck('c', 'report_type')->all()
+            );
+            $stats['match_status'] = Cache::remember('admin_match_status', 300, fn() =>
+                ReportMatch::select('status', DB::raw('count(*) as c'))->groupBy('status')->pluck('c', 'status')->all()
+            );
         }
 
         $recentReports = ItemReport::where('reporter_user_id', $user->id)
@@ -78,15 +59,6 @@ class DashboardController extends WebBaseController
             ->limit(5)
             ->get();
 
-        $recentActivity = $isStaff
-            ? ItemReport::with(['category', 'location', 'reporter'])
-                ->orderBy('created_at', 'desc')
-                ->limit(8)
-                ->get()
-            : collect();
-
-        $isStaff = false;
-
-        return view('dashboard', compact('user', 'stats', 'isStaff', 'recentReports', 'recentActivity'));
+        return view('dashboard', compact('user', 'stats', 'showAnalytics', 'recentReports'));
     }
 }

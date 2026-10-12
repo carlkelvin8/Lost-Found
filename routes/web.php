@@ -144,7 +144,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 
-    // Staff Tools - admin account creation (requires e-mail verification)
     Route::get('/users/create-admin', [UserController::class, 'createAdmin'])->name('users.createAdmin');
     Route::post('/users/create-admin', [UserController::class, 'storeAdmin'])->name('users.storeAdmin');
 

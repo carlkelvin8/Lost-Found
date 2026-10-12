@@ -6,6 +6,7 @@ use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use App\Models\ItemReport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class CategoryController extends WebBaseController
@@ -38,6 +39,7 @@ class CategoryController extends WebBaseController
         $data = $request->validated();
 
         $row = Category::create($data);
+        Cache::forget('categories_list');
         $this->audit($request, 'categories.create', 'categories', $row->id, $data);
 
         return redirect()->route('categories.index')->with('success', 'Created');
@@ -59,6 +61,7 @@ class CategoryController extends WebBaseController
         $data = $request->validated();
 
         $category->update($data);
+        Cache::forget('categories_list');
         $this->audit($request, 'categories.update', 'categories', $category->id, $data);
 
         return redirect()->route('categories.index')->with('success', 'Updated');
@@ -74,6 +77,7 @@ class CategoryController extends WebBaseController
         ItemReport::where('category_id', $id)->update(['category_id' => null]);
 
         $category->delete();
+        Cache::forget('categories_list');
         $this->audit($request, 'categories.delete', 'categories', $id, ['impacted_reports' => $impacted]);
 
         return redirect()->route('categories.index')->with('success', 'Deleted');

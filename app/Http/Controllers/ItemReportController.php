@@ -434,8 +434,10 @@ class ItemReportController extends WebBaseController
 
         if (!$this->hasAnyRole(['admin','osa'])) abort(403);
 
-        if ($report->isLocked()) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
+        // Locking protects the report details/photos from edits, not the
+        // workflow status — staff must be able to mark a claimed item returned.
+        if (!in_array($report->status, ['claimed'], true)) {
+            return redirect()->route('reports.show', $id)->withErrors(['message' => 'Only claimed reports can be marked as returned']);
         }
 
         DB::transaction(function () use ($request, $report) {
@@ -461,13 +463,8 @@ class ItemReportController extends WebBaseController
 
         $report = ItemReport::findOrFail($id);
 
-        // A manually locked report is frozen — nothing about it changes,
-        // including its status.
-        if ($report->locked_at !== null) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
-        }
-
-        // allow archive only for returned or claimed (common workflow)
+        // Locking protects the report details from edits; archiving is a staff
+        // workflow transition and must still work on submitted (locked) reports.
         if (!in_array($report->status, ['returned', 'claimed'], true)) {
             return redirect()->route('reports.show', $id)->withErrors(['message' => 'Only returned/claimed reports can be archived']);
         }
@@ -491,8 +488,9 @@ class ItemReportController extends WebBaseController
     /* =========================
      * LOCK / UNLOCK (staff only)
      * =========================
-     * A locked report cannot be edited by anyone — details, photos and status
-     * are all frozen until staff unlock it again.
+     * A locked report cannot be edited by anyone — details and photos are
+     * frozen. Staff workflow statuses (claimed -> returned -> archived) are
+     * still advanced through the dedicated action buttons.
      */
     public function setLocked(Request $request, int $id)
     {

@@ -1,6 +1,6 @@
 @php
     $user = auth()->user();
-    $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
+    $roleNames = array_map('strtolower', $user?->roles?->pluck('name')->toArray() ?? []);
     $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
 @endphp
 

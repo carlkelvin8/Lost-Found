@@ -628,8 +628,8 @@
 
 @section('content')
 @php
-  $roleNames = $u->roles()->pluck('name')->toArray();
-  $isAdmin = in_array('admin', $roleNames) || in_array('osa', $roleNames);
+  $roleNames = array_map('strtolower', $u->roles()->pluck('name')->toArray());
+  $isAdmin = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
   $userType = (string) ($profile?->user_type ?? '');
   if ($userType === 'visitor') $userType = 'guest';
   $displayRole = $isAdmin
@@ -744,6 +744,7 @@
               <div class="profile-help"><i class="bi bi-lock"></i> Cannot be changed</div>
             </div>
 
+            @if($userType === 'student')
             <div class="profile-field">
               <label class="profile-label">School ID</label>
               <div class="profile-input-wrap">
@@ -766,6 +767,7 @@
                 <i class="bi bi-chevron-down profile-select-arrow"></i>
               </div>
             </div>
+            @endif
           </div>
         </div>
 

@@ -38,10 +38,13 @@ class UserProfileController extends WebBaseController
 
         DB::transaction(function () use ($request, $u, $data) {
 
+            // Only students may hold a School ID / Department binding.
+            $isStudent = (string) ($u->profile?->user_type ?? '') === 'student';
+
             $payload = [
                 'full_name' => $data['full_name'],
-                'school_id_number' => $data['school_id_number'] ?? null,
-                'department_id' => $data['department_id'] ?? null,
+                'school_id_number' => $isStudent ? ($data['school_id_number'] ?? null) : null,
+                'department_id' => $isStudent ? ($data['department_id'] ?? null) : null,
                 'contact_no' => $data['contact_no'] ?? null,
                 'address' => $data['address'] ?? null,
             ];

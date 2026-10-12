@@ -25,8 +25,8 @@ class ClaimEligibilityService
     /** report_matches.status values that still represent a live lost<->found pairing. */
     public const ACTIVE_MATCH_STATUSES = ['suggested', 'confirmed'];
 
-    /** Claim statuses that block a new claim from the same claimant. */
-    public const ACTIVE_CLAIM_STATUSES = ['pending', 'approved'];
+    /** Claim statuses that block any further claim on the report. */
+    public const ACTIVE_CLAIM_STATUSES = ['pending', 'approved', 'rejected'];
 
     /**
      * Evaluate whether $user may submit a claim against $report.
@@ -60,7 +60,7 @@ class ClaimEligibilityService
         }
 
         if ($this->hasActiveClaim($report)) {
-            return ClaimEligibility::ineligible('duplicate_claim', 'Duplicate claim');
+            return ClaimEligibility::ineligible('duplicate_claim', 'A claim has already been submitted for this item.');
         }
 
         return ClaimEligibility::eligible($lostReport);

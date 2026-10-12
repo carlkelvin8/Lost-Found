@@ -1,6 +1,6 @@
 @php
   $user = auth()->user();
-  $roleNames = $user?->roles?->pluck('name')->toArray() ?? [];
+  $roleNames = array_map('strtolower', $user?->roles?->pluck('name')->toArray() ?? []);
   $isStaff = in_array('admin', $roleNames, true) || in_array('osa', $roleNames, true);
 
   // Profile type is what the account "is" (Student, Faculty, Staff, Guest);
@@ -9,8 +9,7 @@
   if ($userType === 'visitor') $userType = 'guest';
 
   $roleLabel = match (true) {
-      in_array('admin', $roleNames, true) => 'Admin',
-      in_array('osa', $roleNames, true) => 'OSA',
+      $isStaff => 'Admin/OSA',
       default => match ($userType) {
           'faculty' => 'Faculty',
           'staff'   => 'Staff',

@@ -94,6 +94,15 @@
           <label class="form-label">School ID</label>
           <input class="form-control" name="school_id_number" value="{{ old('school_id_number') }}" placeholder="2026-XXXX" />
         </div>
+        <div class="col-12 col-md-6" id="departmentFieldWrap">
+          <label class="form-label">Department</label>
+          <select class="form-select" name="department_id" id="departmentSelect">
+            <option value="">Select department</option>
+            @foreach($departments as $d)
+              <option value="{{ $d->id }}" @selected((string)old('department_id')===(string)$d->id)>{{ $d->name }}</option>
+            @endforeach
+          </select>
+        </div>
         <div class="col-12">
           <label class="form-label">Contact no</label>
           <input class="form-control" name="contact_no" value="{{ old('contact_no') }}" placeholder="0912 345 6789" />
@@ -138,6 +147,14 @@ const accessHints = {
 function updateAccessPreview(){
   const v = document.querySelector('input[name="user_type"]:checked');
   document.getElementById('accessPreview').textContent = v ? accessHints[v.value] : '';
+
+  const deptWrap = document.getElementById('departmentFieldWrap');
+  const deptSelect = document.getElementById('departmentSelect');
+  if (deptWrap && deptSelect) {
+    const isStudent = v && v.value === 'student';
+    deptWrap.style.display = isStudent ? '' : 'none';
+    if (!isStudent) deptSelect.value = '';
+  }
 }
 document.querySelectorAll('input[name="user_type"]').forEach(r=>r.addEventListener('change', updateAccessPreview));
 updateAccessPreview();
