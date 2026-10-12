@@ -39,6 +39,13 @@ class AuthWebController extends WebBaseController
 
     public function showRegister()
     {
+        // Self-heal: a fresh deployment may have an empty departments table,
+        // which left students with no option to pick (and registration failed
+        // because a department is required). Ensure the defaults exist.
+        foreach (\App\Models\Department::DEFAULT_NAMES as $name) {
+            \App\Models\Department::firstOrCreate(['name' => $name]);
+        }
+
         $departments = \App\Models\Department::orderBy('name')->get();
 
         return view('auth.register', compact('departments'));

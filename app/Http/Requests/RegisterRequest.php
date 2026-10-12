@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
@@ -53,7 +54,7 @@ class RegisterRequest extends FormRequest
                 'required_if:user_type,student',
                 'nullable',
                 'string',
-                'in:ICS,ILAS,INET',
+                Rule::exists('departments', 'name'),
             ],
             'school_id_number' => [
                 'required_if:user_type,student',

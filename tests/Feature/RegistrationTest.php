@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -66,6 +67,34 @@ class RegistrationTest extends TestCase
             ->assertSessionHasErrors(['school_id_number', 'department_name']);
 
         $this->assertSame(0, User::count());
+    }
+
+    public function test_a_student_can_register_after_departments_are_auto_seeded(): void
+    {
+        Mail::fake();
+
+        // Simulate a live database that never got the departments seeded:
+        // visiting the form must restore the defaults so the student
+        // dropdown is never empty.
+        Department::query()->delete();
+        $this->assertSame(0, Department::count());
+
+        $this->get(route('register'))->assertOk();
+
+        $this->assertSame(count(Department::DEFAULT_NAMES), Department::count());
+
+        $this->post(route('register.post'), $this->payload([
+            'user_type'        => 'student',
+            'email'            => 'student.2026.test@gmail.com',
+            'school_id_number' => '2024-12345',
+            'department_name'  => 'ICS',
+        ]))->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'student.2026.test@gmail.com')->first();
+
+        $this->assertNotNull($user);
+        $this->assertSame('student', $user->profile->user_type);
+        $this->assertNotNull($user->profile->department_id);
     }
 
     public function test_faculty_staff_and_guest_are_not_forced_into_student_fields(): void
