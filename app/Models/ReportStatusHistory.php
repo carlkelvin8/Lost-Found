@@ -11,6 +11,10 @@ class ReportStatusHistory extends Model
     // WALANG created_at / updated_at sa table
     public $timestamps = false;
 
+    protected $casts = [
+        'changed_at' => 'datetime',
+    ];
+
     protected $fillable = [
         'report_id',
         'old_status',
