@@ -32,7 +32,7 @@ class ActivityLog extends Model
      */
     public function causer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'causer_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -49,11 +49,11 @@ class ActivityLog extends Model
 
     /**
      * Accessor for properties stored as meta_json.
-     * Supports both 'properties' and 'meta_json' column usage.
+     * Exposes the stored metadata as an array.
      */
     public function getPropertiesAttribute(): array
     {
-        $raw = $this->attributes['properties'] ?? $this->meta_json ?? null;
+        $raw = $this->meta_json;
         if (is_array($raw)) {
             return $raw;
         }
@@ -65,7 +65,6 @@ class ActivityLog extends Model
      */
     public function setPropertiesAttribute($value): void
     {
-        $this->attributes['properties'] = is_string($value) ? $value : json_encode($value);
-        $this->meta_json = $this->attributes['properties'];
+        $this->meta_json = is_string($value) ? $value : json_encode($value);
     }
 }
