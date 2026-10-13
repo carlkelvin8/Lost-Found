@@ -106,7 +106,7 @@ Report #{{ $report->id }} · NAAP Lost & Found
   {{-- STATUS TIMELINE --}}
   <div class="detail-card mt-3">
     <div class="detail-card-title"><i class="bi bi-diagram-3"></i> Status Progress</div>
-    {!! createStatusTimeline($report->status) !!}
+    <x-status-timeline :status="$report->status" />
   </div>
 
   {{-- PHOTOS --}}
