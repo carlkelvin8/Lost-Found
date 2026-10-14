@@ -195,6 +195,13 @@ class ItemReportController extends WebBaseController
 
                 // AUTO matching may update status to 'matched'
                 $this->runAutoMatch($request, $report->fresh());
+                User::where('is_active', 1)->whereKeyNot($reporterId)
+                    ->whereHas('roles', fn ($query) => $query->whereIn('name', ['admin', 'osa']))
+                    ->each(function ($staff) use ($report) {
+                        $this->notify((int) $staff->id, 'report', 'New report submitted',
+                            ucfirst($report->report_type) . ' report #' . $report->id . ' was submitted.',
+                            ['report_id' => $report->id]);
+                    });
             });
         } catch (\Throwable $exception) {
             foreach ($storedPhotos as $url) $this->tryDeletePublicUrlFile($url);

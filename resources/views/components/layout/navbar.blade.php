@@ -51,9 +51,7 @@
       @endphp
       <a href="{{ route('notifications.index') }}" class="navbar-icon-btn {{ $unreadCount > 0 ? 'has-unread' : '' }}" title="Notifications" aria-label="Notifications{{ $unreadCount > 0 ? " ({$unreadCount} unread)" : '' }}">
         <i class="bi bi-bell" aria-hidden="true"></i>
-        @if($unreadCount > 0)
-          <span class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
-        @endif
+        <span class="notification-badge" @if($unreadCount === 0) style="display:none" @endif>{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
       </a>
 
       <!-- User Menu -->

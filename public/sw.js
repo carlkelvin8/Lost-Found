@@ -1,6 +1,6 @@
-const CACHE_NAME = 'naap-lf-v10';
-const STATIC_CACHE = 'naap-lf-static-v10';
-const DYNAMIC_CACHE = 'naap-lf-dynamic-v10';
+const CACHE_NAME = 'naap-lf-v11';
+const STATIC_CACHE = 'naap-lf-static-v11';
+const DYNAMIC_CACHE = 'naap-lf-dynamic-v11';
 
 const STATIC_ASSETS = [
     '/css/layout.css',

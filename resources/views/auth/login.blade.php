@@ -815,7 +815,6 @@
             </button>
         </form>
 
-        <a href="{{ route('auth.new-session') }}" class="btn-outline" target="_blank" rel="noopener">Open another account in a separate tab</a>
         <div class="security-badge">
             <i class="bi bi-shield-lock-fill"></i>
             Secured with SSL encryption

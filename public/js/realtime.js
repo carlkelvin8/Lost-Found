@@ -8,6 +8,8 @@ class RealTimeFeatures {
         this.notificationPollInterval = null;
         this.statsRefreshInterval = null;
         this.onlineUsers = new Set();
+        this.latestNotificationId = null;
+        this.notificationRequestPending = false;
         this.init();
     }
 
@@ -27,13 +29,13 @@ class RealTimeFeatures {
                 this.stopPolling();
             } else {
                 this.startNotificationPolling();
-                this.checkNotifications();
             }
         });
     }
 
     // ==================== NOTIFICATION POLLING ====================
     startNotificationPolling() {
+        if (this.notificationPollInterval) return;
         this.checkNotifications();
         this.notificationPollInterval = setInterval(() => this.checkNotifications(), 30000); // Every 30s
     }
@@ -46,8 +48,11 @@ class RealTimeFeatures {
     }
 
     async checkNotifications() {
+        if (this.notificationRequestPending) return;
+        this.notificationRequestPending = true;
         try {
-            const response = await fetch(window.appUrl('/notifications/check'), {
+            const query = this.latestNotificationId === null ? '' : `?after_id=${this.latestNotificationId}`;
+            const response = await fetch(window.appUrl('/notifications/check') + query, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             
@@ -55,12 +60,15 @@ class RealTimeFeatures {
                 const data = await response.json();
                 this.updateNotificationBadge(data.count);
                 
-                if (data.latest && data.latest > 0) {
-                    this.showNewNotificationAlert(data.latest);
+                if (this.latestNotificationId !== null && data.new_count > 0) {
+                    this.showNewNotificationAlert(data.new_count);
                 }
+                this.latestNotificationId = Math.max(this.latestNotificationId ?? 0, Number(data.latest) || 0);
             }
         } catch (err) {
             // Silently fail - polling is best effort
+        } finally {
+            this.notificationRequestPending = false;
         }
     }
 
@@ -69,6 +77,10 @@ class RealTimeFeatures {
         badges.forEach(badge => {
             badge.textContent = count > 9 ? '9+' : count;
             badge.style.display = count > 0 ? 'flex' : 'none';
+        });
+        document.querySelectorAll('.navbar-icon-btn[aria-label^="Notifications"]').forEach(link => {
+            link.classList.toggle('has-unread', count > 0);
+            link.setAttribute('aria-label', count > 0 ? `Notifications (${count} unread)` : 'Notifications');
         });
 
         // Update sidebar notification dot
