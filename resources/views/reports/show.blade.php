@@ -97,6 +97,10 @@ Report #{{ $report->id }} · NAAP Lost & Found
       <div class="detail-value">{{ $report->circumstances }}</div>
     @endif
 
+    @if($isStaff && $report->reporter_name)
+      <div class="detail-label mt-3">Reporter Name</div>
+      <div class="detail-value">{{ $report->reporter_name }}</div>
+    @endif
     @if($report->contact_override)
       <div class="detail-label mt-3">Contact</div>
       <div class="detail-value">{{ $report->contact_override }}</div>

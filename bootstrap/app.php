@@ -11,11 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(prepend: [\App\Http\Middleware\IsolateAdminSession::class]);
         $middleware->alias([
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\RequireAdminBoundary::class,
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })

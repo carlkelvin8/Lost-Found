@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
 
+  <script>
+    window.appIdentity = @json((string) auth()->id());
+    window.appUrl = function(path) {
+      const prefix = @json(request()->is('admin', 'admin/*') ? '/admin' : '');
+      return prefix && !path.startsWith('/admin/') ? prefix + path : path;
+    };
+  </script>
   <!-- SEO Meta Tags -->
   <title>@yield('title', 'NAAP Lost & Found — AI-Powered Item Recovery')</title>
   <meta name="description" content="@yield('meta_description', 'NAAP Lost & Found System — Report lost or found items and get AI-powered matches to recover your belongings faster. National Aviation Academy of the Philippines.')" />

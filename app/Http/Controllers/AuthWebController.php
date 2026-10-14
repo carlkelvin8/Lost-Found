@@ -172,12 +172,18 @@ class AuthWebController extends WebBaseController
         if (!Auth::attempt([
             'email' => $data['email'],
             'password' => $data['password']
-        ], true)) {
+        ], $request->boolean('remember'))) {
             return back()->withErrors(['message' => 'Invalid credentials'])->withInput();
         }
 
         $request->session()->regenerate();
         $user = Auth::user();
+        if ($request->is('admin/*') && !$user->hasAnyRole(['admin', 'osa'])) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors(['message' => 'This login is for Admin and OSA accounts.']);
+        }
         $user->update(['last_login_at' => now()]);
 
         $this->audit($request, 'auth.login', 'users', $user->id);

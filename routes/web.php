@@ -176,6 +176,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Matches (staff)
     Route::get('/matches', [ReportMatchController::class, 'index'])->name('matches.index');
+    Route::get('/matches/search', [ReportMatchController::class, 'search'])->name('matches.search');
     Route::post('/matches/{id}/confirm', [ReportMatchController::class, 'confirm'])->name('matches.confirm');
     Route::post('/matches/{id}/reject', [ReportMatchController::class, 'reject'])->name('matches.reject');
     Route::post('/matches/manual', [ReportMatchController::class, 'createManual'])->name('matches.manual');
@@ -272,7 +273,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->map(function ($user) {
                 return [
                     'name' => $user->name,
-                    'reports_count' => $user->reports_count,
+                    'user_id' => $user->id,
+            'reports_count' => $user->reports_count,
                     'claims_count' => $user->claims_count,
                     'score' => ($user->reports_count * 10) + ($user->claims_count * 5)
                 ];
@@ -292,6 +294,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'pending_count' => \App\Models\ItemReport::where('reporter_user_id', $user->id)->where('status', 'pending')->count(),
             'total_users' => \App\Models\User::count(),
             'total_reports' => \App\Models\ItemReport::count(),
+            'claimed_count' => $user->hasAnyRole(['admin', 'osa']) ? \App\Models\Claim::where('status', 'approved')->distinct()->count('report_id') : \App\Models\Claim::where('claimant_user_id', $user->id)->where('status', 'approved')->distinct()->count('report_id'),
         ]);
     });
 
@@ -374,3 +377,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('test-ai');
 
 });
+
+// Reuse application routes behind a separate staff session boundary.
+// Names on the original routes remain stable for existing links and integrations.
+foreach (array_values(Route::getRoutes()->getRoutes()) as $original) {
+    if (!in_array('web', $original->gatherMiddleware(), true)) continue;
+    if (in_array($original->getName(), ['register', 'register.post', 'dev.last-email', 'offline'], true)) continue;
+    $adminRoute = clone $original;
+    $adminRoute->prefix('admin');
+    $action = $adminRoute->getAction();
+    if ($original->getName()) $action['as'] = 'admin.' . $original->getName();
+    $adminRoute->setAction($action);
+    Route::getRoutes()->add($adminRoute);
+}

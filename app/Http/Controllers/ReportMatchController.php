@@ -10,6 +10,36 @@ use Illuminate\Validation\Rule;
 
 class ReportMatchController extends WebBaseController
 {
+    public function search(Request $request)
+    {
+        $this->requireAnyRole(['admin', 'osa']);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:190'],
+            'type' => ['nullable', Rule::in(['lost', 'found'])],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+        ]);
+        $query = ItemReport::with(['category', 'location'])->whereIn('status', ['pending', 'matched']);
+        foreach (['category_id', 'location_id'] as $field) {
+            if (!empty($filters[$field])) $query->where($field, $filters[$field]);
+        }
+        if (!empty($filters['type'])) $query->where('report_type', $filters['type']);
+        $term = trim($filters['q'] ?? '');
+        if ($term !== '') {
+            // Literal substring search; SQL wildcards in user text have no special meaning.
+            $term = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term);
+            $query->where(function ($q) use ($term) {
+                foreach (['item_name', 'item_description', 'brand_model', 'color', 'circumstances'] as $field) {
+                    $q->orWhereRaw("$field LIKE ? ESCAPE '!'", ['%' . $term . '%']);
+                }
+            });
+        }
+        $reports = $query->orderByDesc('id')->paginate(20)->withQueryString();
+        $categories = \App\Models\Category::orderBy('name')->get();
+        $locations = \App\Models\Location::orderBy('name')->get();
+        return view('matches.search', compact('reports', 'categories', 'locations', 'filters'));
+    }
+
     public function index(Request $request)
     {
         $this->requireAnyRole(['admin','osa']);
@@ -136,18 +166,23 @@ class ReportMatchController extends WebBaseController
             return back()->withErrors(['message' => 'Invalid report types for pairing']);
         }
 
-        $row = ReportMatch::where('lost_report_id', $lost->id)->where('found_report_id', $found->id)->first();
-        if ($row) {
-            $row->update(['score' => $data['score'], 'method' => $data['method']]);
-        } else {
-            $row = ReportMatch::create([
+        $row = DB::transaction(function () use ($lost, $found, $data) {
+            $reports = ItemReport::whereIn('id', [$lost->id, $found->id])->orderBy('id')->lockForUpdate()->get();
+            if ($reports->contains(fn ($report) => !in_array($report->status, ['pending', 'matched'], true))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'Only active reports can be paired.']);
+            }
+            $existing = ReportMatch::where('lost_report_id', $lost->id)->where('found_report_id', $found->id)->first();
+            if ($existing) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'This pair already exists. Its score and review status have been preserved.']);
+            }
+            return ReportMatch::create([
                 'lost_report_id' => $lost->id,
                 'found_report_id' => $found->id,
                 'score' => $data['score'],
                 'method' => $data['method'],
                 'status' => 'suggested',
             ]);
-        }
+        });
 
         $this->audit($request, 'matches.manual_create', 'report_matches', $row->id, $data);
 

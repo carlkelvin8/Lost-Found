@@ -72,7 +72,7 @@ class BatchManager {
         if (!confirm(`Delete ${this.selected.size} selected reports? This cannot be undone.`)) return;
 
         try {
-            const response = await fetch('/reports/bulk-delete', {
+            const response = await fetch(window.appUrl('/reports/bulk-delete'), {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ class BatchManager {
         if (!this.selected.size) return;
 
         try {
-            const response = await fetch('/reports/bulk-status', {
+            const response = await fetch(window.appUrl('/reports/bulk-status'), {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ class Leaderboard {
 
     async load() {
         try {
-            const response = await fetch('/leaderboard', {
+            const response = await fetch(window.appUrl('/leaderboard'), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             if (response.ok) {

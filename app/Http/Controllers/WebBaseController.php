@@ -74,18 +74,20 @@ class WebBaseController extends Controller
             'data_json' => $data ? json_encode($data) : null,
         ]);
 
-        // Send email notification (non-blocking)
-        try {
-            $user = User::find($userId);
-            if ($user && $user->email) {
-                Mail::to($user->email)->send(new NotificationMail($title, $body, $type));
+        // Only send committed notifications; retries must not duplicate email side effects.
+        \Illuminate\Support\Facades\DB::afterCommit(function () use ($userId, $title, $body, $type) {
+            try {
+                $user = User::find($userId);
+                if ($user && $user->email) {
+                    Mail::to($user->email)->send(new NotificationMail($title, $body, $type));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Email notification failed', [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage(),
+                ]);
             }
-        } catch (\Throwable $e) {
-            Log::warning('Email notification failed', [
-                'user_id' => $userId,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        });
     }
 
     protected function pushReportStatus(int $reportId, ?string $old, string $new, ?int $changedByUserId = null, ?string $note = null): void

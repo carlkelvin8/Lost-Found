@@ -25,6 +25,8 @@ class ItemReport extends Model
         'location_id',
         'circumstances',
         'contact_override',
+        'reporter_name',
+        'submission_id',
         'status',
         'locked_at',
         'locked_by_user_id',

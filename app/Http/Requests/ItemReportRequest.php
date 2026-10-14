@@ -14,6 +14,8 @@ class ItemReportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'submission_id' => [$this->routeIs('reports.store', 'admin.reports.store') ? 'required' : 'nullable', 'uuid'],
+            'reporter_name' => [\Illuminate\Validation\Rule::requiredIf(fn () => $this->report_type === 'found' && $this->filled('contact_override')), 'nullable', 'string', 'max:190'],
             'report_type' => [
                 'required',
                 'string',
@@ -100,6 +102,7 @@ class ItemReportRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'reporter_name.required' => 'Reporter name is required for a Found report with Contact Override.',
             'report_type.required' => 'Please select report type (Lost or Found).',
             'report_type.in' => 'Report type must be either Lost or Found.',
             'item_name.min' => 'Item name must be at least 2 characters.',
@@ -124,6 +127,7 @@ class ItemReportRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'reporter_name' => trim($this->reporter_name ?? ''),
             'item_name' => trim($this->item_name ?? ''),
             'item_description' => trim($this->item_description ?? ''),
             'brand_model' => trim($this->brand_model ?? ''),

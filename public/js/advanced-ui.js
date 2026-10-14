@@ -10,7 +10,7 @@ function generateBreadcrumbs() {
     const container = document.getElementById('breadcrumbs');
     if (!container) return;
 
-    let html = '<a href="/dashboard" class="breadcrumb-item"><i class="bi bi-house"></i></a>';
+    let html = '<a href="' + window.appUrl('/dashboard') + '" class="breadcrumb-item"><i class="bi bi-house"></i></a>';
     
     const routeNames = {
         'dashboard': 'Dashboard',

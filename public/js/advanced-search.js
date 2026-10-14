@@ -184,7 +184,7 @@ class AdvancedSearch {
         }
 
         // Navigate to search results
-        window.location.href = `/reports?${params.toString()}`;
+        window.location.href = `${window.appUrl('/reports')}?${params.toString()}`;
     }
 
     applySearch(query) {

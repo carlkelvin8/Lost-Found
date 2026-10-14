@@ -15,6 +15,7 @@ class Claim extends Model
         'report_id',
         'claimant_user_id',
         'proof_text',
+        'rejection_reason',
         'status',
         'reviewed_by_user_id',
         'reviewed_at'

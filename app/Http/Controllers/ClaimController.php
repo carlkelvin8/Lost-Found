@@ -237,7 +237,16 @@ class ClaimController extends WebBaseController
         }
 
         DB::transaction(function () use ($request, $claim) {
-            $report = ItemReport::findOrFail($claim->report_id);
+            // Lock the report first, following the claim submission lock order.
+            $report = ItemReport::whereKey($claim->report_id)->lockForUpdate()->firstOrFail();
+            $claim = Claim::whereKey($claim->id)->lockForUpdate()->firstOrFail();
+            if ($claim->status !== 'pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'Claim is not pending']);
+            }
+
+            if (in_array($report->status, ['returned', 'archived'], true) || Claim::where('report_id', $report->id)->where('status', 'approved')->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'This item has already been finalized.']);
+            }
 
             $claim->update([
                 'status' => 'approved',
@@ -284,31 +293,44 @@ class ClaimController extends WebBaseController
     {
         $this->requireAnyRole(['admin', 'osa']);
 
+        $data = $request->validate(['rejection_reason' => ['required', 'string', 'max:2000']]);
+        $reason = trim($data['rejection_reason']);
+        if ($reason === '') {
+            throw \Illuminate\Validation\ValidationException::withMessages(['rejection_reason' => 'Reason for Rejection is required.']);
+        }
+
         $claim = Claim::findOrFail($id);
 
         if ($claim->status !== 'pending') {
             return back()->withErrors(['message' => 'Claim is not pending']);
         }
 
-        DB::transaction(function () use ($request, $claim) {
-            $report = ItemReport::findOrFail($claim->report_id);
+        DB::transaction(function () use ($request, $claim, $reason) {
+            // Lock the report first, following the claim submission lock order.
+            $report = ItemReport::whereKey($claim->report_id)->lockForUpdate()->firstOrFail();
+            $claim = Claim::whereKey($claim->id)->lockForUpdate()->firstOrFail();
+            if ($claim->status !== 'pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'Claim is not pending']);
+            }
 
             $claim->update([
                 'status' => 'rejected',
+                'rejection_reason' => $reason,
                 'reviewed_by_user_id' => (int) $this->user()->id,
                 'reviewed_at' => now(),
             ]);
 
-            $hasActiveMatches = ReportMatch::where('lost_report_id', $report->id)
-                ->orWhere('found_report_id', $report->id)
+            $hasActiveMatches = ReportMatch::where(fn ($q) => $q->where('lost_report_id', $report->id)->orWhere('found_report_id', $report->id))
                 ->whereIn('status', ['confirmed', 'suggested'])
                 ->exists();
-            $newStatus = $hasActiveMatches ? 'matched' : 'pending';
+            $oldStatus = $report->status;
+            $newStatus = in_array($oldStatus, ['returned', 'archived'], true)
+                ? $oldStatus : ($hasActiveMatches ? 'matched' : 'pending');
             $report->update(['status' => $newStatus]);
 
             $this->pushReportStatus(
                 $report->id,
-                'claimed',
+                $oldStatus,
                 $newStatus,
                 (int) $this->user()->id,
                 'Claim rejected'
@@ -355,20 +377,26 @@ class ClaimController extends WebBaseController
         }
 
         DB::transaction(function () use ($request, $claim) {
-            $report = ItemReport::findOrFail($claim->report_id);
+            // Lock the report first, following the claim submission lock order.
+            $report = ItemReport::whereKey($claim->report_id)->lockForUpdate()->firstOrFail();
+            $claim = Claim::whereKey($claim->id)->lockForUpdate()->firstOrFail();
+            if ($claim->status !== 'pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['message' => 'Claim is not pending']);
+            }
 
             $claim->update(['status' => 'cancelled']);
 
-            $hasActiveMatches = ReportMatch::where('lost_report_id', $report->id)
-                ->orWhere('found_report_id', $report->id)
+            $hasActiveMatches = ReportMatch::where(fn ($q) => $q->where('lost_report_id', $report->id)->orWhere('found_report_id', $report->id))
                 ->whereIn('status', ['confirmed', 'suggested'])
                 ->exists();
-            $newStatus = $hasActiveMatches ? 'matched' : 'pending';
+            $oldStatus = $report->status;
+            $newStatus = in_array($oldStatus, ['returned', 'archived'], true)
+                ? $oldStatus : ($hasActiveMatches ? 'matched' : 'pending');
             $report->update(['status' => $newStatus]);
 
             $this->pushReportStatus(
                 $report->id,
-                'claimed',
+                $oldStatus,
                 $newStatus,
                 (int) $this->user()->id,
                 'Claim cancelled by claimant'

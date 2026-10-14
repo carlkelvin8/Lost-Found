@@ -45,6 +45,7 @@ class DashboardController extends WebBaseController
             $stats['report_status'] = Cache::remember('admin_report_status', 300, fn() =>
                 ItemReport::select('status', DB::raw('count(*) as c'))->groupBy('status')->pluck('c', 'status')->all()
             );
+            $stats['claimed_items'] = Claim::where('status', 'approved')->distinct()->count('report_id');
             $stats['report_type'] = Cache::remember('admin_report_type', 300, fn() =>
                 ItemReport::select('report_type', DB::raw('count(*) as c'))->groupBy('report_type')->pluck('c', 'report_type')->all()
             );

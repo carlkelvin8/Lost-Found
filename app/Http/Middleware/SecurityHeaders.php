@@ -11,6 +11,10 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        if ($request->user() || $request->is('login', 'admin/*', 'email/*', 'register', 'reset-password/*')) {
+            $response->headers->set('Cache-Control', 'no-store, private');
+        }
+
         // Content Security Policy
         $csp = [
             "default-src 'self'",

@@ -32,6 +32,7 @@
 
 <form id="editForm" method="POST" action="{{ route('reports.update',$report->id) }}" class="form-section">
 @csrf
+<input type="hidden" name="report_type" value="{{ $report->report_type }}">
 
 <div class="form-section-header">
   <div class="form-section-icon"><i class="bi bi-pencil-square"></i></div>
@@ -139,8 +140,23 @@
     <label class="form-label">Contact Override</label>
     <input class="form-control" name="contact_override" value="{{ old('contact_override',$report->contact_override) }}">
   </div>
+  <div class="col-12">
+    <label for="editReporterName" class="form-label">Reporter name (required for Found Contact Override)</label>
+    <input id="editReporterName" class="form-control" name="reporter_name" maxlength="190" value="{{ old('reporter_name', $report->reporter_name) }}">
+    @error('reporter_name') <div class="text-danger">{{ $message }}</div> @enderror
+  </div>
 </div>
-
+<script>
+  const editContact = document.querySelector('#editForm [name="contact_override"]');
+  const editReporterName = document.getElementById('editReporterName');
+  function validateEditReporter() {
+    editReporterName.required = @json($report->report_type === 'found') && editContact.value.trim() !== '';
+    editReporterName.setCustomValidity(editReporterName.required && !editReporterName.value.trim() ? 'Reporter name is required.' : '');
+  }
+  editContact.addEventListener('input', validateEditReporter);
+  editReporterName.addEventListener('input', validateEditReporter);
+  validateEditReporter();
+</script>
 <div class="form-actions">
   <button type="submit" class="btn btn-primary">
     <i class="bi bi-save"></i> Save Changes

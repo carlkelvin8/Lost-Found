@@ -19,8 +19,10 @@
   </a>
 </div>
 
-<form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">
+<form id="reportCreateForm" method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">
   @csrf
+  <input type="hidden" name="submission_id" value="{{ old('submission_id', (string) \Illuminate\Support\Str::uuid()) }}">
+  <div id="reportSubmitFeedback" class="alert alert-danger d-none" role="alert" tabindex="-1"></div>
 
   <!-- Section: Type & Context -->
   <div class="form-section">
@@ -104,6 +106,11 @@
         <label class="form-label">Contact override (optional)</label>
         <input class="form-control" name="contact_override" value="{{ old('contact_override') }}" placeholder="e.g., 09xx..., email, FB link" />
         <div class="form-text">If you want a separate contact detail for this report.</div>
+        <div id="reporterNameGroup" class="mt-2">
+          <label for="reporter_name" class="form-label">Reporter name <span id="reporterNameRequired" class="text-danger d-none">*</span></label>
+          <input id="reporter_name" class="form-control" name="reporter_name" maxlength="190" value="{{ old('reporter_name') }}">
+          <div class="form-text">Required for a Found report using Contact Override.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -257,6 +264,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/camera-capture.js') }}"></script>
+<script src="{{ asset('js/report-create.js') }}"></script>
 <script>
   const photoInput = document.getElementById('photoInput');
   const takePhotoBtn = document.getElementById('takePhotoBtn');
@@ -285,7 +293,9 @@
     renderPreview();
   });
 
+  let previewGeneration = 0;
   function renderPreview() {
+    const generation = ++previewGeneration;
     const container = document.getElementById('photoPreviewContainer');
     container.innerHTML = '';
 
@@ -294,12 +304,20 @@
     files.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        if (generation !== previewGeneration) return;
         const div = document.createElement('div');
         div.className = 'photo-preview-item fade-in';
         div.innerHTML = `
           <img src="${e.target.result}" alt="Photo ${index + 1}">
           <span class="photo-number">${index + 1}</span>
+          <button type="button" class="btn btn-sm btn-danger" aria-label="Remove photo ${index + 1}">Remove</button>
         `;
+        div.querySelector('button').addEventListener('click', () => {
+          const remaining = new DataTransfer();
+          Array.from(photoInput.files).filter((_, i) => i !== index).forEach(f => remaining.items.add(f));
+          photoInput.files = remaining.files;
+          photoInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
         container.appendChild(div);
       };
       reader.readAsDataURL(file);

@@ -1,9 +1,8 @@
-const CACHE_NAME = 'naap-lf-v7';
-const STATIC_CACHE = 'naap-lf-static-v7';
-const DYNAMIC_CACHE = 'naap-lf-dynamic-v7';
+const CACHE_NAME = 'naap-lf-v8';
+const STATIC_CACHE = 'naap-lf-static-v8';
+const DYNAMIC_CACHE = 'naap-lf-dynamic-v8';
 
 const STATIC_ASSETS = [
-    '/',
     '/css/layout.css',
     '/css/dashboard.css',
     '/css/claims.css',
@@ -16,7 +15,8 @@ const STATIC_ASSETS = [
     '/js/analytics.js',
     '/js/bookmarks-compare.js',
     '/js/account-security.js',
-    '/manifest.json'
+    '/manifest.json',
+    '/offline.html'
 ];
 
 const OFFLINE_URL = '/offline.html';
@@ -59,70 +59,14 @@ self.addEventListener('fetch', (event) => {
     // Skip external URLs (CDN, analytics, etc.)
     if (url.origin !== location.origin) return;
 
-    // For navigation requests - network first, offline fallback
-    if (request.mode === 'navigate') {
-        event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    const clone = response.clone();
-                    caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone));
-                    return response;
-                })
-                .catch(() => {
-                    return caches.match(OFFLINE_URL).then(r => r || new Response('Offline', { status: 503 }));
-                })
-        );
+    if (!STATIC_ASSETS.includes(url.pathname) && url.pathname !== OFFLINE_URL) {
+        if (request.mode === 'navigate') {
+            event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL).then(cached => cached || new Response('Offline', { status: 503 }))));
+        }
         return;
     }
+    event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 
-    // For static assets - cache first
-    if (STATIC_ASSETS.some(asset => url.pathname.endsWith(asset))) {
-        event.respondWith(
-            caches.match(request).then((cached) => {
-                return cached || fetch(request).then((response) => {
-                    const clone = response.clone();
-                    caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
-                    return response;
-                });
-            })
-        );
-        return;
-    }
-
-    // For images - cache first with network fallback
-    if (request.destination === 'image') {
-        event.respondWith(
-            caches.match(request).then((cached) => {
-                if (cached) return cached;
-                return fetch(request).then((response) => {
-                    const clone = response.clone();
-                    caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone));
-                    return response;
-                }).catch(() => {
-                    return new Response(
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="#f1f5f9" width="200" height="200"/><text fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle" x="100" y="105">Image Offline</text></svg>',
-                        { headers: { 'Content-Type': 'image/svg+xml' } }
-                    );
-                });
-            })
-        );
-        return;
-    }
-
-    // For everything else - network first, cache fallback
-    event.respondWith(
-        fetch(request)
-            .then((response) => {
-                const clone = response.clone();
-                caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone));
-                return response;
-            })
-            .catch(() => {
-                return caches.match(request).then((cached) => {
-                    return cached || new Response('Offline', { status: 503 });
-                });
-            })
-    );
 });
 
 // Background sync for offline form submissions
@@ -140,16 +84,24 @@ async function syncReports() {
 
     for (const report of reports) {
         try {
+            // Never replay another account's offline draft using the current cookies.
+            if (!report.ownerId || !['/reports', '/admin/reports'].includes(report.endpoint)) continue;
+            const statsUrl = report.endpoint === '/admin/reports' ? '/admin/dashboard/stats' : '/dashboard/stats';
+            const identityResponse = await fetch(statsUrl, { headers: { Accept: 'application/json' } });
+            if (!identityResponse.ok) continue;
+            const identity = await identityResponse.json();
+            if (String(identity.user_id) !== report.ownerId) continue;
             const formData = new FormData();
             Object.keys(report.data).forEach(key => {
                 formData.append(key, report.data[key]);
             });
 
-            const response = await fetch('/reports', {
+            const response = await fetch(report.endpoint, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': report.csrfToken,
+                    'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });

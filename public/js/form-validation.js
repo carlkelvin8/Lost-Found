@@ -308,6 +308,7 @@
 
         // Form submit validation
         form.addEventListener('submit', function(e) {
+            if (form.id === 'reportCreateForm') return;
             let isValid = true;
 
             inputs.forEach(input => {

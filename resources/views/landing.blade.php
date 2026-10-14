@@ -122,7 +122,7 @@
                     <div class="phone-card-body">
                         <div class="phone-card-icon"><i class="bi bi-phone"></i></div>
                         <div class="phone-card-info">
-                            <strong>iPhone 14 Pro</strong>
+                            <strong>Cellphone</strong>
                             <span><i class="bi bi-geo-alt-fill"></i> Library, 2nd Floor</span>
                             <span><i class="bi bi-clock"></i> 2 hours ago</span>
                         </div>
@@ -141,7 +141,7 @@
                     <div class="phone-card-body">
                         <div class="phone-card-icon"><i class="bi bi-phone"></i></div>
                         <div class="phone-card-info">
-                            <strong>iPhone 14 Pro</strong>
+                            <strong>Cellphone</strong>
                             <span><i class="bi bi-geo-alt-fill"></i> Cafeteria Counter</span>
                             <span><i class="bi bi-clock"></i> 1 hour ago</span>
                         </div>

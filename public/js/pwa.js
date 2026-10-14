@@ -140,7 +140,9 @@ class PWAManager {
             const db = await this.openDB();
             const tx = db.transaction('pending-reports', 'readwrite');
             await tx.objectStore('pending-reports').add({
-                data: reportData,
+                data: { ...reportData, submission_id: reportData.submission_id || crypto.randomUUID() },
+                ownerId: window.appIdentity,
+                endpoint: window.appUrl('/reports'),
                 csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
                 timestamp: new Date().toISOString()
             });
@@ -162,17 +164,19 @@ class PWAManager {
             request.onsuccess = async () => {
                 const reports = request.result;
                 for (const report of reports) {
+                    if (report.ownerId !== window.appIdentity || report.endpoint !== window.appUrl('/reports')) continue;
                     try {
                         const formData = new FormData();
                         Object.keys(report.data).forEach(key => {
                             formData.append(key, report.data[key]);
                         });
 
-                        const response = await fetch('/reports', {
+                        const response = await fetch(report.endpoint, {
                             method: 'POST',
                             body: formData,
                             headers: {
-                                'X-CSRF-TOKEN': report.csrfToken,
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                                'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
@@ -230,7 +234,7 @@ class PWAManager {
             });
             
             // Send subscription to server
-            await fetch('/push/subscribe', {
+            await fetch(window.appUrl('/push/subscribe'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

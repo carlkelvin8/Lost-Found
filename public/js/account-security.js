@@ -103,7 +103,7 @@ async function revokeSession(sessionId) {
     if (!confirm('Revoke this session? The user will be logged out.')) return;
     
     try {
-        const response = await fetch(`/sessions/${sessionId}/revoke`, {
+        const response = await fetch(window.appUrl(`/sessions/${sessionId}/revoke`), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,

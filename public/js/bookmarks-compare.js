@@ -103,7 +103,7 @@ function showBookmarksPanel() {
     }
 
     const content = items.length ? items.map(item => `
-        <a href="/reports/${item.id}" class="bookmark-item">
+        <a href="${window.appUrl(`/reports/${item.id}`)}" class="bookmark-item">
             <i class="bi bi-file-earmark-text" style="color:#0041C7"></i>
             <div style="flex:1;min-width:0">
                 <div style="font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.title || 'Report #' + item.id}</div>
@@ -198,8 +198,8 @@ class CompareManager {
         // Fetch both reports
         try {
             const [report1, report2] = await Promise.all([
-                fetch(`/reports/${this.selected[0]}`).then(r => r.text()),
-                fetch(`/reports/${this.selected[1]}`).then(r => r.text())
+                fetch(window.appUrl(`/reports/${this.selected[0]}`)).then(r => r.text()),
+                fetch(window.appUrl(`/reports/${this.selected[1]}`)).then(r => r.text())
             ]);
 
             let modal = document.getElementById('compare-modal');

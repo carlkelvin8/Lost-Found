@@ -80,12 +80,7 @@
             </button>
           </form>
 
-          <form method="POST" action="{{ route('claims.reject', $claim->id) }}" onsubmit="return confirm('Reject claim?');" class="cs-action-form">
-            @csrf
-            <button type="submit" class="cs-btn cs-btn-danger">
-              <i class="bi bi-x-circle"></i> Reject Claim
-            </button>
-          </form>
+          <button type="button" class="cs-btn cs-btn-danger" data-bs-toggle="modal" data-bs-target="#rejectClaimModal"><i class="bi bi-x-circle"></i> Reject Claim</button>
         @endif
 
         @if($claim->claimant_user_id === auth()->id() && $isPending)
@@ -106,6 +101,13 @@
       </div>
     </div>
 
+    @if($claim->status === 'rejected' && $claim->rejection_reason)
+    <div class="cs-card"><div class="cs-card-body">
+      <h3 class="cs-card-title">Reason for Rejection</h3>
+      <p style="white-space:pre-wrap">{{ $claim->rejection_reason }}</p>
+      <small>Reviewed {{ $claim->reviewed_at?->format('M d, Y H:i') }} @if($isStaff) by {{ $claim->reviewer?->profile?->full_name ?? $claim->reviewer?->email }} @endif</small>
+    </div></div>
+    @endif
     <!-- Report Summary -->
     <div class="cs-card">
       <div class="cs-card-header">
@@ -201,6 +203,20 @@
     @endif
   </div>
 </div>
+@if($isStaff && $isPending)
+          <div class="modal fade" id="rejectClaimModal" tabindex="-1" aria-labelledby="rejectClaimTitle" aria-hidden="true">
+            <div class="modal-dialog"><div class="modal-content">
+              <form method="POST" action="{{ route('claims.reject', $claim->id) }}" onsubmit="if (!this.rejection_reason.value.trim()) { this.rejection_reason.setCustomValidity('Reason for Rejection is required.'); this.rejection_reason.reportValidity(); return false; } this.querySelector('button[type=submit]').disabled = true;">
+                @csrf
+                <div class="modal-header"><h5 id="rejectClaimTitle">Reject Claim</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body"><label for="rejection_reason" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                  <textarea id="rejection_reason" name="rejection_reason" class="form-control" rows="4" required maxlength="2000" oninput="this.setCustomValidity('')">{{ old('rejection_reason') }}</textarea>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Confirm Rejection</button></div>
+              </form>
+            </div></div>
+          </div>
+@endif
 @endsection
 
 @push('styles')

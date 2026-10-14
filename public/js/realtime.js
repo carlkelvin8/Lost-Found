@@ -47,7 +47,7 @@ class RealTimeFeatures {
 
     async checkNotifications() {
         try {
-            const response = await fetch('/notifications/check', {
+            const response = await fetch(window.appUrl('/notifications/check'), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             
@@ -94,15 +94,20 @@ class RealTimeFeatures {
     }
 
     async refreshStats() {
-        if (window.location.pathname !== '/dashboard') return;
+        if (window.location.pathname !== window.appUrl('/dashboard')) return;
         
         try {
-            const response = await fetch('/dashboard/stats', {
+            const response = await fetch(window.appUrl('/dashboard/stats'), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             
             if (response.ok) {
                 const data = await response.json();
+                const claimedCount = document.getElementById('claimedItemsCount');
+                if (claimedCount && data.claimed_count !== undefined) {
+                    claimedCount.textContent = data.claimed_count;
+                    claimedCount.dataset.count = data.claimed_count;
+                }
                 this.updateDashboardStats(data);
             }
         } catch (err) {
@@ -135,13 +140,13 @@ class RealTimeFeatures {
 
         // Mark user as online on page load
         window.addEventListener('beforeunload', () => {
-            navigator.sendBeacon('/presence/leave');
+            navigator.sendBeacon(window.appUrl('/presence/leave'));
         });
     }
 
     async sendHeartbeat() {
         try {
-            await fetch('/presence/heartbeat', {
+            await fetch(window.appUrl('/presence/heartbeat'), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,

@@ -820,12 +820,19 @@
             Secured with SSL encryption
         </div>
 
+        @if(!request()->is('admin/*'))
+        <a class="btn-outline" href="{{ route('admin.login') }}">Admin / OSA sign in (independent session)</a>
+        @endif
+        @if(!request()->is('admin/*'))
         <div class="or-divider">Don't have an account?</div>
+        @endif
 
+        @if(!request()->is('admin/*'))
         <a href="{{ route('register') }}" class="btn-outline">
             <i class="bi bi-person-plus"></i>
             Create an account
         </a>
+        @endif
 
         <p class="form-foot">
             &copy; {{ date('Y') }} NAAP Lost &amp; Found &mdash; All rights reserved.

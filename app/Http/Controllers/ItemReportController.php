@@ -130,49 +130,67 @@ class ItemReportController extends WebBaseController
         $isStaff    = $this->hasAnyRole(['admin', 'osa']);
 
         $reportId = null;
+        $created = false;
+        $storedPhotos = [];
 
-        DB::transaction(function () use ($request, $data, $reporterId, $isStaff, &$reportId) {
-            $report = ItemReport::create([
-                'report_type'       => $data['report_type'],
-                'reporter_user_id'  => $reporterId,
-                // Owner is usually unknown; only staff should set it.
-                'owner_user_id'     => $isStaff ? ($data['owner_user_id'] ?? null) : null,
-                'category_id'       => $data['category_id'] ?? null,
-                'item_name'         => $data['item_name'] ?? null,
-                'item_description'  => $data['item_description'],
-                'brand_model'       => $data['brand_model'] ?? null,
-                'color'             => $data['color'] ?? null,
-                'incident_date'     => $data['incident_date'] ?? null,
-                'incident_time'     => $data['incident_time'] ?? null,
-                'location_id'       => $data['location_id'] ?? null,
-                'circumstances'     => $data['circumstances'] ?? null,
-                'contact_override'  => $data['contact_override'] ?? null,
-                'status'            => 'pending',
-                'locked_at'         => now(),
-                'locked_by_user_id' => null,
-                'matched_report_id' => null,
-                'matched_score'     => null,
-            ]);
-
-            $reportId = (int) $report->id;
-
-            if (!empty($data['photos'] ?? [])) {
-                foreach ($data['photos'] as $file) {
-                    $this->storeReportPhoto($report->id, $file);
+        try {
+            DB::transaction(function () use ($request, $data, $reporterId, $isStaff, &$reportId, &$created, &$storedPhotos) {
+                // Serialize submissions by this account, including concurrent retries.
+                User::whereKey($reporterId)->lockForUpdate()->firstOrFail();
+                $existing = ItemReport::where('reporter_user_id', $reporterId)
+                    ->where('submission_id', $data['submission_id'])->first();
+                if ($existing) {
+                    $reportId = (int) $existing->id;
+                    return;
                 }
-            }
+                $report = ItemReport::create([
+                    'submission_id'     => $data['submission_id'],
+                    'reporter_name'     => $data['reporter_name'] ?? null,
+                    'report_type'       => $data['report_type'],
+                    'reporter_user_id'  => $reporterId,
+                    // Owner is usually unknown; only staff should set it.
+                    'owner_user_id'     => $isStaff ? ($data['owner_user_id'] ?? null) : null,
+                    'category_id'       => $data['category_id'] ?? null,
+                    'item_name'         => $data['item_name'] ?? null,
+                    'item_description'  => $data['item_description'],
+                    'brand_model'       => $data['brand_model'] ?? null,
+                    'color'             => $data['color'] ?? null,
+                    'incident_date'     => $data['incident_date'] ?? null,
+                    'incident_time'     => $data['incident_time'] ?? null,
+                    'location_id'       => $data['location_id'] ?? null,
+                    'circumstances'     => $data['circumstances'] ?? null,
+                    'contact_override'  => $data['contact_override'] ?? null,
+                    'status'            => 'pending',
+                    'locked_at'         => now(),
+                    'locked_by_user_id' => null,
+                    'matched_report_id' => null,
+                    'matched_score'     => null,
+                ]);
 
-            $this->audit($request, 'reports.create', 'item_reports', $report->id, [
-                'type'   => $report->report_type,
-                'status' => $report->status,
-            ]);
+                $reportId = (int) $report->id;
+                $created = true;
 
-            // AUTO matching may update status to 'matched'
-            $this->runAutoMatch($request, $report->fresh());
-        });
+                if (!empty($data['photos'] ?? [])) {
+                    foreach ($data['photos'] as $file) {
+                        $storedPhotos[] = $this->storeReportPhoto($report->id, $file);
+                    }
+                }
+
+                $this->audit($request, 'reports.create', 'item_reports', $report->id, [
+                    'type'   => $report->report_type,
+                    'status' => $report->status,
+                ]);
+
+                // AUTO matching may update status to 'matched'
+                $this->runAutoMatch($request, $report->fresh());
+            });
+        } catch (\Throwable $exception) {
+            foreach ($storedPhotos as $url) $this->tryDeletePublicUrlFile($url);
+            throw $exception;
+        }
 
         // Trigger AI Analysis after transaction commits
-        if (!empty($data['photos'] ?? [])) {
+        if ($created && !empty($data['photos'] ?? [])) {
             try {
                 ProcessImageAnalysis::dispatch((int) $reportId);
             } catch (\Exception $e) {
@@ -180,6 +198,9 @@ class ItemReportController extends WebBaseController
             }
         }
 
+        if ($request->expectsJson()) {
+            return response()->json(['redirect' => route('reports.show', $reportId)], $created ? 201 : 200);
+        }
         return redirect()->route('reports.show', $reportId)->with('success', 'Created');
     }
 
@@ -316,6 +337,7 @@ class ItemReportController extends WebBaseController
                 'location_id'      => $data['location_id'] ?? null,
                 'circumstances'    => $data['circumstances'] ?? null,
                 'contact_override' => $data['contact_override'] ?? null,
+                'reporter_name' => $data['reporter_name'] ?? null,
             ];
 
             if ($isStaff) {
@@ -377,7 +399,7 @@ class ItemReportController extends WebBaseController
         DB::transaction(function () use ($request, $report, $data) {
             $this->storeReportPhoto($report->id, $data['photo']);
             $this->audit($request, 'reports.photo.upload', 'item_reports', $report->id);
-            
+
             // Trigger AI Analysis for new photo (async via queue)
             try {
                 ProcessImageAnalysis::dispatch((int) $report->id);
@@ -859,10 +881,11 @@ class ItemReportController extends WebBaseController
         return in_array($status, self::LOCKED_STATUSES, true);
     }
 
-    private function storeReportPhoto(int $reportId, $file): void
+    private function storeReportPhoto(int $reportId, $file): string
     {
         $filename = uniqid() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg';
         $destination = public_path('report_photos');
+        if (!is_dir($destination)) mkdir($destination, 0755, true);
         $filePath = $destination . '/' . $filename;
 
         // Compress image using GD
@@ -876,12 +899,18 @@ class ItemReportController extends WebBaseController
 
         $url = 'report_photos/' . $filename;
 
-        ReportPhoto::create([
-            'report_id'  => $reportId,
-            'photo_url'  => $url,
-            'caption'    => null,
-            'created_at' => now(),
-        ]);
+        try {
+            ReportPhoto::create([
+                'report_id'  => $reportId,
+                'photo_url'  => $url,
+                'caption'    => null,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            $this->tryDeletePublicUrlFile($url);
+            throw $exception;
+        }
+        return $url;
     }
 
     private function compressImage(string $source, string $destination, int $quality = 82): void

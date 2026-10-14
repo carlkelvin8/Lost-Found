@@ -40,7 +40,7 @@ function exportToCSV(data, filename) {
 
 // ==================== SHARE REPORT ====================
 function shareReport(reportId, reportTitle) {
-    const url = window.location.origin + '/reports/' + reportId;
+    const url = window.location.origin + window.appUrl('/reports/' + reportId);
     const text = `Check out this lost & found report: ${reportTitle}`;
 
     if (navigator.share) {
@@ -86,7 +86,7 @@ function shareViaEmail(subject, body) {
 
 // ==================== SHARE MODAL ====================
 function showShareModal(reportId, reportTitle) {
-    const url = window.location.origin + '/reports/' + reportId;
+    const url = window.location.origin + window.appUrl('/reports/' + reportId);
     const text = `Check out this lost & found report: ${reportTitle}`;
 
     let modal = document.getElementById('share-modal');

@@ -247,6 +247,12 @@
       </div>
     </div>
 
+    <div class="dash-analytics-card mb-3">
+      <div class="dash-analytics-icon dash-stat-violet"><i class="bi bi-check-circle"></i></div>
+      <div class="dash-analytics-info"><span class="dash-analytics-label">Claimed Items</span>
+        <span id="claimedItemsCount" class="dash-analytics-value" data-count="{{ $stats['claimed_items'] ?? 0 }}">{{ $stats['claimed_items'] ?? 0 }}</span>
+      </div>
+    </div>
     <!-- Charts Row -->
     <div class="dash-charts">
       <!-- Reports by Type -->
@@ -295,7 +301,7 @@
               $pctVal = $pct($count, $maxStatus);
             @endphp
             <div class="dash-bar-row">
-              <span class="dash-bar-label">{{ ucfirst($s) }}</span>
+              <span class="dash-bar-label">{{ $s === 'claimed' ? 'Awaiting review' : ucfirst($s) }}</span>
               <div class="dash-bar-track">
                 <div class="dash-bar-fill" style="width:{{ $pctVal }}%; background:{{ $colors[$s] }}"></div>
               </div>

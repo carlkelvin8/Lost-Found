@@ -216,8 +216,8 @@ function initAnimatedCounters() {
 // ==================== KEYBOARD SHORTCUTS ====================
 const shortcuts = [
     { keys: ['Ctrl', 'K'], label: 'Search', action: () => document.querySelector('.search-input')?.focus() },
-    { keys: ['Ctrl', 'N'], label: 'New Report', action: () => window.location.href = '/reports/create' },
-    { keys: ['Ctrl', 'D'], label: 'Dashboard', action: () => window.location.href = '/dashboard' },
+    { keys: ['Ctrl', 'N'], label: 'New Report', action: () => window.location.href = window.appUrl('/reports/create') },
+    { keys: ['Ctrl', 'D'], label: 'Dashboard', action: () => window.location.href = window.appUrl('/dashboard') },
     { keys: ['?'], label: 'Show Shortcuts', action: () => toggleShortcutsModal() },
 ];
 
