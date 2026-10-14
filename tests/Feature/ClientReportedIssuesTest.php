@@ -28,7 +28,7 @@ class ClientReportedIssuesTest extends TestCase
 
     private function reportData(string $type = 'found'): array
     {
-        return ['submission_id' => (string) Str::uuid(), 'report_type' => $type, 'item_description' => 'A distinctive wallet with a blue strap.'];
+        return ['reporter_name' => $type === 'found' ? 'Test Finder' : null, 'submission_id' => (string) Str::uuid(), 'report_type' => $type, 'item_description' => 'A distinctive wallet with a blue strap.'];
     }
 
     public function test_rejection_reason_is_persistent_visible_and_cannot_be_replaced(): void
@@ -105,7 +105,7 @@ class ClientReportedIssuesTest extends TestCase
         ItemReport::factory()->create(['reporter_user_id' => $report->reporter_user_id, 'submission_id' => $report->submission_id]);
     }
 
-    public function test_found_override_requires_name_but_lost_and_found_without_override_do_not(): void
+    public function test_every_found_report_requires_name_and_lost_reports_ignore_it(): void
     {
         Mail::fake();
         $this->actingAs(User::factory()->create());
@@ -118,11 +118,15 @@ class ClientReportedIssuesTest extends TestCase
         $this->assertSame('Juan Dela Cruz', ItemReport::sole()->reporter_name);
         $lost = $this->reportData('lost') + ['contact_override' => '09171234567'];
         $this->postJson(route('reports.store'), $lost)->assertCreated();
-        $this->postJson(route('reports.store'), $this->reportData())->assertCreated();
+        $missingName = $this->reportData();
+        unset($missingName['reporter_name']);
+        $this->postJson(route('reports.store'), $missingName)->assertUnprocessable()->assertJsonValidationErrors('reporter_name');
+        $this->assertNull(ItemReport::where('report_type', 'lost')->sole()->reporter_name);
     }
 
     public function test_validation_returns_json_without_creating_or_uploading_photos(): void
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
         Queue::fake();
         $photo = UploadedFile::fake()->image('camera.jpg', 200, 200);
         $payload = $this->reportData();
@@ -136,8 +140,7 @@ class ClientReportedIssuesTest extends TestCase
         $this->postJson(route('reports.store'), $payload)->assertOk()->assertJson(['redirect' => $first->json('redirect')]);
         $this->assertDatabaseCount('report_photos', 1);
         Queue::assertPushed(\App\Jobs\ProcessImageAnalysis::class, 1);
-        $path = public_path(\App\Models\ReportPhoto::sole()->photo_url);
-        if (is_file($path)) unlink($path); // Only the fixture upload created by this test.
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists(\App\Models\ReportPhoto::sole()->photo_url);
     }
 
     public function test_manual_search_filters_active_reports_and_does_not_mutate_matches(): void
@@ -168,9 +171,9 @@ class ClientReportedIssuesTest extends TestCase
         Claim::factory()->create(['status' => 'rejected']);
         Claim::factory()->create(['status' => 'cancelled']);
         $pending = Claim::factory()->create();
-        $this->actingAs($admin)->get(route('dashboard'))->assertOk()->assertViewHas('stats', fn ($stats) => $stats['claimed_items'] === 1);
+        $this->actingAs($admin)->get(route('dashboard'))->assertOk()->assertViewHas('stats', fn ($stats) => $stats['claimed_items'] === 1 && $stats['report_status']['claimed'] === 1);
         $this->post(route('claims.approve', $pending))->assertRedirect();
-        $this->get(route('dashboard'))->assertOk()->assertViewHas('stats', fn ($stats) => $stats['claimed_items'] === 2);
+        $this->get(route('dashboard'))->assertOk()->assertViewHas('stats', fn ($stats) => $stats['claimed_items'] === 2 && $stats['report_status']['claimed'] === 2);
         $this->get('/dashboard/stats')->assertOk()->assertJsonPath('claimed_count', 2);
     }
 

@@ -9,11 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const button = form.querySelector('button[type="submit"]');
     let submitting = false;
     function validateName() {
-        name.required = type.value === 'found' && contact.value.trim() !== '';
-        name.setCustomValidity(name.required && !name.value.trim() ? 'Reporter name is required for a Found report with Contact Override.' : '');
+        const surrender = document.getElementById('studentSurrenderCheckbox');
+        name.required = type.value === 'found' && !surrender?.checked;
+        name.disabled = !name.required;
+        document.getElementById('reporterNameGroup').classList.toggle('d-none', !name.required);
+        name.setCustomValidity(name.required && !name.value.trim() ? 'Name is required for a Found report.' : '');
         document.getElementById('reporterNameRequired').classList.toggle('d-none', !name.required);
     }
     [type, contact, name].forEach(input => input.addEventListener('input', validateName));
+    document.getElementById('studentSurrenderCheckbox')?.addEventListener('input', validateName);
     validateName();
     form.addEventListener('submit', async event => {
         event.preventDefault();

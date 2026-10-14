@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateFinder() {
         const found = type.value === 'found';
         const student = found && checkbox.checked;
+        const reporterName = form.elements.reporter_name;
+        if (reporterName) {
+            reporterName.required = found && !student;
+            reporterName.disabled = !found || student;
+            reporterName.setCustomValidity('');
+            reporterName.closest('#reporterNameGroup, #editReporterNameGroup')?.classList.toggle('d-none', !found || student);
+        }
         section.classList.toggle('d-none', !found);
         checkbox.disabled = defaultInput.disabled = !found;
         document.getElementById('studentFinderFields').classList.toggle('d-none', !student);

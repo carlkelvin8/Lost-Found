@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ItemReport;
 use App\Models\ReportPhoto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ReportPhotoController extends WebBaseController
 {
@@ -28,9 +27,7 @@ class ReportPhotoController extends WebBaseController
             'caption' => ['nullable','string','max:255'],
         ]);
 
-        $filename = uniqid() . '_' . $data['photo']->getClientOriginalName();
-        $data['photo']->move(public_path('report_photos'), $filename);
-        $url = 'report_photos/' . $filename;
+        $url = app(\App\Services\UploadedImageStorage::class)->store($data['photo'], 'report_photos');
 
         ReportPhoto::create([
             'report_id' => $report->id,
@@ -74,28 +71,6 @@ class ReportPhotoController extends WebBaseController
      */
     private function tryDeletePublicUrlFile(?string $url): void
     {
-        if (!$url) return;
-
-        $sanitized = str_replace('\\', '/', $url);
-        if (str_contains($sanitized, '..') || str_contains($sanitized, "\0")) {
-            return;
-        }
-
-        $filePath = public_path($sanitized);
-        $resolved = realpath($filePath);
-        $base = realpath(public_path());
-        if ($resolved && $base && str_starts_with($resolved, $base) && file_exists($resolved)) {
-            @unlink($resolved);
-            return;
-        }
-
-        if (str_starts_with($sanitized, 'storage/')) {
-            $relative = substr($sanitized, strlen('storage/'));
-            $oldPath = public_path($relative);
-            $oldResolved = realpath($oldPath);
-            if ($oldResolved && $base && str_starts_with($oldResolved, $base) && file_exists($oldResolved)) {
-                @unlink($oldResolved);
-            }
-        }
+        app(\App\Services\UploadedImageStorage::class)->delete($url);
     }
 }

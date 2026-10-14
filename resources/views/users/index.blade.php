@@ -81,8 +81,8 @@
           <tr>
             <td>
               @if(!empty($u->profile?->avatar_url))
-                @php $avatarSrc = str_starts_with($u->profile->avatar_url, 'storage/') ? substr($u->profile->avatar_url, 8) : $u->profile->avatar_url; @endphp
-                <img src="{{ asset($avatarSrc) }}" alt="Avatar"
+                @php $avatarSrc = uploaded_image_url($u->profile->avatar_url); @endphp
+                <img src="{{ $avatarSrc }}" alt="Avatar"
                      class="rounded-circle" style="width:36px;height:36px;object-fit:cover">
               @else
                 @php $initial = strtoupper(substr($u->email,0,1)); @endphp

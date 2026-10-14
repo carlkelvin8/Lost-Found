@@ -15,7 +15,6 @@ use App\Services\ClaimEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ItemReportController extends WebBaseController
@@ -364,6 +363,13 @@ class ItemReportController extends WebBaseController
                 $payload['owner_user_id'] = $data['owner_user_id'] ?? null;
                 if (isset($data['status'])) {
                     $payload['status'] = $data['status'];
+                }
+            }
+
+            if (!$isStaff && $report->report_type === 'found') {
+                $payload['finder_name'] = $data['reporter_name'];
+                if ($data['reporter_name'] !== $report->finderIdentity()['name']) {
+                    $payload['finder_student_id'] = null;
                 }
             }
 
@@ -903,21 +909,23 @@ class ItemReportController extends WebBaseController
 
     private function storeReportPhoto(int $reportId, $file): string
     {
-        $filename = uniqid() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg';
-        $destination = public_path('report_photos');
-        if (!is_dir($destination)) mkdir($destination, 0755, true);
-        $filePath = $destination . '/' . $filename;
-
-        // Compress image using GD
+        $images = app(\App\Services\UploadedImageStorage::class);
+        $temporary = tempnam(sys_get_temp_dir(), 'lf_image_');
+        if ($temporary === false) throw new \RuntimeException('Cannot prepare image upload.');
         try {
-            $this->compressImage($file->getPathname(), $filePath, 82);
-        } catch (\Exception $e) {
-            // Fallback: store original file
-            $filename = uniqid() . '_' . $file->getClientOriginalName();
-            $file->move($destination, $filename);
+            $compressed = false;
+            try {
+                $this->compressImage($file->getPathname(), $temporary, 82);
+                $compressed = true;
+            } catch (\Throwable $exception) {
+                // Preserve the original image when compression is unavailable.
+            }
+            $url = $compressed
+                ? $images->put('report_photos/' . (string) \Illuminate\Support\Str::uuid() . '.jpg', file_get_contents($temporary))
+                : $images->store($file, 'report_photos');
+        } finally {
+            if (is_file($temporary)) unlink($temporary);
         }
-
-        $url = 'report_photos/' . $filename;
 
         try {
             ReportPhoto::create([
@@ -975,30 +983,6 @@ class ItemReportController extends WebBaseController
 
     private function tryDeletePublicUrlFile(?string $url): void
     {
-        if (!$url) return;
-
-        $sanitized = str_replace('\\', '/', $url);
-        if (str_contains($sanitized, '..') || str_contains($sanitized, "\0")) {
-            return;
-        }
-
-        // Handle new format: "report_photos/xxx.jpg"
-        $filePath = public_path($sanitized);
-        $resolved = realpath($filePath);
-        $base = realpath(public_path());
-        if ($resolved && $base && str_starts_with($resolved, $base) && file_exists($resolved)) {
-            @unlink($resolved);
-            return;
-        }
-
-        // Handle old format: "storage/report_photos/xxx.jpg"
-        if (str_starts_with($sanitized, 'storage/')) {
-            $relative = substr($sanitized, strlen('storage/'));
-            $oldPath = public_path($relative);
-            $oldResolved = realpath($oldPath);
-            if ($oldResolved && $base && str_starts_with($oldResolved, $base) && file_exists($oldResolved)) {
-                @unlink($oldResolved);
-            }
-        }
+        app(\App\Services\UploadedImageStorage::class)->delete($url);
     }
 }

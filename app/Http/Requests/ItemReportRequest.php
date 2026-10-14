@@ -22,7 +22,7 @@ class ItemReportRequest extends FormRequest
             'surrendered_by_student' => ['sometimes', 'boolean', \Illuminate\Validation\Rule::prohibitedIf(!$staffFound && $this->boolean('surrendered_by_student'))],
             'finder_name' => [\Illuminate\Validation\Rule::requiredIf($studentSurrender), \Illuminate\Validation\Rule::prohibitedIf(!$studentSurrender), 'nullable', 'string', 'max:190'],
             'finder_student_id' => [\Illuminate\Validation\Rule::requiredIf($studentSurrender), \Illuminate\Validation\Rule::prohibitedIf(!$studentSurrender), 'nullable', 'string', 'max:60', 'regex:/^[\pL\pN][\pL\pN ._\/\-]*$/u'],
-            'reporter_name' => [\Illuminate\Validation\Rule::requiredIf(fn () => $this->report_type === 'found' && $this->filled('contact_override')), 'nullable', 'string', 'max:190'],
+            'reporter_name' => [\Illuminate\Validation\Rule::excludeIf(fn () => $this->report_type !== 'found'), \Illuminate\Validation\Rule::requiredIf(fn () => $this->report_type === 'found'), 'nullable', 'string', 'max:190'],
             'report_type' => [
                 'required',
                 'string',
@@ -115,7 +115,7 @@ class ItemReportRequest extends FormRequest
             'surrendered_by_student.prohibited' => 'Only Admin/OSA can record student surrender details on Found reports.',
             'finder_name.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
             'finder_student_id.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
-            'reporter_name.required' => 'Reporter name is required for a Found report with Contact Override.',
+            'reporter_name.required' => "Finder's name is required for a Found report.",
             'report_type.required' => 'Please select report type (Lost or Found).',
             'report_type.in' => 'Report type must be either Lost or Found.',
             'item_name.min' => 'Item name must be at least 2 characters.',
@@ -148,6 +148,11 @@ class ItemReportRequest extends FormRequest
             if ($this->has($field) && is_string($this->input($field))) {
                 $this->merge([$field => preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $this->input($field))]);
             }
+        }
+        // Student surrender already collects the finder's name in its own field.
+        if ($this->report_type === 'found' && $this->boolean('surrendered_by_student')
+            && $this->user()?->hasAnyRole(['admin', 'osa'])) {
+            $this->merge(['reporter_name' => $this->input('finder_name')]);
         }
         $this->merge([
             'reporter_name' => trim($this->reporter_name ?? ''),

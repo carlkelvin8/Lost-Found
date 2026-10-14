@@ -44,7 +44,7 @@ class FinderDisplayRegressionTest extends TestCase
         Mail::fake();
         $student = $this->student();
         $this->actingAs($student)->postJson(route('reports.store'), [
-            'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'item_description' => 'A red bag with a distinctive strap.',
+            'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'reporter_name' => 'Actual Student Finder', 'item_description' => 'A red bag with a distinctive strap.',
         ])->assertCreated();
         $report = ItemReport::sole();
         $this->assertSame('Actual Student Finder', $report->finder_name);
@@ -87,18 +87,18 @@ class FinderDisplayRegressionTest extends TestCase
     {
         Mail::fake();
         $this->actingAs($this->student())->postJson(route('reports.store'), [
-            'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'item_description' => 'A blue bag found near the office.',
+            'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'reporter_name' => 'Actual Student Finder', 'item_description' => 'A blue bag found near the office.',
             'contact_override' => '09171234567', 'reporter_name' => 'Another Finder',
         ])->assertCreated();
         $this->assertSame('Another Finder', ItemReport::sole()->finder_name);
         $this->assertNull(ItemReport::sole()->finder_student_id);
     }
 
-    public function test_finder_information_remains_hidden_from_regular_users(): void
+    public function test_regular_users_see_reporter_name_without_private_student_id(): void
     {
         $student = $this->student();
         $report = ItemReport::factory()->found()->create(['reporter_user_id' => $student->id, 'finder_name' => 'Private Finder', 'finder_student_id' => 'PRIVATE-ID']);
-        $this->actingAs($student)->get(route('reports.show', $report))->assertOk()->assertDontSee('Finder\'s Name')->assertDontSee('Private Finder')->assertDontSee('PRIVATE-ID');
+        $this->actingAs($student)->get(route('reports.show', $report))->assertOk()->assertDontSee('Finder\'s Name')->assertSee('Reporter Name')->assertSee('Private Finder')->assertDontSee('PRIVATE-ID');
     }
 
     public function test_dashboard_restores_original_claimed_label_and_keeps_successful_claim_metric(): void

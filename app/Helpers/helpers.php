@@ -1,5 +1,11 @@
 <?php
 
+/** Resolve image object keys using the configured upload disk. */
+function uploaded_image_url(?string $path): string
+{
+    return app(\App\Services\UploadedImageStorage::class)->url($path);
+}
+
 if (!function_exists('createStatusTimeline')) {
     function createStatusTimeline(string $currentStatus): string
     {

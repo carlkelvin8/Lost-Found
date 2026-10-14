@@ -61,8 +61,8 @@
         <button class="user-menu-trigger" type="button" id="userMenuTrigger">
           <div class="user-avatar">
             @if($user->profile && $user->profile->avatar_url)
-              @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-              <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile?->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.user-avatar-fallback');if(fb)fb.style.display='flex';">
+              @php $avatarSrc = uploaded_image_url($user->profile->avatar_url); @endphp
+              <img src="{{ $avatarSrc }}" alt="{{ $user->profile?->full_name ?? 'User' }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.user-avatar-fallback');if(fb)fb.style.display='flex';">
               <span class="user-avatar-fallback" style="display:none">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
             @else
               <span class="user-avatar-fallback">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
@@ -80,8 +80,8 @@
           <div class="dropdown-header">
             <div class="dropdown-avatar">
               @if($user->profile && $user->profile->avatar_url)
-                @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-                <img src="{{ asset($avatarSrc) }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.dropdown-avatar-fallback');if(fb)fb.style.display='flex';">
+                @php $avatarSrc = uploaded_image_url($user->profile->avatar_url); @endphp
+                <img src="{{ $avatarSrc }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.dropdown-avatar-fallback');if(fb)fb.style.display='flex';">
                 <span class="dropdown-avatar-fallback" style="display:none">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>
               @else
                 <span class="dropdown-avatar-fallback">{{ strtoupper(substr($user->email ?? 'U', 0, 1)) }}</span>

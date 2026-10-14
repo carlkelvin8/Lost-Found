@@ -162,7 +162,7 @@ class CalendarController extends WebBaseController
             $photoUrl = null;
             $firstPhoto = $r->photos->first();
             if ($firstPhoto && $firstPhoto->photo_url) {
-                $photoUrl = asset($firstPhoto->photo_url);
+                $photoUrl = uploaded_image_url($firstPhoto->photo_url);
             }
 
             $payload = [

@@ -675,8 +675,8 @@
             <label for="avatarInput" class="profile-avatar" title="Click to change photo">
               <div id="currentAvatarDisplay">
                 @if(!empty($profile?->avatar_url))
-                  @php $avatarSrc = str_starts_with($profile->avatar_url, 'storage/') ? substr($profile->avatar_url, 8) : $profile->avatar_url; @endphp
-                  <img src="{{ asset($avatarSrc) }}" alt="Avatar" onerror="this.parentElement.innerHTML='<div class=\'profile-avatar-initial\'>{{ $initial }}</div>'">
+                  @php $avatarSrc = uploaded_image_url($profile->avatar_url); @endphp
+                  <img src="{{ $avatarSrc }}" alt="Avatar" onerror="this.parentElement.innerHTML='<div class=\'profile-avatar-initial\'>{{ $initial }}</div>'">
                 @else
                   <div class="profile-avatar-initial">{{ $initial }}</div>
                 @endif

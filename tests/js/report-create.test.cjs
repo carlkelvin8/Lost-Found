@@ -9,14 +9,14 @@ function input(value = '') {
 }
 
 function setup(fetch) {
-    const elements = { report_type: input('found'), contact_override: input(), reporter_name: input(), submission_id: input('stable-submission-id'), photos: { files: [new File(['camera-bytes'], 'camera.jpg', { type: 'image/jpeg' })] } };
+    const elements = { report_type: input('found'), contact_override: input(), reporter_name: input('Test Finder'), submission_id: input('stable-submission-id'), photos: { files: [new File(['camera-bytes'], 'camera.jpg', { type: 'image/jpeg' })] } };
     const button = { disabled: false, innerHTML: 'Create Report', textContent: '' };
     const classList = { toggle() {}, add() {}, remove() {} };
     const feedback = { classList, textContent: '', focus() {} };
     const form = { elements, action: '/reports', valid: true, querySelector() { return button; }, reportValidity() { return this.valid && !elements.reporter_name.validity; }, addEventListener(type, handler) { this[type] = handler; } };
     const redirects = [];
     const bodies = [];
-    const document = { addEventListener(type, handler) { handler(); }, getElementById(id) { return id === 'reportCreateForm' ? form : id === 'reportSubmitFeedback' ? feedback : { classList }; } };
+    const document = { addEventListener(type, handler) { handler(); }, getElementById(id) { if (id === 'studentSurrenderCheckbox') return null; return id === 'reportCreateForm' ? form : id === 'reportSubmitFeedback' ? feedback : { classList }; } };
     class FakeFormData {
         constructor(source) {
             this.file = source.elements.photos.files[0];
@@ -67,10 +67,10 @@ test('ordinary client validation keeps photos and sends no request', async () =>
     assert.equal(app.elements.photos.files[0], photo);
 });
 
-test('Found Contact Override rejects whitespace reporter names, Lost permits them', async () => {
+test('Found requires a name without Contact Override, Lost disables it', async () => {
     let calls = 0;
     const app = setup(async () => { calls++; return { ok: true, json: async () => ({ redirect: '/reports/1' }) }; });
-    app.elements.contact_override.value = '09171234567';
+    app.elements.contact_override.value = '';
     app.elements.reporter_name.value = '   ';
     await app.submit();
     assert.equal(calls, 0);
@@ -79,6 +79,7 @@ test('Found Contact Override rejects whitespace reporter names, Lost permits the
     await app.submit();
     assert.equal(calls, 1);
     assert.equal(app.elements.reporter_name.required, false);
+    assert.equal(app.elements.reporter_name.disabled, true);
 });
 
 test('network errors keep the camera file and allow retry', async () => {

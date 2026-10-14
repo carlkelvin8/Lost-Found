@@ -6,7 +6,7 @@ use App\Models\Department;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use App\Services\UploadedImageStorage;
 
 class UserProfileController extends WebBaseController
 {
@@ -50,30 +50,10 @@ class UserProfileController extends WebBaseController
             ];
 
             if (!empty($data['avatar'] ?? null)) {
-                // Delete old avatar from public/avatars/
-                if ($u->profile && !empty($u->profile->avatar_url)) {
-                    $old = $u->profile->avatar_url;
-                    $sanitized = str_replace('\\', '/', $old);
-                    if (str_starts_with($sanitized, 'avatars/') && !str_contains($sanitized, '..')) {
-                        $oldPath = public_path($sanitized);
-                        $resolved = realpath($oldPath);
-                        $base = realpath(public_path());
-                        if ($resolved && $base && str_starts_with($resolved, $base) && File::exists($resolved)) {
-                            File::delete($resolved);
-                        }
-                    }
-                }
-
-                // Store new avatar directly in public/avatars/
-                $dir = public_path('avatars');
-                if (!File::isDirectory($dir)) {
-                    File::makeDirectory($dir, 0755, true);
-                }
-
-                $filename = 'avatar_' . $u->id . '_' . time() . '.' . $data['avatar']->getClientOriginalExtension();
-                $data['avatar']->move($dir, $filename);
-
-                $payload['avatar_url'] = 'avatars/' . $filename;
+                $images = app(UploadedImageStorage::class);
+                $oldAvatar = $u->profile?->avatar_url;
+                $payload['avatar_url'] = $images->store($data['avatar'], 'avatars');
+                DB::afterCommit(fn () => $images->delete($oldAvatar));
             }
 
             if ($u->profile) {

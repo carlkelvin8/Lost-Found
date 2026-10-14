@@ -209,18 +209,10 @@ class ReportExportController extends WebBaseController
         $imageBase64 = null;
         $firstPhoto = $report->photos->first();
         if ($firstPhoto && $firstPhoto->photo_url) {
-            $path = public_path($firstPhoto->photo_url);
-            // Handle storage/ prefix
-            if (!file_exists($path) && str_starts_with($firstPhoto->photo_url, 'storage/')) {
-                $alt = public_path(substr($firstPhoto->photo_url, 8));
-                if (file_exists($alt)) $path = $alt;
-            }
-            if (file_exists($path)) {
-                $mime = mime_content_type($path) ?: 'image/jpeg';
-                // Limit size: only embed if < 1MB to avoid PDF bloat
-                if (filesize($path) < 1024 * 1024) {
-                    $imageBase64 = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
-                }
+            $imageData = app(\App\Services\UploadedImageStorage::class)->read($firstPhoto->photo_url);
+            if ($imageData !== null && strlen($imageData) < 1024 * 1024) {
+                $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($imageData) ?: 'image/jpeg';
+                $imageBase64 = 'data:'.$mime.';base64,'.base64_encode($imageData);
             }
         }
 

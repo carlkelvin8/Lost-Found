@@ -140,23 +140,14 @@
     <label class="form-label">Contact Override</label>
     <input class="form-control" name="contact_override" value="{{ old('contact_override',$report->contact_override) }}">
   </div>
-  <div class="col-12">
-    <label for="editReporterName" class="form-label">Reporter name (required for Found Contact Override)</label>
-    <input id="editReporterName" class="form-control" name="reporter_name" maxlength="190" value="{{ old('reporter_name', $report->reporter_name) }}">
+  @if($report->report_type === 'found')
+  <div class="col-12" id="editReporterNameGroup">
+    <label for="editReporterName" class="form-label">{{ $isStaff ? "Finder's name" : 'Reporter name' }} <span class="text-danger">*</span></label>
+    <input id="editReporterName" class="form-control" name="reporter_name" maxlength="190" required value="{{ old('reporter_name', $report->reporter_name ?: $report->finderIdentity()['name']) }}">
     @error('reporter_name') <div class="text-danger">{{ $message }}</div> @enderror
   </div>
+  @endif
 </div>
-<script>
-  const editContact = document.querySelector('#editForm [name="contact_override"]');
-  const editReporterName = document.getElementById('editReporterName');
-  function validateEditReporter() {
-    editReporterName.required = @json($report->report_type === 'found') && editContact.value.trim() !== '';
-    editReporterName.setCustomValidity(editReporterName.required && !editReporterName.value.trim() ? 'Reporter name is required.' : '');
-  }
-  editContact.addEventListener('input', validateEditReporter);
-  editReporterName.addEventListener('input', validateEditReporter);
-  validateEditReporter();
-</script>
 @include('reports.partials.finder-details')
 <div class="form-actions">
   <button type="submit" class="btn btn-primary">
@@ -179,7 +170,7 @@
     <div class="row g-3 mb-3">
       @foreach($report->photos as $p)
         <div class="col-6 col-md-3">
-          <img src="{{ asset($p->photo_url) }}" class="img-fluid rounded" alt="Report photo" style="border:1px solid var(--border-default);">
+          <img src="{{ uploaded_image_url($p->photo_url) }}" class="img-fluid rounded" alt="Report photo" style="border:1px solid var(--border-default);">
         </div>
       @endforeach
     </div>

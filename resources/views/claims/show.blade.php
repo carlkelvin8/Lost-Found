@@ -140,8 +140,8 @@
         <div class="cs-claimant">
           <div class="cs-claimant-avatar">
             @if($claim->claimant->profile && $claim->claimant->profile->avatar_url)
-              @php $avatarSrc = str_starts_with($claim->claimant->profile->avatar_url, 'storage/') ? substr($claim->claimant->profile->avatar_url, 8) : $claim->claimant->profile->avatar_url; @endphp
-              <img src="{{ asset($avatarSrc) }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+              @php $avatarSrc = uploaded_image_url($claim->claimant->profile->avatar_url); @endphp
+              <img src="{{ $avatarSrc }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
               <span style="display:none">{{ strtoupper(substr($claim->claimant->email, 0, 1)) }}</span>
             @else
               {{ strtoupper(substr($claim->claimant->email, 0, 1)) }}

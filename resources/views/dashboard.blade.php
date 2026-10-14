@@ -14,8 +14,8 @@
   <div class="dash-welcome">
     <div class="dash-avatar">
       @if($user->profile && $user->profile->avatar_url)
-        @php $avatarSrc = str_starts_with($user->profile->avatar_url, 'storage/') ? substr($user->profile->avatar_url, 8) : $user->profile->avatar_url; @endphp
-        <img src="{{ asset($avatarSrc) }}" alt="{{ $user->profile->full_name ?? 'User' }}" style="width:56px;height:56px;object-fit:cover;border-radius:16px;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.dash-avatar-initial');if(fb)fb.style.display='flex';">
+        @php $avatarSrc = uploaded_image_url($user->profile->avatar_url); @endphp
+        <img src="{{ $avatarSrc }}" alt="{{ $user->profile->full_name ?? 'User' }}" style="width:56px;height:56px;object-fit:cover;border-radius:16px;" onerror="this.onerror=null;this.style.display='none';var fb=this.parentElement.querySelector('.dash-avatar-initial');if(fb)fb.style.display='flex';">
         <span class="dash-avatar-initial" style="display:none">{{ $initial }}</span>
       @else
         <span class="dash-avatar-initial">{{ $initial }}</span>
@@ -301,7 +301,7 @@
               $pctVal = $pct($count, $maxStatus);
             @endphp
             <div class="dash-bar-row">
-              <span class="dash-bar-label" @if($s === 'claimed') title="Claim submitted and awaiting approval" @endif>{{ ucfirst($s) }}</span>
+              <span class="dash-bar-label">{{ ucfirst($s) }}</span>
               <div class="dash-bar-track">
                 <div class="dash-bar-fill" style="width:{{ $pctVal }}%; background:{{ $colors[$s] }}"></div>
               </div>

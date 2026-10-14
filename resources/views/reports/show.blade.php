@@ -97,10 +97,6 @@ Report #{{ $report->id }} · NAAP Lost & Found
       <div class="detail-value">{{ $report->circumstances }}</div>
     @endif
 
-    @if($isStaff && $report->reporter_name && $report->report_type !== 'found')
-      <div class="detail-label mt-3">Reporter Name</div>
-      <div class="detail-value">{{ $report->reporter_name }}</div>
-    @endif
     @if($isStaff && $report->report_type === 'found')
       @php $finder = $report->finderIdentity(); @endphp
       <div class="detail-label mt-3">Finder's Name</div>
@@ -114,6 +110,10 @@ Report #{{ $report->id }} · NAAP Lost & Found
       @if(!$finder['name'])
         <div class="form-text">The finder's name was not recorded for this report.</div>
       @endif
+    @endif
+    @if(!$isStaff && $report->report_type === 'found')
+      <div class="detail-label mt-3">Reporter Name</div>
+      <div class="detail-value">{{ $report->finderIdentity()['name'] ?? 'Not recorded' }}</div>
     @endif
     @if($report->contact_override)
       <div class="detail-label mt-3">Contact</div>
@@ -134,9 +134,9 @@ Report #{{ $report->id }} · NAAP Lost & Found
     @if($report->photos->count())
       <div class="detail-photo-grid">
         @foreach($report->photos as $p)
-          <img src="{{ asset($p->photo_url) }}" alt="Report photo" loading="lazy" 
+          <img src="{{ uploaded_image_url($p->photo_url) }}" alt="Report photo" loading="lazy"
                style="cursor:pointer" 
-               onclick="lightbox.open({{ $report->photos->map(fn($photo) => asset($photo->photo_url))->toJson() }}, {{ $loop->index }})">
+               onclick="lightbox.open({{ $report->photos->map(fn($photo) => uploaded_image_url($photo->photo_url))->toJson() }}, {{ $loop->index }})">
         @endforeach
       </div>
     @else

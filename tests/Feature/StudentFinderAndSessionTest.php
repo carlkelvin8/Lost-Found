@@ -74,20 +74,20 @@ class StudentFinderAndSessionTest extends TestCase
         Mail::fake();
         $this->actingAs($this->admin());
         foreach (['found', 'lost'] as $type) {
-            $data = $this->payload(['report_type' => $type, 'surrendered_by_student' => false]);
+            $data = $this->payload(['report_type' => $type, 'surrendered_by_student' => false, 'reporter_name' => 'Test Finder']);
             unset($data['finder_name'], $data['finder_student_id']);
             $this->postJson(route('reports.store'), $data)->assertCreated();
         }
         $this->assertDatabaseCount('item_reports', 2);
     }
 
-    public function test_matched_claimant_cannot_see_finder_name_or_student_id(): void
+    public function test_matched_claimant_sees_reporter_name_but_not_student_id(): void
     {
         $claimant = User::factory()->create();
         $lost = ItemReport::factory()->lost()->create(['reporter_user_id' => $claimant->id]);
         $found = ItemReport::factory()->found()->create(['surrendered_by_student' => true, 'finder_name' => 'Private Finder', 'finder_student_id' => 'PRIVATE-001']);
         ReportMatch::factory()->create(['lost_report_id' => $lost->id, 'found_report_id' => $found->id]);
-        $this->actingAs($claimant)->get(route('reports.show', $found))->assertOk()->assertDontSee('Private Finder')->assertDontSee('PRIVATE-001');
+        $this->actingAs($claimant)->get(route('reports.show', $found))->assertOk()->assertSee('Reporter Name')->assertSee('Private Finder')->assertDontSee('PRIVATE-001');
     }
 
     public function test_legacy_admin_edit_preserves_real_type_and_validates_finder_details(): void

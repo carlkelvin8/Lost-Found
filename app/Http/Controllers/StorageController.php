@@ -21,29 +21,26 @@ class StorageController extends WebBaseController
             abort(403);
         }
 
-        $fullPath = 'public/' . $path;
+        $disk = Storage::disk(app(\App\Services\UploadedImageStorage::class)->diskName());
+        if (!$disk->exists($path)) {
+            abort(404);
+        }
 
-        $resolved = realpath(storage_path('app/' . $fullPath));
-        $base = realpath(storage_path('app/public'));
-        if (!$resolved || !str_starts_with($resolved, $base)) {
+        if (config('filesystems.disks.' . app(\App\Services\UploadedImageStorage::class)->diskName() . '.driver') === 's3') {
+            return redirect()->away($disk->temporaryUrl($path, now()->addHour()));
+        }
+
+        $file = realpath($disk->path($path));
+        $base = realpath($disk->path(''));
+        if (!$file || !$base || !str_starts_with($file, $base . DIRECTORY_SEPARATOR) || !is_file($file)) {
             abort(403);
-        }
-
-        if (!Storage::exists($fullPath)) {
-            abort(404);
-        }
-
-        $file = Storage::path($fullPath);
-
-        if (!file_exists($file)) {
-            abort(404);
         }
 
         $mimeType = mime_content_type($file) ?: 'application/octet-stream';
 
         return response()->file($file, [
             'Content-Type' => $mimeType,
-            'Cache-Control' => 'public, max-age=3600',
+            'Cache-Control' => 'private, max-age=3600',
         ]);
     }
 }

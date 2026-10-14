@@ -140,8 +140,8 @@
             <td>
               <div class="d-flex align-items-center gap-2">
                 @if($claim->claimant?->profile?->avatar_url)
-                  @php $av = str_starts_with($claim->claimant->profile->avatar_url,'storage/') ? substr($claim->claimant->profile->avatar_url,8) : $claim->claimant->profile->avatar_url; @endphp
-                  <img src="{{ asset($av) }}" class="sc-avatar" alt="">
+                  @php $av = uploaded_image_url($claim->claimant->profile->avatar_url); @endphp
+                  <img src="{{ $av }}" class="sc-avatar" alt="">
                 @else
                   <span class="sc-initial">{{ strtoupper(substr($claimantName,0,1)) }}</span>
                 @endif

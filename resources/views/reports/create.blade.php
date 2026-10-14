@@ -106,10 +106,10 @@
         <label class="form-label">Contact override (optional)</label>
         <input class="form-control" name="contact_override" value="{{ old('contact_override') }}" placeholder="e.g., 09xx..., email, FB link" />
         <div class="form-text">If you want a separate contact detail for this report.</div>
-        <div id="reporterNameGroup" class="mt-2">
-          <label for="reporter_name" class="form-label">Reporter name <span id="reporterNameRequired" class="text-danger d-none">*</span></label>
-          <input id="reporter_name" class="form-control" name="reporter_name" maxlength="190" value="{{ old('reporter_name') }}">
-          <div class="form-text">Required for a Found report using Contact Override.</div>
+        <div id="reporterNameGroup" class="mt-2 {{ $rt === 'found' ? '' : 'd-none' }}">
+          <label for="reporter_name" class="form-label">{{ $isStaff ? "Finder's name" : 'Reporter name' }} <span id="reporterNameRequired" class="text-danger d-none">*</span></label>
+          <input id="reporter_name" class="form-control" name="reporter_name" maxlength="190" value="{{ old('reporter_name') }}" @required($rt === 'found') @disabled($rt !== 'found')>
+          <div class="form-text">Required for every Found report.</div>
         </div>
       </div>
     </div>
