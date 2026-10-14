@@ -13,8 +13,15 @@ class ItemReportRequest extends FormRequest
 
     public function rules(): array
     {
+        $staffFound = $this->user()?->hasAnyRole(['admin', 'osa'])
+            && (int) ($this->user()?->is_active ?? 1) === 1
+            && $this->report_type === 'found';
+        $studentSurrender = $staffFound && $this->boolean('surrendered_by_student');
         return [
-            'submission_id' => [$this->routeIs('reports.store', 'admin.reports.store') ? 'required' : 'nullable', 'uuid'],
+            'submission_id' => [$this->routeIs('reports.store', 'admin.reports.store', 'session.reports.store') ? 'required' : 'nullable', 'uuid'],
+            'surrendered_by_student' => ['sometimes', 'boolean', \Illuminate\Validation\Rule::prohibitedIf(!$staffFound && $this->boolean('surrendered_by_student'))],
+            'finder_name' => [\Illuminate\Validation\Rule::requiredIf($studentSurrender), \Illuminate\Validation\Rule::prohibitedIf(!$studentSurrender), 'nullable', 'string', 'max:190'],
+            'finder_student_id' => [\Illuminate\Validation\Rule::requiredIf($studentSurrender), \Illuminate\Validation\Rule::prohibitedIf(!$studentSurrender), 'nullable', 'string', 'max:60', 'regex:/^[\pL\pN][\pL\pN ._\/\-]*$/u'],
             'reporter_name' => [\Illuminate\Validation\Rule::requiredIf(fn () => $this->report_type === 'found' && $this->filled('contact_override')), 'nullable', 'string', 'max:190'],
             'report_type' => [
                 'required',
@@ -102,6 +109,12 @@ class ItemReportRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'finder_name.required' => 'Finder name is required for an item surrendered by a student.',
+            'finder_student_id.required' => 'Finder student ID is required for an item surrendered by a student.',
+            'finder_student_id.regex' => 'Enter a valid student ID using letters, numbers, spaces, dots, slashes, underscores or hyphens.',
+            'surrendered_by_student.prohibited' => 'Only Admin/OSA can record student surrender details on Found reports.',
+            'finder_name.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
+            'finder_student_id.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
             'reporter_name.required' => 'Reporter name is required for a Found report with Contact Override.',
             'report_type.required' => 'Please select report type (Lost or Found).',
             'report_type.in' => 'Report type must be either Lost or Found.',
@@ -126,6 +139,16 @@ class ItemReportRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->routeIs('reports.update', 'admin.reports.update', 'session.reports.update')) {
+            // Validate the stored type; a forged Lost type cannot bypass Found requirements.
+            $report = \App\Models\ItemReport::find($this->route('id'));
+            if ($report) $this->merge(['report_type' => $report->report_type]);
+        }
+        foreach (['finder_name', 'finder_student_id'] as $field) {
+            if ($this->has($field) && is_string($this->input($field))) {
+                $this->merge([$field => preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $this->input($field))]);
+            }
+        }
         $this->merge([
             'reporter_name' => trim($this->reporter_name ?? ''),
             'item_name' => trim($this->item_name ?? ''),

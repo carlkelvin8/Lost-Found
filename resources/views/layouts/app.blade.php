@@ -8,8 +8,8 @@
   <script>
     window.appIdentity = @json((string) auth()->id());
     window.appUrl = function(path) {
-      const prefix = @json(request()->is('admin', 'admin/*') ? '/admin' : '');
-      return prefix && !path.startsWith('/admin/') ? prefix + path : path;
+      const prefix = @json(request()->attributes->get('session_prefix', ''));
+      return prefix && !path.startsWith('/admin/') && !path.startsWith('/session/') ? prefix + path : path;
     };
   </script>
   <!-- SEO Meta Tags -->

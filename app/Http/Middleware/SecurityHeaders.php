@@ -11,7 +11,7 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        if ($request->user() || $request->is('login', 'admin/*', 'email/*', 'register', 'reset-password/*')) {
+        if ($request->user() || $request->is('login', 'admin/*', 'session/*', 'email/*', 'register', 'reset-password/*')) {
             $response->headers->set('Cache-Control', 'no-store, private');
         }
 

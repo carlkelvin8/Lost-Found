@@ -26,6 +26,9 @@ class ItemReport extends Model
         'circumstances',
         'contact_override',
         'reporter_name',
+        'surrendered_by_student',
+        'finder_name',
+        'finder_student_id',
         'submission_id',
         'status',
         'locked_at',
@@ -36,6 +39,7 @@ class ItemReport extends Model
     ];
 
     protected $casts = [
+        'surrendered_by_student' => 'boolean',
         'ai_analysis' => 'array',
         'locked_at' => 'datetime',
     ];
@@ -57,6 +61,32 @@ class ItemReport extends Model
     public function reporter()
     {
         return $this->belongsTo(User::class, 'reporter_user_id');
+    }
+
+    /** Resolve recorded finder details, including legacy self-reported Found items. */
+    public function finderIdentity(): array
+    {
+        $name = trim((string) $this->finder_name);
+        $studentId = trim((string) $this->finder_student_id);
+        if ($name !== '') {
+            return ['name' => $name, 'student_id' => $studentId !== '' ? $studentId : null];
+        }
+
+        $overrideName = trim((string) $this->reporter_name);
+        if ($overrideName !== '') {
+            // A separately named finder must not inherit the submitting account's ID.
+            return ['name' => $overrideName, 'student_id' => $studentId !== '' ? $studentId : null];
+        }
+
+        $reporter = $this->reporter;
+        if ($reporter && !$reporter->hasAnyRole(['admin', 'osa'])) {
+            $name = trim((string) ($reporter->profile?->full_name ?: $reporter->name));
+            if ($studentId === '') $studentId = trim((string) $reporter->profile?->school_id_number);
+            return ['name' => $name !== '' ? $name : null, 'student_id' => $studentId !== '' ? $studentId : null];
+        }
+
+        // An admin may submit on someone else's behalf; never guess their finder identity.
+        return ['name' => null, 'student_id' => $studentId !== '' ? $studentId : null];
     }
 
     public function owner()

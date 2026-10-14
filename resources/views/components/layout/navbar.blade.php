@@ -106,6 +106,9 @@
             <span>My Claims</span>
           </a>
           <div class="dropdown-divider"></div>
+          <a href="{{ route('auth.new-session') }}" class="dropdown-item" target="_blank" rel="noopener">
+            <i class="bi bi-person-plus"></i><span>Open another account</span>
+          </a>
           <form method="POST" action="{{ route('logout') }}" id="logoutForm">
             @csrf
             <button

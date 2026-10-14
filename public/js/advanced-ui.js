@@ -7,6 +7,8 @@
 function generateBreadcrumbs() {
     const path = window.location.pathname;
     const segments = path.split('/').filter(s => s);
+    if (segments[0] === 'session' && /^[0-9a-f-]{36}$/i.test(segments[1] || '')) segments.splice(0, 2);
+    else if (segments[0] === 'admin') segments.shift();
     const container = document.getElementById('breadcrumbs');
     if (!container) return;
 
@@ -36,7 +38,7 @@ function generateBreadcrumbs() {
         if (isLast) {
             html += `<span class="breadcrumb-item breadcrumb-active">${name}</span>`;
         } else {
-            const href = '/' + segments.slice(0, i + 1).join('/');
+            const href = window.appUrl('/' + segments.slice(0, i + 1).join('/'));
             html += `<a href="${href}" class="breadcrumb-item">${name}</a>`;
         }
     });

@@ -157,6 +157,7 @@
   editReporterName.addEventListener('input', validateEditReporter);
   validateEditReporter();
 </script>
+@include('reports.partials.finder-details')
 <div class="form-actions">
   <button type="submit" class="btn btn-primary">
     <i class="bi bi-save"></i> Save Changes
@@ -215,6 +216,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/camera-capture.js') }}"></script>
+<script src="{{ asset('js/finder-details.js') }}"></script>
 <script>
   function initCameraForEdit() {
     initCamera({

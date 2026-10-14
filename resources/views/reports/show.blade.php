@@ -97,9 +97,23 @@ Report #{{ $report->id }} · NAAP Lost & Found
       <div class="detail-value">{{ $report->circumstances }}</div>
     @endif
 
-    @if($isStaff && $report->reporter_name)
+    @if($isStaff && $report->reporter_name && $report->report_type !== 'found')
       <div class="detail-label mt-3">Reporter Name</div>
       <div class="detail-value">{{ $report->reporter_name }}</div>
+    @endif
+    @if($isStaff && $report->report_type === 'found')
+      @php $finder = $report->finderIdentity(); @endphp
+      <div class="detail-label mt-3">Finder's Name</div>
+      <div class="detail-value" id="finderNameValue">{{ $finder['name'] ?? 'Not recorded' }}</div>
+      @if($finder['student_id'] !== null || $report->surrendered_by_student)
+        <div class="detail-label">Finder's Student ID</div>
+        <div class="detail-value" id="finderStudentIdValue">{{ $finder['student_id'] ?? 'Not recorded' }}</div>
+      @endif
+      <div class="detail-label">Submitted By</div>
+      <div class="detail-value">{{ $report->reporter?->profile?->full_name ?: ($report->reporter?->name ?: 'Unknown account') }}</div>
+      @if(!$finder['name'])
+        <div class="form-text">The finder's name was not recorded for this report.</div>
+      @endif
     @endif
     @if($report->contact_override)
       <div class="detail-label mt-3">Contact</div>

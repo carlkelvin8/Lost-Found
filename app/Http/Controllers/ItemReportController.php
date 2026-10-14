@@ -117,7 +117,8 @@ class ItemReportController extends WebBaseController
             Location::orderBy('name')->get()
         );
 
-        return view('reports.create', compact('categories', 'locations'));
+        $isStaff = $this->hasAnyRole(['admin', 'osa']);
+        return view('reports.create', compact('categories', 'locations', 'isStaff'));
     }
 
     public function store(ItemReportRequest $request)
@@ -128,6 +129,15 @@ class ItemReportController extends WebBaseController
 
         $reporterId = (int) $this->user()->id;
         $isStaff    = $this->hasAnyRole(['admin', 'osa']);
+
+        if (!$isStaff && $data['report_type'] === 'found') {
+            // Snapshot the authenticated finder so future profile edits don't rename old reports.
+            $profileName = trim((string) ($this->user()->profile?->full_name ?: $this->user()->name));
+            $overrideName = trim((string) ($data['reporter_name'] ?? ''));
+            $data['finder_name'] = $overrideName !== '' ? $overrideName : ($profileName !== '' ? $profileName : null);
+            $data['finder_student_id'] = $overrideName === '' || mb_strtolower($overrideName) === mb_strtolower($profileName)
+                ? $this->user()->profile?->school_id_number : null;
+        }
 
         $reportId = null;
         $created = false;
@@ -146,6 +156,9 @@ class ItemReportController extends WebBaseController
                 $report = ItemReport::create([
                     'submission_id'     => $data['submission_id'],
                     'reporter_name'     => $data['reporter_name'] ?? null,
+                    'surrendered_by_student' => $isStaff && !empty($data['surrendered_by_student']),
+                    'finder_name'       => $data['finder_name'] ?? null,
+                    'finder_student_id' => $data['finder_student_id'] ?? null,
                     'report_type'       => $data['report_type'],
                     'reporter_user_id'  => $reporterId,
                     // Owner is usually unknown; only staff should set it.
@@ -225,6 +238,10 @@ class ItemReportController extends WebBaseController
             || $eligibilityService->canViewFoundReport($report, $this->user());
 
         if (!$canView) abort(403);
+
+        if ($isStaff) {
+            $report->loadMissing('reporter.profile');
+        }
 
         $claimEligibility = $eligibilityService->evaluate($report, $this->user());
 
@@ -341,6 +358,9 @@ class ItemReportController extends WebBaseController
             ];
 
             if ($isStaff) {
+                $payload['surrendered_by_student'] = !empty($data['surrendered_by_student']);
+                $payload['finder_name'] = $data['finder_name'] ?? null;
+                $payload['finder_student_id'] = $data['finder_student_id'] ?? null;
                 $payload['owner_user_id'] = $data['owner_user_id'] ?? null;
                 if (isset($data['status'])) {
                     $payload['status'] = $data['status'];

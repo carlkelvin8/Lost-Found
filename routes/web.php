@@ -378,15 +378,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-// Reuse application routes behind a separate staff session boundary.
-// Names on the original routes remain stable for existing links and integrations.
+// Every new account tab gets an independent HttpOnly cookie/session namespace.
+Route::get('/account/new-session', fn () => redirect()->route('session.login', ['context' => (string) \Illuminate\Support\Str::uuid()]))
+    ->name('auth.new-session');
+
+// Preserve original route names and business permissions across session contexts.
 foreach (array_values(Route::getRoutes()->getRoutes()) as $original) {
     if (!in_array('web', $original->gatherMiddleware(), true)) continue;
-    if (in_array($original->getName(), ['register', 'register.post', 'dev.last-email', 'offline'], true)) continue;
-    $adminRoute = clone $original;
-    $adminRoute->prefix('admin');
-    $action = $adminRoute->getAction();
-    if ($original->getName()) $action['as'] = 'admin.' . $original->getName();
-    $adminRoute->setAction($action);
-    Route::getRoutes()->add($adminRoute);
+    if (in_array($original->getName(), ['dev.last-email', 'offline'], true)) continue;
+    if (!in_array($original->getName(), ['register', 'register.post'], true)) {
+        $adminRoute = clone $original;
+        $adminRoute->prefix('admin');
+        $action = $adminRoute->getAction();
+        if ($original->getName()) $action['as'] = 'admin.' . $original->getName();
+        $adminRoute->setAction($action);
+        Route::getRoutes()->add($adminRoute);
+    }
+    $scopedRoute = clone $original;
+    $scopedRoute->prefix('session/{context}')->whereUuid('context');
+    $action = $scopedRoute->getAction();
+    if ($original->getName()) $action['as'] = 'session.' . $original->getName();
+    $scopedRoute->setAction($action);
+    Route::getRoutes()->add($scopedRoute);
 }

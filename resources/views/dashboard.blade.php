@@ -301,7 +301,7 @@
               $pctVal = $pct($count, $maxStatus);
             @endphp
             <div class="dash-bar-row">
-              <span class="dash-bar-label">{{ $s === 'claimed' ? 'Awaiting review' : ucfirst($s) }}</span>
+              <span class="dash-bar-label" @if($s === 'claimed') title="Claim submitted and awaiting approval" @endif>{{ ucfirst($s) }}</span>
               <div class="dash-bar-track">
                 <div class="dash-bar-fill" style="width:{{ $pctVal }}%; background:{{ $colors[$s] }}"></div>
               </div>

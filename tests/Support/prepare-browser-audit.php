@@ -2,7 +2,9 @@
 
 // Creates disposable fixtures only in the explicitly isolated audit SQLite DB.
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
-$path = dirname(__DIR__, 2) . '/storage/framework/testing/client-audit.sqlite';
+$filename = $argv[1] ?? 'client-audit.sqlite';
+if (!in_array($filename, ['client-audit.sqlite', 'client-followup.sqlite'], true)) throw new RuntimeException('Invalid fixture filename.');
+$path = dirname(__DIR__, 2) . '/storage/framework/testing/' . $filename;
 if (file_exists($path)) {
     throw new RuntimeException('Audit fixture database already exists; refusing to overwrite it.');
 }
@@ -18,9 +20,9 @@ if (config('database.default') !== 'sqlite' || config('database.connections.sqli
     throw new RuntimeException('Database isolation check failed.');
 }
 Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-foreach (['audit.admin@gmail.com' => 'admin', 'audit.user@gmail.com' => 'student'] as $email => $role) {
+foreach (['audit.admin@gmail.com' => 'admin', 'audit.user@gmail.com' => 'student', 'audit.user.two@gmail.com' => 'student'] as $email => $role) {
     $user = App\Models\User::factory()->create(['email' => $email, 'password' => Illuminate\Support\Facades\Hash::make('Audit-Test-2026!'), 'is_active' => 1]);
     $user->roles()->firstOrCreate(['name' => $role]);
-    App\Models\UserProfile::create(['user_id' => $user->id, 'full_name' => $role === 'admin' ? 'Audit Admin' : 'Audit User', 'user_type' => $role]);
+    App\Models\UserProfile::create(['user_id' => $user->id, 'full_name' => $role === 'admin' ? 'Audit Admin' : ($email === 'audit.user.two@gmail.com' ? 'Audit User Two' : 'Audit User'), 'user_type' => $role]);
 }
 echo "Isolated audit fixtures prepared.\n";

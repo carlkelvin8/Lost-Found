@@ -1,6 +1,6 @@
-const CACHE_NAME = 'naap-lf-v8';
-const STATIC_CACHE = 'naap-lf-static-v8';
-const DYNAMIC_CACHE = 'naap-lf-dynamic-v8';
+const CACHE_NAME = 'naap-lf-v10';
+const STATIC_CACHE = 'naap-lf-static-v10';
+const DYNAMIC_CACHE = 'naap-lf-dynamic-v10';
 
 const STATIC_ASSETS = [
     '/css/layout.css',
@@ -85,8 +85,8 @@ async function syncReports() {
     for (const report of reports) {
         try {
             // Never replay another account's offline draft using the current cookies.
-            if (!report.ownerId || !['/reports', '/admin/reports'].includes(report.endpoint)) continue;
-            const statsUrl = report.endpoint === '/admin/reports' ? '/admin/dashboard/stats' : '/dashboard/stats';
+            if (!report.ownerId || !/^\/(?:admin\/|session\/[0-9a-f-]{36}\/)?reports$/i.test(report.endpoint || '')) continue;
+            const statsUrl = report.endpoint.replace(/\/reports$/, '/dashboard/stats');
             const identityResponse = await fetch(statsUrl, { headers: { Accept: 'application/json' } });
             if (!identityResponse.ok) continue;
             const identity = await identityResponse.json();

@@ -115,6 +115,8 @@
     </div>
   </div>
 
+  @include('reports.partials.finder-details')
+
   <!-- Section: Description & Evidence -->
   <div class="form-section">
     <div class="form-section-header">
@@ -265,6 +267,7 @@
 @push('scripts')
 <script src="{{ asset('js/camera-capture.js') }}"></script>
 <script src="{{ asset('js/report-create.js') }}"></script>
+<script src="{{ asset('js/finder-details.js') }}"></script>
 <script>
   const photoInput = document.getElementById('photoInput');
   const takePhotoBtn = document.getElementById('takePhotoBtn');

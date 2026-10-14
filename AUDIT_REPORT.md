@@ -2,6 +2,8 @@
 
 Date: October 14, 2026 (Asia/Manila)
 
+> Follow-up: the revised student finder name/ID requirement and multiple same-role account sessions are now implemented. See [FOLLOWUP_IMPLEMENTATION.md](FOLLOWUP_IMPLEMENTATION.md) for the current code changes and verification. The original report below records the earlier audit stage.
+
 All eight code changes are implemented. Six issues are verified in the available local environment. Issues 2 and 5 have additional environment-specific checks outstanding, detailed below. No commits, pushes or deployments were performed. The working tree was clean before changes. The configured application database and production records were not modified; migrations and fixtures ran only in isolated SQLite databases.
 
 ## 1. Root Cause Analysis
