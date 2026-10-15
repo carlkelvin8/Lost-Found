@@ -821,9 +821,6 @@
         </div>
 
         @if(!request()->is('admin/*'))
-        <a class="btn-outline" href="{{ route('admin.login') }}">Admin / OSA sign in (independent session)</a>
-        @endif
-        @if(!request()->is('admin/*'))
         <div class="or-divider">Don't have an account?</div>
         @endif
 

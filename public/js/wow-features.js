@@ -316,7 +316,7 @@ function generateQRCode(text, size = 128) {
 
 // ==================== TOAST HELPER ====================
 function showToast(message, type = 'success') {
-    if (window.toast) {
+    if (window.toast && message && String(message).trim() !== '') {
         window.toast.show(message, type);
     }
 }
@@ -326,9 +326,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initAnimatedCounters();
     
     // Auto-show toast for flash messages
-    const flashSuccess = document.querySelector('.alert-success');
-    const flashError = document.querySelector('.alert-danger');
-    
+    // Skip hidden or empty placeholders (e.g. #reportSubmitFeedback) so no blank toast appears
+    const findFlash = (selector) => Array.from(document.querySelectorAll(selector))
+        .find((el) => !el.classList.contains('d-none') && el.offsetParent !== null && el.textContent.trim() !== '');
+
+    const flashSuccess = findFlash('.alert-success');
+    const flashError = findFlash('.alert-danger');
+
     if (flashSuccess) {
         showToast(flashSuccess.textContent.trim());
     }
