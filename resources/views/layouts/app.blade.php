@@ -94,8 +94,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('js/toast.js') }}"></script>
-<script src="{{ asset('js/wow-features.js') }}"></script>
+<script src="{{ asset('js/toast.js') }}?v=2"></script>
+<script src="{{ asset('js/wow-features.js') }}?v=2"></script>
 <script src="{{ asset('js/advanced-ui.js') }}"></script>
 <script src="{{ asset('js/export-share.js') }}"></script>
 <script src="{{ asset('js/realtime.js') }}"></script>
@@ -128,8 +128,8 @@
   @if(session('success'))
     showToast('{{ session("success") }}', 'success');
   @endif
-  @if($errors->any())
-    showToast('{{ $errors->first() }}', 'error');
+  @if($errors->any() && trim((string) $errors->first()) !== '')
+    showToast(@json($errors->first()), 'error');
   @endif
 })();
 </script>

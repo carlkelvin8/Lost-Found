@@ -134,9 +134,11 @@
 <div class="admin-pagination">{{ $matches->links() }}</div>
 
 <div class="admin-manual-card">
-  <a class="btn btn-outline-primary" href="{{ route('matches.search') }}"><i class="bi bi-search"></i> Search Lost / Found reports</a>
   <div class="card-body">
-    <h6>Manual Match (Suggested)</h6>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <h6 class="mb-0">Manual Match (Suggested)</h6>
+      <a class="btn btn-outline-primary" href="{{ route('matches.search') }}"><i class="bi bi-search"></i> Search Lost / Found reports</a>
+    </div>
     <form method="POST" action="{{ route('matches.manual') }}" class="row g-2 align-items-end">
       @csrf
       <div class="col-12 col-md-3">

@@ -292,7 +292,30 @@
   });
 
   // File picker change — show preview
+  // Picker/drop replace input.files, so merge new picks into the previous selection (max 5).
+  const MAX_PHOTOS = 5;
+  const fileKey = f => `${f.name}|${f.size}|${f.lastModified}`;
+  let knownFiles = [];
+  let internalChange = false;
+
   photoInput.addEventListener('change', function() {
+    let current = Array.from(photoInput.files || []);
+    if (!internalChange) {
+      const currentKeys = new Set(current.map(fileKey));
+      const kept = knownFiles.filter(f => !currentKeys.has(fileKey(f)));
+      if (kept.length) {
+        const merged = kept.concat(current);
+        if (merged.length > MAX_PHOTOS) {
+          alert('Maximum 5 photos allowed. Extra photos were skipped.');
+        }
+        const dt = new DataTransfer();
+        merged.slice(0, MAX_PHOTOS).forEach(f => dt.items.add(f));
+        photoInput.files = dt.files;
+        current = Array.from(photoInput.files);
+      }
+    }
+    internalChange = false;
+    knownFiles = current;
     renderPreview();
   });
 
@@ -319,6 +342,7 @@
           const remaining = new DataTransfer();
           Array.from(photoInput.files).filter((_, i) => i !== index).forEach(f => remaining.items.add(f));
           photoInput.files = remaining.files;
+          internalChange = true;
           photoInput.dispatchEvent(new Event('change', { bubbles: true }));
         });
         container.appendChild(div);

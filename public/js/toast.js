@@ -18,6 +18,7 @@ class Toast {
     }
 
     show(message, type = 'success', duration = 4000) {
+        if (message === null || message === undefined || String(message).trim() === '') return null;
         const toast = document.createElement('div');
         toast.className = `toast-notification toast-${type}`;
         
