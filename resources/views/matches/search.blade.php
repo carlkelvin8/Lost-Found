@@ -14,7 +14,7 @@
 </form>
 <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Type</th><th>Item</th><th>Description</th><th>Category</th><th>Location</th></tr></thead><tbody>
 @forelse($reports as $report)
-<tr><td><a href="{{ route('reports.show', $report->id) }}">#{{ $report->id }}</a></td><td>{{ ucfirst($report->report_type) }}</td><td>{{ $report->item_name }}</td><td>{{ \Illuminate\Support\Str::limit($report->item_description, 140) }}</td><td>{{ $report->category?->name }}</td><td>{{ $report->location?->name }}</td></tr>
+<tr><td><a href="{{ route('reports.show', $report->id) }}">#{{ $report->id }}</a></td><td>{{ ucfirst($report->report_type) }}</td><td>{{ $report->item_name }}</td><td>{{ \Illuminate\Support\Str::limit($report->item_description, 140) }}</td><td>{{ $report->category?->name }}</td><td>{{ $report->location_label }}</td></tr>
 @empty <tr><td colspan="6">No active reports match your search.</td></tr> @endforelse
 </tbody></table></div>
 {{ $reports->links() }}

@@ -30,13 +30,34 @@ document.addEventListener('DOMContentLoaded', () => {
         button.textContent = 'Submitting…';
         feedback.classList.add('d-none');
         try {
+            const body = new FormData(form);
+            if (window.ReportPhotos) {
+                const photoInput = form.querySelector('input[name="photos[]"]');
+                const photos = await window.ReportPhotos.prepare(Array.from(photoInput.files || []), text => { button.textContent = text; });
+                body.delete('photos[]');
+                photos.forEach(photo => body.append('photos[]', photo));
+            }
+            button.textContent = 'Saving report…';
             const response = await fetch(form.action, {
-                method: 'POST', body: new FormData(form),
+                method: 'POST', body,
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
-            const result = await response.json();
+            if (response.status === 413) throw new Error('The server rejected the upload size. Try fewer photos or smaller JPEGs.');
+            const result = await response.json().catch(() => { throw new Error('The server could not process this upload. Your entries and photos remain selected.'); });
             if (!response.ok) {
                 const messages = Object.values(result.errors || {}).flat();
+                Object.entries(result.errors || {}).forEach(([field, errors]) => {
+                    const input = document.getElementById(field + '_search') || form.elements.namedItem?.(field) || form.elements.namedItem?.(field.split('.')[0] + '[]');
+                    if (input?.classList) {
+                        input.classList.add('is-invalid');
+                        input.setAttribute('aria-invalid', 'true');
+                        const message = document.createElement('div');
+                        message.className = 'invalid-feedback';
+                        message.textContent = errors[0];
+                        input.after(message);
+                        input.addEventListener('input', () => { input.classList.remove('is-invalid'); input.removeAttribute('aria-invalid'); message.remove(); }, { once: true });
+                    }
+                });
                 throw new Error(messages.join(' ') || result.message || 'Unable to submit report. Please try again.');
             }
             if (!result.redirect) throw new Error('Unexpected response. Please try again.');

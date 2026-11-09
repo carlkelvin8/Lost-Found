@@ -187,7 +187,7 @@
             </td>
             <td class="wrap">{{ $r->category?->name ?? '—' }}</td>
             <td><span class="badge {{ $r->report_type==='lost' ? 'b-lost' : 'b-found' }}">{{ $r->report_type }}</span></td>
-            <td class="wrap">{{ $r->location?->name ?? '—' }}</td>
+            <td class="wrap">{{ $r->location_label ?: '—' }}</td>
             <td style="white-space:nowrap">
               <div style="font-weight:600">{{ $r->incident_date ? \Carbon\Carbon::parse($r->incident_date)->format('M d, Y') : ($r->created_at?->format('M d, Y') ?? '—') }}</div>
               <div style="font-size:6px;color:#94a3b8">{{ $r->created_at?->format('h:i A') ?? '' }}</div>

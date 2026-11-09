@@ -1,0 +1,29 @@
+{
+  "baseline_commit": "f05017b",
+  "environment": "Windows, PHP 8.4.13, Laravel 12.48.1, SQLite test database, fake local public disk",
+  "method": "One warm-up then five measured Laravel HTTP requests; five 2000x1500 JPEG fixtures per request; three staff recipients; 200 ms MessageSending delay per email; array mail transport; AI key explicitly disabled; matching has no opposite-type candidates. Includes backend validation, file processing, persistence, matching query and notification creation; excludes browser, real S3 and network.",
+  "before": [
+    {"ms": 1329.8, "queries": 24},
+    {"ms": 1384.62, "queries": 24},
+    {"ms": 1325.37, "queries": 24},
+    {"ms": 1361.89, "queries": 24},
+    {"ms": 1351.57, "queries": 24}
+  ],
+  "after_final": [
+    {"ms": 717.06, "queries": 23},
+    {"ms": 717.69, "queries": 23},
+    {"ms": 732.23, "queries": 23},
+    {"ms": 739.12, "queries": 23},
+    {"ms": 724.85, "queries": 23}
+  ],
+  "median_before_ms": 1351.57,
+  "median_after_ms": 724.85,
+  "production_15_to_20_seconds_reproduced": false,
+  "synthetic_browser_upload": {
+    "source_bytes": 6506646,
+    "source_dimensions": [4032, 3024],
+    "stored_bytes": 30025,
+    "stored_dimensions": [1600, 1200],
+    "note": "Synthetic gradient JPEG with padding to exercise large-file handling. Not representative of real photo compression ratios. Browser submission and claim succeeded against isolated local SQLite fixtures."
+  }
+}

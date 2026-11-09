@@ -77,6 +77,7 @@
             rows="7"
             required
             minlength="20"
+            maxlength="5000"
             placeholder="Describe how you can prove this item is yours. Include details like unique identifiers, serial numbers, or where/when you lost the item..."
           >{{ old('proof_text') }}</textarea>
           <div class="cc-form-hint">
@@ -121,10 +122,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (form && submitBtn) {
-    form.addEventListener('submit', function() {
+    let submitting = false;
+    form.addEventListener('submit', function(event) {
+      textarea.value = textarea.value.trim();
+      if (submitting || !form.reportValidity()) { event.preventDefault(); return; }
+      submitting = true;
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Submitting...</span>';
     });
+    window.addEventListener('pageshow', () => { submitting = false; submitBtn.disabled = false; submitBtn.innerHTML = '<i class="bi bi-send"></i> <span>Submit Claim</span>'; });
   }
 });
 </script>

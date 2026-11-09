@@ -61,29 +61,7 @@
   </div>
   @endif
 
-  <div class="col-md-4">
-    <label class="form-label">Category</label>
-    <select class="form-select" name="category_id">
-      <option value="">—</option>
-      @foreach($categories as $c)
-        <option value="{{ $c->id }}" @selected(old('category_id',$report->category_id)==$c->id)>
-          {{ $c->name }}
-        </option>
-      @endforeach
-    </select>
-  </div>
-
-  <div class="col-md-4">
-    <label class="form-label">Location</label>
-    <select class="form-select" name="location_id">
-      <option value="">—</option>
-      @foreach($locations as $l)
-        <option value="{{ $l->id }}" @selected(old('location_id',$report->location_id)==$l->id)>
-          {{ $l->name }}
-        </option>
-      @endforeach
-    </select>
-  </div>
+  @include('reports.partials.location-category')
 
   @if($isStaff)
   <div class="col-md-4">
@@ -100,18 +78,18 @@
   @endif
 
   <div class="col-md-6">
-    <label class="form-label">Item Name</label>
-    <input class="form-control" name="item_name" value="{{ old('item_name',$report->item_name) }}">
+    <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
+    <input class="form-control" id="item_name" name="item_name" required minlength="2" maxlength="190" value="{{ old('item_name',$report->item_name) }}">
   </div>
 
   <div class="col-md-6">
-    <label class="form-label">Brand / Model</label>
+    <label class="form-label">Brand / Model (optional)</label>
     <input class="form-control" name="brand_model" value="{{ old('brand_model',$report->brand_model) }}">
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">Color</label>
-    <input class="form-control" name="color" value="{{ old('color',$report->color) }}">
+    <label for="color" class="form-label">Color <span class="text-danger">*</span></label>
+    <input class="form-control" id="color" name="color" required maxlength="60" value="{{ old('color',$report->color) }}">
   </div>
 
   <div class="col-md-4">
@@ -127,8 +105,8 @@
   </div>
 
   <div class="col-12">
-    <label class="form-label">Description</label>
-    <textarea class="form-control" rows="4" name="item_description" required>{{ old('item_description',$report->item_description) }}</textarea>
+    <label for="item_description" class="form-label">Description <span class="text-danger">*</span></label>
+    <textarea class="form-control" rows="4" id="item_description" name="item_description" required minlength="10" maxlength="5000">{{ old('item_description',$report->item_description) }}</textarea>
   </div>
 
   <div class="col-12">
@@ -178,9 +156,10 @@
     <div class="text-muted mb-3">No photos uploaded</div>
   @endif
 
-  <form method="POST" action="{{ route('reports.photos.store',$report->id) }}"
+  <form data-photo-upload method="POST" action="{{ route('reports.photos.store',$report->id) }}"
         enctype="multipart/form-data" class="row g-2 align-items-end">
     @csrf
+    <div class="col-12 text-danger" role="alert"></div>
     <div class="col-12">
       <label class="form-label">Upload New Photo</label>
       <div class="photo-upload-section">
@@ -192,13 +171,13 @@
           <label for="photoInputEdit" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> Choose File
           </label>
-          <input id="photoInputEdit" class="form-control d-none" type="file" name="photo" accept="image/*" required onchange="previewSinglePhoto(this)" />
+          <input id="photoInputEdit" class="form-control d-none" type="file" name="photo" data-photo-optimize accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" required onchange="previewSinglePhoto(this)" />
         </div>
         <div id="singlePhotoPreview" class="mt-3"></div>
       </div>
     </div>
     <div class="col-12">
-      <button class="btn btn-primary w-100">
+      <button type="submit" class="btn btn-primary w-100">
         <i class="bi bi-upload"></i> Upload Photo
       </button>
     </div>
@@ -206,6 +185,9 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/report-fields.js') }}"></script>
+<script src="{{ asset('js/photo-optimizer.js') }}"></script>
+<script src="{{ asset('js/report-photo-edit.js') }}"></script>
 <script src="{{ asset('js/camera-capture.js') }}"></script>
 <script src="{{ asset('js/finder-details.js') }}"></script>
 <script>
@@ -216,18 +198,20 @@
     });
   }
 
+  let editPreviewUrl;
   function previewSinglePhoto(input) {
     const container = document.getElementById('singlePhotoPreview');
     container.innerHTML = '';
-    
+    if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl);
     if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        container.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-      };
-      reader.readAsDataURL(input.files[0]);
+      const image = document.createElement('img');
+      image.alt = 'Selected photo preview';
+      editPreviewUrl = URL.createObjectURL(input.files[0]);
+      image.src = editPreviewUrl;
+      container.appendChild(image);
     }
   }
+  window.addEventListener('pagehide', () => { if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl); });
 </script>
 @endpush
 @endsection

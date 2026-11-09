@@ -18,6 +18,7 @@ use Tests\TestCase;
 class ClientReportedIssuesTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Concerns\ReportPayload;
 
     private function admin(): User
     {
@@ -28,7 +29,7 @@ class ClientReportedIssuesTest extends TestCase
 
     private function reportData(string $type = 'found'): array
     {
-        return ['reporter_name' => $type === 'found' ? 'Test Finder' : null, 'submission_id' => (string) Str::uuid(), 'report_type' => $type, 'item_description' => 'A distinctive wallet with a blue strap.'];
+        return $this->completeReportFields() + ['reporter_name' => $type === 'found' ? 'Test Finder' : null, 'submission_id' => (string) Str::uuid(), 'report_type' => $type, 'item_description' => 'A distinctive wallet with a blue strap.'];
     }
 
     public function test_rejection_reason_is_persistent_visible_and_cannot_be_replaced(): void
@@ -70,7 +71,7 @@ class ClientReportedIssuesTest extends TestCase
             $this->postJson(route('reports.store'), $payload)->assertCreated();
         }
         $this->assertDatabaseCount('item_reports', 4);
-        $this->assertDatabaseCount('activity_logs', 4);
+        $this->assertSame(4, \App\Models\ActivityLog::where('action', 'reports.create')->count());
     }
 
     public function test_submission_identifier_is_required_and_scoped_to_account(): void
@@ -95,7 +96,8 @@ class ClientReportedIssuesTest extends TestCase
         $this->postJson(route('reports.store'), $payload)->assertOk();
         $this->assertDatabaseCount('report_matches', 1);
         $this->assertDatabaseCount('notifications', 2);
-        Mail::assertSent(\App\Mail\NotificationMail::class, 2);
+        $this->assertDatabaseCount('jobs', 2);
+        Mail::assertNothingSent();
     }
 
     public function test_database_unique_constraint_rejects_duplicate_submission_even_without_controller(): void

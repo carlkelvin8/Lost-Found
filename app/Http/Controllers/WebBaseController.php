@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\NotificationMail;
 use App\Models\ActivityLog;
 use App\Models\Notification;
 use App\Models\ReportStatusHistory;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class WebBaseController extends Controller
 {
@@ -66,7 +63,7 @@ class WebBaseController extends Controller
     protected function notify(int $userId, string $type, string $title, string $body, array $data = []): void
     {
         // Save to database
-        Notification::create([
+        $notification = Notification::create([
             'user_id' => $userId,
             'notif_type' => $type,
             'title' => $title,
@@ -74,20 +71,10 @@ class WebBaseController extends Controller
             'data_json' => $data ? json_encode($data) : null,
         ]);
 
-        // Only send committed notifications; retries must not duplicate email side effects.
-        \Illuminate\Support\Facades\DB::afterCommit(function () use ($userId, $title, $body, $type) {
-            try {
-                $user = User::find($userId);
-                if ($user && $user->email) {
-                    Mail::to($user->email)->send(new NotificationMail($title, $body, $type));
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Email notification failed', [
-                    'user_id' => $userId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        });
+        // Persist the job in the same transaction: email is delivered only after commit.
+        $connection = config('reports.background_connection');
+        $job = \App\Jobs\DeliverNotificationEmail::dispatch($notification->id)->onConnection($connection);
+        if (config("queue.connections.{$connection}.driver") !== 'database') $job->afterCommit();
     }
 
     protected function pushReportStatus(int $reportId, ?string $old, string $new, ?int $changedByUserId = null, ?string $note = null): void

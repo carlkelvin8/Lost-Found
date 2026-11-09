@@ -44,25 +44,7 @@
         <div class="form-text">Choose "Lost" if you lost it, "Found" if you discovered it.</div>
       </div>
 
-      <div class="col-12 col-md-4">
-        <label class="form-label">Category</label>
-        <select class="form-select" name="category_id">
-          <option value="">Select category</option>
-          @foreach($categories as $c)
-            <option value="{{ $c->id }}" @selected((string)old('category_id')===(string)$c->id)>{{ $c->name }}</option>
-          @endforeach
-        </select>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <label class="form-label">Location</label>
-        <select class="form-select" name="location_id">
-          <option value="">Select location</option>
-          @foreach($locations as $l)
-            <option value="{{ $l->id }}" @selected((string)old('location_id')===(string)$l->id)>{{ $l->name }}</option>
-          @endforeach
-        </select>
-      </div>
+      @include('reports.partials.location-category')
 
       <div class="col-12 col-md-6">
         <label class="form-label">Incident date</label>
@@ -87,19 +69,19 @@
 
     <div class="row g-3">
       <div class="col-12 col-md-6">
-        <label class="form-label">Item name</label>
-        <input class="form-control" name="item_name" value="{{ old('item_name') }}" placeholder="e.g., iPhone, Wallet, Umbrella" />
+        <label for="item_name" class="form-label">Item name <span class="text-danger">*</span></label>
+        <input class="form-control" id="item_name" name="item_name" required minlength="2" maxlength="190" value="{{ old('item_name') }}" placeholder="e.g., iPhone, Wallet, Umbrella" />
         <div class="form-text">Short label for quick scanning.</div>
       </div>
 
       <div class="col-12 col-md-6">
-        <label class="form-label">Brand / Model</label>
+        <label class="form-label">Brand / Model (optional)</label>
         <input class="form-control" name="brand_model" value="{{ old('brand_model') }}" placeholder="e.g., Apple iPhone 11, Jansport" />
       </div>
 
       <div class="col-12 col-md-6">
-        <label class="form-label">Color</label>
-        <input class="form-control" name="color" value="{{ old('color') }}" placeholder="e.g., Black, Blue, Red" />
+        <label for="color" class="form-label">Color <span class="text-danger">*</span></label>
+        <input class="form-control" id="color" name="color" required maxlength="60" value="{{ old('color') }}" placeholder="e.g., Black, Blue, Red" />
       </div>
 
       <div class="col-12 col-md-6">
@@ -128,8 +110,8 @@
 
     <div class="row g-3">
       <div class="col-12">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" rows="4" name="item_description" required
+        <label for="item_description" class="form-label">Description <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="4" id="item_description" name="item_description" required minlength="10" maxlength="5000"
           placeholder="Describe key identifiers (stickers, scratches, contents, serial/unique marks)...">{{ old('item_description') }}</textarea>
       </div>
 
@@ -156,10 +138,10 @@
             <label for="photoInput" class="btn btn-outline-primary">
               <i class="bi bi-upload"></i> Choose Files
             </label>
-            <input id="photoInput" class="d-none" type="file" name="photos[]" multiple accept="image/*" />
+            <input id="photoInput" class="d-none" type="file" name="photos[]" multiple accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" />
           </div>
           <div class="form-text mt-2">
-            <i class="bi bi-info-circle"></i> Upload clear photos for better matching (front/back/details). Max 5 photos.
+            <i class="bi bi-info-circle"></i> Upload clear photos for better matching (front/back/details). Max 5 photos. Photos are optimized before upload. HEIC/HEIF conversion depends on your browser.
           </div>
           <div id="photoPreviewContainer" class="mt-3"></div>
         </div>
@@ -265,97 +247,11 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('js/report-fields.js') }}"></script>
+<script src="{{ asset('js/photo-optimizer.js') }}"></script>
 <script src="{{ asset('js/camera-capture.js') }}"></script>
 <script src="{{ asset('js/report-create.js') }}"></script>
 <script src="{{ asset('js/finder-details.js') }}"></script>
-<script>
-  const photoInput = document.getElementById('photoInput');
-  const takePhotoBtn = document.getElementById('takePhotoBtn');
-
-  // Take Photo button opens the camera modal - max level handling
-  takePhotoBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    // Check existing count
-    const existingCount = photoInput.files ? photoInput.files.length : 0;
-    if (existingCount >= 5) {
-      alert('Maximum 5 photos already selected. Remove one first.');
-      return;
-    }
-    initCamera({
-      maxPhotos: 5,
-      targetInput: '#photoInput',
-      onDone: function(photos) {
-        // renderPreview will be triggered via change event, but ensure it runs
-        setTimeout(renderPreview, 100);
-      }
-    });
-  });
-
-  // File picker change — show preview
-  // Picker/drop replace input.files, so merge new picks into the previous selection (max 5).
-  const MAX_PHOTOS = 5;
-  const fileKey = f => `${f.name}|${f.size}|${f.lastModified}`;
-  let knownFiles = [];
-  let internalChange = false;
-
-  photoInput.addEventListener('change', function() {
-    let current = Array.from(photoInput.files || []);
-    if (!internalChange) {
-      const currentKeys = new Set(current.map(fileKey));
-      const kept = knownFiles.filter(f => !currentKeys.has(fileKey(f)));
-      if (kept.length) {
-        const merged = kept.concat(current);
-        if (merged.length > MAX_PHOTOS) {
-          alert('Maximum 5 photos allowed. Extra photos were skipped.');
-        }
-        const dt = new DataTransfer();
-        merged.slice(0, MAX_PHOTOS).forEach(f => dt.items.add(f));
-        photoInput.files = dt.files;
-        current = Array.from(photoInput.files);
-      }
-    }
-    internalChange = false;
-    knownFiles = current;
-    renderPreview();
-  });
-
-  let previewGeneration = 0;
-  function renderPreview() {
-    const generation = ++previewGeneration;
-    const container = document.getElementById('photoPreviewContainer');
-    container.innerHTML = '';
-
-    const files = Array.from(photoInput.files || []);
-
-    files.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (generation !== previewGeneration) return;
-        const div = document.createElement('div');
-        div.className = 'photo-preview-item fade-in';
-        div.innerHTML = `
-          <img src="${e.target.result}" alt="Photo ${index + 1}">
-          <span class="photo-number">${index + 1}</span>
-          <button type="button" class="btn btn-sm btn-danger" aria-label="Remove photo ${index + 1}">Remove</button>
-        `;
-        div.querySelector('button').addEventListener('click', () => {
-          const remaining = new DataTransfer();
-          Array.from(photoInput.files).filter((_, i) => i !== index).forEach(f => remaining.items.add(f));
-          photoInput.files = remaining.files;
-          internalChange = true;
-          photoInput.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-        container.appendChild(div);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // Initialize drag & drop
-  const dragDropZone = document.getElementById('dragDropZone');
-  if (dragDropZone) {
-    initDragDrop(dragDropZone, photoInput, document.getElementById('photoPreviewContainer'));
-  }
-</script>
+<script src="{{ asset('js/photo-selection.js') }}"></script>
 @endpush
 @endsection

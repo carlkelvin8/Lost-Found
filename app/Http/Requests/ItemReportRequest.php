@@ -35,13 +35,13 @@ class ItemReportRequest extends FormRequest
                 'min:1',
             ],
             'category_id' => [
-                'nullable',
+                'required',
                 'integer',
                 'exists:categories,id',
                 'min:1',
             ],
             'item_name' => [
-                'nullable',
+                'required',
                 'string',
                 'max:190',
                 'min:2',
@@ -60,7 +60,7 @@ class ItemReportRequest extends FormRequest
                 'regex:/^[a-zA-Z0-9\s\-\.\,\/]+$/',
             ],
             'color' => [
-                'nullable',
+                'required',
                 'string',
                 'max:60',
                 'regex:/^[a-zA-Z\s\-\/]+$/',
@@ -75,8 +75,9 @@ class ItemReportRequest extends FormRequest
                 'nullable',
                 'regex:/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/',
             ],
+            'location_detail' => ['nullable', 'string', 'min:2', 'max:190', "regex:/^[\pL\pN][\pL\pN .,#&'’()\/\-]*$/u"],
             'location_id' => [
-                'nullable',
+                'required_without:location_detail',
                 'integer',
                 'exists:locations,id',
                 'min:1',
@@ -97,12 +98,7 @@ class ItemReportRequest extends FormRequest
                 'array',
                 'max:5',
             ],
-            'photos.*' => [
-                'file',
-                'mimes:jpg,jpeg,png,webp',
-                'max:4096',
-                'dimensions:min_width=100,min_height=100,max_width=4000,max_height=4000',
-            ],
+            'photos.*' => \App\Rules\ReportImage::rules(),
         ];
     }
 
@@ -116,6 +112,11 @@ class ItemReportRequest extends FormRequest
             'finder_name.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
             'finder_student_id.prohibited' => 'Finder details apply only to an admin Found report surrendered by a student.',
             'reporter_name.required' => "Finder's name is required for a Found report.",
+            'category_id.required' => 'Choose an existing category.',
+            'location_id.required_without' => 'Choose a location or enter a detailed location.',
+            'location_detail.regex' => 'Start the location with a letter or number; use room names, spaces, and standard punctuation.',
+            'item_name.required' => 'Item name is required.',
+            'color.required' => 'Color is required; use Multicolor if appropriate.',
             'report_type.required' => 'Please select report type (Lost or Found).',
             'report_type.in' => 'Report type must be either Lost or Found.',
             'item_name.min' => 'Item name must be at least 2 characters.',
@@ -132,7 +133,7 @@ class ItemReportRequest extends FormRequest
             'contact_override.regex' => 'Contact information contains invalid characters.',
             'photos.max' => 'You can upload a maximum of 5 photos.',
             'photos.*.mimes' => 'Photos must be JPG, JPEG, PNG, or WEBP format.',
-            'photos.*.max' => 'Each photo must not exceed 4MB.',
+            'photos.*.max' => 'Each uploaded photo must not exceed 10 MB. Please resize it or use photo optimization.',
             'photos.*.dimensions' => 'Photo dimensions must be between 100x100 and 4000x4000 pixels.',
         ];
     }
@@ -154,14 +155,15 @@ class ItemReportRequest extends FormRequest
             && $this->user()?->hasAnyRole(['admin', 'osa'])) {
             $this->merge(['reporter_name' => $this->input('finder_name')]);
         }
-        $this->merge([
-            'reporter_name' => trim($this->reporter_name ?? ''),
-            'item_name' => trim($this->item_name ?? ''),
-            'item_description' => trim($this->item_description ?? ''),
-            'brand_model' => trim($this->brand_model ?? ''),
-            'color' => ucfirst(strtolower(trim($this->color ?? ''))),
-            'circumstances' => trim($this->circumstances ?? ''),
-            'contact_override' => trim($this->contact_override ?? ''),
-        ]);
+        foreach (['item_name', 'item_description', 'color', 'location_detail'] as $field) {
+            if (is_string($this->input($field))) $this->merge([$field => preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $this->input($field))]);
+        }
+        if (is_string($this->input('location_detail'))) $this->merge(['location_detail' => preg_replace('/[\s\p{Z}]+/u', ' ', $this->input('location_detail'))]);
+        foreach (['reporter_name', 'item_name', 'item_description', 'brand_model', 'color', 'circumstances', 'contact_override'] as $field) {
+            if (is_string($this->input($field))) {
+                $value = preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $this->input($field));
+                $this->merge([$field => $field === 'color' ? ucfirst(strtolower($value)) : $value]);
+            }
+        }
     }
 }

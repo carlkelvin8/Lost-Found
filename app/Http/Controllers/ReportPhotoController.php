@@ -19,24 +19,40 @@ class ReportPhotoController extends WebBaseController
 
         if (!$isStaff && !$isOwner) abort(403);
         if ($report->isLocked()) {
+            if ($request->expectsJson()) throw \Illuminate\Validation\ValidationException::withMessages(['photo' => 'This report is locked and cannot be edited.']);
             return redirect()->route('reports.show', $reportId)->withErrors(['message' => 'This report is locked and cannot be edited.']);
         }
 
         $data = $request->validate([
-            'photo' => ['required','file','mimes:jpg,jpeg,png,webp','max:4096'],
+            'photo' => ['required', ...\App\Rules\ReportImage::rules()],
             'caption' => ['nullable','string','max:255'],
         ]);
 
-        $url = app(\App\Services\UploadedImageStorage::class)->store($data['photo'], 'report_photos');
+        $url = null;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $report, $data, &$url) {
+                $locked = ItemReport::whereKey($report->id)->lockForUpdate()->firstOrFail();
+                if ($locked->isLocked() || $locked->photos()->count() >= 5) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['photo' => 'This report is locked or already has 5 photos.']);
+                }
+                $url = app(\App\Services\UploadedImageStorage::class)->store($data['photo'], 'report_photos');
+                ReportPhoto::create([
+                    'report_id' => $report->id,
+                    'photo_url' => $url,
+                    'caption' => $data['caption'] ?? null,
+                    'created_at' => now(),
+                ]);
+                $this->audit($request, 'photos.create', 'report_photos', null, ['report_id' => $report->id]);
+            });
+        } catch (\Throwable $exception) {
+            if ($url) $this->tryDeletePublicUrlFile($url);
+            throw $exception;
+        }
 
-        ReportPhoto::create([
-            'report_id' => $report->id,
-            'photo_url' => $url,
-            'caption' => $data['caption'] ?? null,
-            'created_at' => now(),
-        ]);
-
-        $this->audit($request, 'photos.create', 'report_photos', null, ['report_id' => $report->id]);
+        if ($request->expectsJson()) {
+            $request->session()->flash('success', 'Photo uploaded.');
+            return response()->json(['message' => 'Photo uploaded.'], 201);
+        }
 
         return redirect()->route('reports.show', $reportId)->with('success', 'Uploaded');
     }

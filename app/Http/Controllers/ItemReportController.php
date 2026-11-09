@@ -122,6 +122,8 @@ class ItemReportController extends WebBaseController
 
     public function store(ItemReportRequest $request)
     {
+        $started = hrtime(true);
+        $timings = ['photos_ms' => 0, 'matching_ms' => 0];
         if (!$this->user()) return redirect()->route('login');
 
         $data = $request->validated();
@@ -143,7 +145,7 @@ class ItemReportController extends WebBaseController
         $storedPhotos = [];
 
         try {
-            DB::transaction(function () use ($request, $data, $reporterId, $isStaff, &$reportId, &$created, &$storedPhotos) {
+            DB::transaction(function () use ($request, $data, $reporterId, $isStaff, &$reportId, &$created, &$storedPhotos, &$timings) {
                 // Serialize submissions by this account, including concurrent retries.
                 User::whereKey($reporterId)->lockForUpdate()->firstOrFail();
                 $existing = ItemReport::where('reporter_user_id', $reporterId)
@@ -170,6 +172,7 @@ class ItemReportController extends WebBaseController
                     'incident_date'     => $data['incident_date'] ?? null,
                     'incident_time'     => $data['incident_time'] ?? null,
                     'location_id'       => $data['location_id'] ?? null,
+                    'location_detail' => $data['location_detail'] ?? null,
                     'circumstances'     => $data['circumstances'] ?? null,
                     'contact_override'  => $data['contact_override'] ?? null,
                     'status'            => 'pending',
@@ -183,9 +186,11 @@ class ItemReportController extends WebBaseController
                 $created = true;
 
                 if (!empty($data['photos'] ?? [])) {
+                    $photoStarted = hrtime(true);
                     foreach ($data['photos'] as $file) {
                         $storedPhotos[] = $this->storeReportPhoto($report->id, $file);
                     }
+                    $timings['photos_ms'] = round((hrtime(true) - $photoStarted) / 1e6, 2);
                 }
 
                 $this->audit($request, 'reports.create', 'item_reports', $report->id, [
@@ -194,7 +199,9 @@ class ItemReportController extends WebBaseController
                 ]);
 
                 // AUTO matching may update status to 'matched'
+                $matchStarted = hrtime(true);
                 $this->runAutoMatch($request, $report->fresh());
+                $timings['matching_ms'] = round((hrtime(true) - $matchStarted) / 1e6, 2);
                 User::where('is_active', 1)->whereKeyNot($reporterId)
                     ->whereHas('roles', fn ($query) => $query->whereIn('name', ['admin', 'osa']))
                     ->each(function ($staff) use ($report) {
@@ -202,23 +209,23 @@ class ItemReportController extends WebBaseController
                             ucfirst($report->report_type) . ' report #' . $report->id . ' was submitted.',
                             ['report_id' => $report->id]);
                     });
+                if (!empty($data['photos'])) {
+                    $connection = config('reports.background_connection');
+                    $job = ProcessImageAnalysis::dispatch($report->id)->onConnection($connection);
+                    if (config("queue.connections.{$connection}.driver") !== 'database') $job->afterCommit();
+                }
             });
         } catch (\Throwable $exception) {
             foreach ($storedPhotos as $url) $this->tryDeletePublicUrlFile($url);
             throw $exception;
         }
 
-        // Trigger AI Analysis after transaction commits
-        if ($created && !empty($data['photos'] ?? [])) {
-            try {
-                ProcessImageAnalysis::dispatch((int) $reportId);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
-            }
-        }
-
         if ($request->expectsJson()) {
-            return response()->json(['redirect' => route('reports.show', $reportId)], $created ? 201 : 200);
+            $duration = round((hrtime(true) - $started) / 1e6, 2);
+            \Illuminate\Support\Facades\Log::info('Report submission completed', $timings + ['duration_ms' => $duration, 'report_id' => $reportId, 'created' => $created]);
+            if ($created) $request->session()->flash('success', 'Report submitted successfully.');
+            return response()->json(['redirect' => route('reports.show', $reportId)], $created ? 201 : 200)
+                ->header('Server-Timing', 'report;dur=' . $duration . ', photos;dur=' . $timings['photos_ms'] . ', matching;dur=' . $timings['matching_ms']);
         }
         return redirect()->route('reports.show', $reportId)->with('success', 'Created');
     }
@@ -267,6 +274,10 @@ class ItemReportController extends WebBaseController
 
         $claimableFoundIds = $eligibilityService->claimableFoundReportIds($report, $this->user(), $isStaff);
 
+        $claimableFoundReports = $report->report_type === 'found' && $claimEligibility->allowed
+            ? collect([$report])
+            : ItemReport::with(['photos', 'location'])->whereIn('id', $claimableFoundIds)->get();
+
         $claims = Claim::with('claimant')
             ->where('report_id', $id)
             ->orderByDesc('id')
@@ -291,7 +302,7 @@ class ItemReportController extends WebBaseController
             default    => 'secondary',
         };
 
-        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner', 'statusColor', 'claimEligibility', 'claimableFoundIds', 'isLocked', 'lockerName'));
+        return view('reports.show', compact('report', 'matches', 'claims', 'isStaff', 'isOwner', 'statusColor', 'claimEligibility', 'claimableFoundIds', 'claimableFoundReports', 'isLocked', 'lockerName'));
     }
 
     /* =========================
@@ -358,6 +369,7 @@ class ItemReportController extends WebBaseController
                 'incident_date'    => $data['incident_date'] ?? null,
                 'incident_time'    => $data['incident_time'] ?? null,
                 'location_id'      => $data['location_id'] ?? null,
+                'location_detail' => $data['location_detail'] ?? null,
                 'circumstances'    => $data['circumstances'] ?? null,
                 'contact_override' => $data['contact_override'] ?? null,
                 'reporter_name' => $data['reporter_name'] ?? null,
@@ -413,35 +425,7 @@ class ItemReportController extends WebBaseController
 
     public function storePhoto(Request $request, int $id)
     {
-        if (!$this->user()) return redirect()->route('login');
-
-        $report = ItemReport::with('photos')->findOrFail($id);
-
-        $isStaff = $this->hasAnyRole(['admin', 'osa']);
-        $isOwner = (int) $report->reporter_user_id === (int) $this->user()->id;
-
-        if (!$isStaff && !$isOwner) abort(403);
-        if ($report->isLocked()) {
-            return redirect()->route('reports.show', $id)->withErrors(['message' => 'This report is locked and cannot be edited.']);
-        }
-
-        $data = $request->validate([
-            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-        ]);
-
-        DB::transaction(function () use ($request, $report, $data) {
-            $this->storeReportPhoto($report->id, $data['photo']);
-            $this->audit($request, 'reports.photo.upload', 'item_reports', $report->id);
-
-            // Trigger AI Analysis for new photo (async via queue)
-            try {
-                ProcessImageAnalysis::dispatch((int) $report->id);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('AI analysis dispatch failed: ' . $e->getMessage());
-            }
-        });
-
-        return redirect()->route('reports.edit', $id)->with('success', 'Photo uploaded');
+        return app(ReportPhotoController::class)->store($request, $id);
     }
 
     public function destroyPhoto(Request $request, int $photoId)
@@ -917,6 +901,17 @@ class ItemReportController extends WebBaseController
     private function storeReportPhoto(int $reportId, $file): string
     {
         $images = app(\App\Services\UploadedImageStorage::class);
+        $info = getimagesize($file->getPathname());
+        if ($info && $info['mime'] === 'image/jpeg' && max($info[0], $info[1]) <= 1600 && $file->getSize() <= 1500 * 1024) {
+            $url = $images->store($file, 'report_photos');
+            try {
+                ReportPhoto::create(['report_id' => $reportId, 'photo_url' => $url, 'created_at' => now()]);
+            } catch (\Throwable $exception) {
+                $images->delete($url);
+                throw $exception;
+            }
+            return $url;
+        }
         $temporary = tempnam(sys_get_temp_dir(), 'lf_image_');
         if ($temporary === false) throw new \RuntimeException('Cannot prepare image upload.');
         try {
@@ -984,7 +979,10 @@ class ItemReportController extends WebBaseController
             $src = $resized;
         }
 
-        imagejpeg($src, $destination, $quality);
+        if (!imagejpeg($src, $destination, $quality)) {
+            imagedestroy($src);
+            throw new \RuntimeException('Photo encoding failed.');
+        }
         imagedestroy($src);
     }
 

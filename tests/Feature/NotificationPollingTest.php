@@ -12,6 +12,7 @@ use Tests\TestCase;
 class NotificationPollingTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Concerns\ReportPayload;
 
     public function test_polling_counts_new_unread_records_instead_of_the_record_id(): void
     {
@@ -32,7 +33,7 @@ class NotificationPollingTest extends TestCase
         $admin = User::factory()->create();
         $admin->roles()->firstOrCreate(['name' => 'admin']);
         $user = User::factory()->create();
-        $data = ['submission_id' => (string) Str::uuid(), 'report_type' => 'lost', 'item_description' => 'A blue wallet lost in the library.'];
+        $data = $this->completeReportFields() + ['submission_id' => (string) Str::uuid(), 'report_type' => 'lost', 'item_description' => 'A blue wallet lost in the library.'];
         $this->actingAs($user)->postJson(route('reports.store'), $data)->assertCreated();
         $this->postJson(route('reports.store'), $data)->assertOk();
         $this->assertSame(1, Notification::where('user_id', $admin->id)->where('notif_type', 'report')->count());

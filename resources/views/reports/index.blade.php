@@ -271,7 +271,7 @@
               </div>
               <div class="report-meta-content">
                 <div class="report-meta-label">Location</div>
-                <div class="report-meta-value">{{ $r->location?->name ?? 'Unknown' }}</div>
+                <div class="report-meta-value">{{ $r->location_label ?: 'Unknown' }}</div>
               </div>
             </div>
 

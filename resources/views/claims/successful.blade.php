@@ -161,7 +161,7 @@
             @endif
             <td>
               <div style="font-weight:700;font-size:.875rem">{{ \Illuminate\Support\Str::limit($itemName,26) }}</div>
-              <div class="text-muted" style="font-size:.68rem">Claim #{{ $claim->id }} · <a href="{{ route('reports.show',$claim->report_id) }}" class="text-decoration-none">Report #{{ $claim->report_id }}</a> · {{ $claim->report?->location?->name ?? '—' }}</div>
+              <div class="text-muted" style="font-size:.68rem">Claim #{{ $claim->id }} · <a href="{{ route('reports.show',$claim->report_id) }}" class="text-decoration-none">Report #{{ $claim->report_id }}</a> · {{ $claim->report?->location_label ?: '—' }}</div>
             </td>
             <td><span class="admin-badge admin-badge-secondary">{{ $categoryName }}</span></td>
             <td style="white-space:nowrap">

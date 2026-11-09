@@ -13,6 +13,7 @@ use Tests\TestCase;
 class StudentFinderAndSessionTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Concerns\ReportPayload;
 
     private function admin(): User
     {
@@ -23,7 +24,7 @@ class StudentFinderAndSessionTest extends TestCase
 
     private function payload(array $overrides = []): array
     {
-        return array_merge([
+        return array_merge($this->completeReportFields(), [
             'submission_id' => (string) Str::uuid(),
             'report_type' => 'found',
             'item_description' => 'A surrendered wallet with a distinctive blue strap.',

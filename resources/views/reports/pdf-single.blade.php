@@ -124,7 +124,7 @@
         </tr>
         <tr>
           <td><div class="label">Color / Distinguishing Marks</div><div class="value">{{ $report->color ?? '—' }}</div></td>
-          <td><div class="label">Location</div><div class="value">{{ $report->location?->name ?? '—' }}</div></td>
+          <td><div class="label">Location</div><div class="value">{{ $report->location_label ?: '—' }}</div></td>
         </tr>
         <tr>
           <td><div class="label">{{ $report->report_type==='lost' ? 'Date Lost' : 'Date Found' }}</div><div class="value">{{ $report->incident_date ? \Carbon\Carbon::parse($report->incident_date)->format('M d, Y') : '—' }} @if($report->incident_time) — {{ $report->incident_time }} @endif</div></td>

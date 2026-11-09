@@ -86,7 +86,7 @@ class ReportsExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $row->color ?? '—',
             ucfirst($row->report_type ?? '—'),
             $row->category?->name ?? '—',
-            $row->location?->name ?? '—',
+            $row->location_label ?: '—',
             $incident,
             $reportDate,
             ucfirst($row->status ?? '—'),

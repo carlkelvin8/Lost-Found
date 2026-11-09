@@ -83,7 +83,7 @@ Report #{{ $report->id }} · NAAP Lost & Found
       </div>
       <div class="col-md-6">
         <div class="detail-label">Location</div>
-        <div class="detail-value">{{ $report->location?->name ?? '—' }}</div>
+        <div class="detail-value">{{ $report->location_label ?: '—' }}</div>
       </div>
     </div>
 
@@ -221,23 +221,21 @@ Report #{{ $report->id }} · NAAP Lost & Found
   {{-- CLAIM --}}
   {{-- Only the LOST reporter matched to this FOUND report may claim it.
        The finder sees their own management actions instead. --}}
-  @if($report->report_type === 'found' && $claimEligibility->allowed)
-    <div class="detail-card mt-3">
-      <div class="detail-card-title"><i class="bi bi-person-check"></i> Claim Item</div>
-      <a class="btn btn-primary w-100" href="{{ route('claims.create',$report->id) }}">
-        Submit Claim
-      </a>
-    </div>
-  @endif
-
   {{-- CLAIM ACTION (students) --}}
-  @if(!$isStaff && count($claimableFoundIds))
+  @if(!$isStaff && $claimableFoundReports->isNotEmpty())
     <div class="detail-card mt-3">
       <div class="detail-card-title"><i class="bi bi-person-check"></i> Claim</div>
-      @foreach($claimableFoundIds as $claimableFoundId)
-        <a class="btn btn-primary w-100 mb-2" href="{{ route('claims.create',$claimableFoundId) }}">
-          <i class="bi bi-person-check"></i> Submit Claim
-        </a>
+      @foreach($claimableFoundReports as $foundItem)
+        <div class="border rounded p-3 mb-3">
+          <div class="fw-semibold">{{ $foundItem->item_name ?: 'Found item' }} · Report #{{ $foundItem->id }}</div>
+          <div class="text-muted small mb-2">{{ $foundItem->location_label ?: 'Location not recorded' }} · {{ $foundItem->incident_date ?: 'Date not recorded' }}</div>
+          @if($foundItem->photos->first())
+            <img src="{{ uploaded_image_url($foundItem->photos->first()->photo_url) }}" alt="{{ $foundItem->item_name }}" loading="lazy" style="width:80px;height:80px;object-fit:cover;border-radius:8px" class="mb-2">
+          @endif
+          <a class="btn btn-primary w-100" href="{{ route('claims.create',$foundItem->id) }}" aria-label="Submit claim for {{ $foundItem->item_name }} report {{ $foundItem->id }}">
+            <i class="bi bi-person-check"></i> Submit Claim
+          </a>
+        </div>
       @endforeach
     </div>
   @endif
