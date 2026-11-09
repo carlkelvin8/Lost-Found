@@ -138,7 +138,7 @@
                 </div>
                 <div class="dash-list-meta">
                   <span><i class="bi bi-tag"></i> {{ $report->category?->name ?? 'N/A' }}</span>
-                  <span><i class="bi bi-geo-alt"></i> {{ $report->location?->name ?? 'N/A' }}</span>
+                  <span><i class="bi bi-geo-alt"></i> {{ $report->location_label ?: 'N/A' }}</span>
                 </div>
               </div>
               <span class="dash-list-time">{{ $report->created_at->diffForHumans() }}</span>

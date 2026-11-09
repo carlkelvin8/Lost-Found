@@ -16,6 +16,8 @@ class ProcessImageAnalysis implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $reportId;
+    public int $tries = 3;
+    public int $timeout = 60;
 
     /**
      * Create a new job instance.

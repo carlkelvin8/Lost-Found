@@ -102,8 +102,15 @@ class TemplateManager {
         const descInput = document.querySelector('textarea[name="item_description"]');
 
         if (typeSelect) typeSelect.value = t.type;
-        if (categorySelect && t.category) categorySelect.value = t.category;
+        if (categorySelect && t.category) {
+            categorySelect.value = Array.from(categorySelect.options).find(option =>
+                option.value === String(t.category) || option.text.trim().toLowerCase() === String(t.category).trim().toLowerCase())?.value || '';
+        }
         if (descInput) descInput.value = t.description || '';
+        [typeSelect, categorySelect, descInput].filter(Boolean).forEach(input => {
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
 
         document.getElementById('templates-modal')?.classList.remove('active');
         toast.success('Template applied!');

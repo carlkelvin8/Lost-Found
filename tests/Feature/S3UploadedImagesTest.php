@@ -17,6 +17,7 @@ use Tests\TestCase;
 class S3UploadedImagesTest extends TestCase
 {
     use DatabaseMigrations;
+    use \Tests\Concerns\ReportPayload;
 
     protected function setUp(): void
     {
@@ -31,7 +32,7 @@ class S3UploadedImagesTest extends TestCase
     public function test_report_creation_uploads_to_bucket_and_renders_signed_urls(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson(route('reports.store'), [
+        $this->actingAs($user)->postJson(route('reports.store'), $this->completeReportFields() + [
             'submission_id' => (string) Str::uuid(), 'report_type' => 'found',
             'reporter_name' => 'Test Finder', 'item_description' => 'A distinctive blue wallet near the library.',
             'photos' => [UploadedFile::fake()->image('wallet.png', 200, 200)],
@@ -66,7 +67,7 @@ class S3UploadedImagesTest extends TestCase
     {
         $user = User::factory()->create();
         $report = ItemReport::factory()->lost()->create(['reporter_user_id' => $user->id, 'locked_at' => null]);
-        $this->actingAs($user)->post(route('reports.photos.store', $report), ['photo' => UploadedFile::fake()->image('item.png')])->assertRedirect();
+        $this->actingAs($user)->post(route('reports.photos.store', $report), ['photo' => UploadedFile::fake()->image('item.png', 200, 200)])->assertRedirect();
         $photo = ReportPhoto::sole();
         Storage::disk('s3')->assertExists($photo->photo_url);
         $this->post(route('photos.destroy', $photo))->assertRedirect();

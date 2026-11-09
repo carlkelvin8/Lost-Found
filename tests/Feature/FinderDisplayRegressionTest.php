@@ -13,6 +13,7 @@ use Tests\TestCase;
 class FinderDisplayRegressionTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Concerns\ReportPayload;
 
     private function admin(): User
     {
@@ -43,7 +44,7 @@ class FinderDisplayRegressionTest extends TestCase
     {
         Mail::fake();
         $student = $this->student();
-        $this->actingAs($student)->postJson(route('reports.store'), [
+        $this->actingAs($student)->postJson(route('reports.store'), $this->completeReportFields() + [
             'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'reporter_name' => 'Actual Student Finder', 'item_description' => 'A red bag with a distinctive strap.',
         ])->assertCreated();
         $report = ItemReport::sole();
@@ -86,7 +87,7 @@ class FinderDisplayRegressionTest extends TestCase
     public function test_student_override_is_snapshotted_without_copying_the_submitters_id(): void
     {
         Mail::fake();
-        $this->actingAs($this->student())->postJson(route('reports.store'), [
+        $this->actingAs($this->student())->postJson(route('reports.store'), $this->completeReportFields() + [
             'submission_id' => (string) Str::uuid(), 'report_type' => 'found', 'reporter_name' => 'Actual Student Finder', 'item_description' => 'A blue bag found near the office.',
             'contact_override' => '09171234567', 'reporter_name' => 'Another Finder',
         ])->assertCreated();

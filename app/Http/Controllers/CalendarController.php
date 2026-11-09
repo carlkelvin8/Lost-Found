@@ -173,7 +173,7 @@ class CalendarController extends WebBaseController
                 'item_description' => $r->item_description,
                 'brand_model'      => $r->brand_model,
                 'color'            => $r->color,
-                'location'         => $r->location?->name,
+                'location'         => $r->location_label,
                 'location_id'      => $r->location_id,
                 'incident_date'    => $r->incident_date ? Carbon::parse($r->incident_date)->format('Y-m-d') : null,
                 'incident_time'    => $r->incident_time,

@@ -23,6 +23,7 @@ class ItemReport extends Model
         'incident_date',
         'incident_time',
         'location_id',
+        'location_detail',
         'circumstances',
         'contact_override',
         'reporter_name',
@@ -97,6 +98,11 @@ class ItemReport extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function getLocationLabelAttribute(): string
+    {
+        return collect([$this->location?->name, $this->location_detail])->filter()->unique()->implode(' · ');
     }
 
     public function location()

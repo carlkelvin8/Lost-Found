@@ -80,9 +80,10 @@ class ClaimController extends WebBaseController
             return redirect()->route('login');
         }
 
+        if (is_string($request->input('proof_text'))) $request->merge(['proof_text' => preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $request->input('proof_text'))]);
         $data = $request->validate([
             'report_id' => ['required', 'integer', 'exists:item_reports,id'],
-            'proof_text' => ['required', 'string', 'min:20'],
+            'proof_text' => ['required', 'string', 'min:20', 'max:5000'],
             'description' => ['nullable', 'string', 'max:1000'],
             'contact_info' => ['nullable', 'string', 'max:255'],
         ]);

@@ -8,23 +8,25 @@ function input(value = '') {
     return { value, required: false, validity: '', listeners: {}, addEventListener(type, handler) { this.listeners[type] = handler; }, setCustomValidity(value) { this.validity = value; } };
 }
 
-function setup(fetch) {
+function setup(fetch, optimizer) {
     const elements = { report_type: input('found'), contact_override: input(), reporter_name: input('Test Finder'), submission_id: input('stable-submission-id'), photos: { files: [new File(['camera-bytes'], 'camera.jpg', { type: 'image/jpeg' })] } };
     const button = { disabled: false, innerHTML: 'Create Report', textContent: '' };
     const classList = { toggle() {}, add() {}, remove() {} };
     const feedback = { classList, textContent: '', focus() {} };
-    const form = { elements, action: '/reports', valid: true, querySelector() { return button; }, reportValidity() { return this.valid && !elements.reporter_name.validity; }, addEventListener(type, handler) { this[type] = handler; } };
+    const form = { elements, action: '/reports', valid: true, querySelector(selector) { return selector.includes('photos[]') ? elements.photos : button; }, reportValidity() { return this.valid && !elements.reporter_name.validity; }, addEventListener(type, handler) { this[type] = handler; } };
     const redirects = [];
     const bodies = [];
-    const document = { addEventListener(type, handler) { handler(); }, getElementById(id) { if (id === 'studentSurrenderCheckbox') return null; return id === 'reportCreateForm' ? form : id === 'reportSubmitFeedback' ? feedback : { classList }; } };
+    const document = { addEventListener(type, handler) { handler(); }, getElementById(id) { if (id === 'studentSurrenderCheckbox') return null; return id === 'reportCreateForm' ? form : id === 'reportSubmitFeedback' ? feedback : ['reporterNameRequired', 'reporterNameGroup'].includes(id) ? { classList } : null; } };
     class FakeFormData {
+        delete() { this.file = null; }
+        append(key, file) { this.file = file; }
         constructor(source) {
             this.file = source.elements.photos.files[0];
             this.id = source.elements.submission_id.value;
             bodies.push(this);
         }
     }
-    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../public/js/report-create.js'), 'utf8'), { document, fetch, FormData: FakeFormData, window: { location: { assign(url) { redirects.push(url); } } } });
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../public/js/report-create.js'), 'utf8'), { document, fetch, FormData: FakeFormData, window: { ReportPhotos: optimizer, location: { assign(url) { redirects.push(url); } } } });
     return { elements, button, feedback, form, redirects, bodies, submit: () => form.submit({ preventDefault() {} }) };
 }
 
@@ -106,4 +108,15 @@ test('camera Done copies captured bytes to the upload input before cleaning came
     assert.equal(selected.files.length, 1);
     assert.equal(await selected.files[0].text(), 'captured-bytes');
     assert.equal(camera.capturedPhotos.length, 0);
+});
+
+
+test('photo optimization uses the array-named input, preserves originals and posts prepared bytes', async () => {
+    const optimized = new File(['small-bytes'], 'optimized.jpg', { type: 'image/jpeg' });
+    const app = setup(async () => ({ ok: true, json: async () => ({ redirect: '/reports/1' }) }), { prepare: async files => { assert.equal(files.length, 1); return [optimized]; } });
+    const original = app.elements.photos.files[0];
+    await app.submit();
+    assert.equal(app.bodies[0].file, optimized);
+    assert.equal(app.elements.photos.files[0], original);
+    assert.deepEqual(app.redirects, ['/reports/1']);
 });
